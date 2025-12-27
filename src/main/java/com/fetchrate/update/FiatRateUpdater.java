@@ -3,6 +3,7 @@ package com.fetchrate.update;
 import org.springframework.stereotype.Service;
 import com.fetchrate.core.ExchangeRateRecord;
 import com.fetchrate.config.ECBURLs;
+
 import java.util.List;
 
 @Service
