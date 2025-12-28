@@ -1,7 +1,6 @@
 package com.fetchrate.update;
 
 import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -27,16 +26,12 @@ public class FiatRateFetcher {
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(URL)).GET().build();
 
         try {
-
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
             return response.body();
 
         } catch (IOException | InterruptedException e) {
-
             throw new RuntimeException("Failed to fetch fiat rates from ECB", e);
 
         }
     }
-
 }

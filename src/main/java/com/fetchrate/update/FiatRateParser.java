@@ -11,21 +11,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * This class serves to parse the data from a String format into a List of Records format.
+ * This class serves to parse the data from a String format into an ArrayList of Records format.
  */
 @Service
 public class FiatRateParser {
 
-    private static final Pattern DAY_BLOCK = Pattern.compile(
+    private static final Pattern DATE_BLOCK = Pattern.compile(
             "<Cube\\s+time=['\"](\\d{4}-\\d{2}-\\d{2})['\"]\\s*>\\s*(.*?)\\s*</Cube>",
             Pattern.DOTALL
     );
 
-
-    private static final Pattern RATE_ROW = Pattern.compile(
+    private static final Pattern CURR_AND_RATE = Pattern.compile(
             "<Cube\\s+currency=['\"]([A-Z]{3})['\"]\\s+rate=['\"]([0-9.]+)['\"]\\s*/>"
     );
-
 
 
     /**
@@ -40,19 +38,21 @@ public class FiatRateParser {
 
         List<ExchangeRateRecord> fiatRecord = new ArrayList<>();
 
-        Matcher dayMatcher = DAY_BLOCK.matcher(xml);
-        while (dayMatcher.find()) {
-            LocalDate date = LocalDate.parse(dayMatcher.group(1));
-            String inner = dayMatcher.group(2);
+        Matcher dateMatcher = DATE_BLOCK.matcher(xml);
+        while (dateMatcher.find()) {
+            LocalDate date = LocalDate.parse(dateMatcher.group(1));
+            String currencyAndRate = dateMatcher.group(2);
 
-            Matcher rowMatcher = RATE_ROW.matcher(inner);
+            Matcher rowMatcher = CURR_AND_RATE.matcher(currencyAndRate);
             while (rowMatcher.find()) {
                 String currency = rowMatcher.group(1);
                 BigDecimal rate = new BigDecimal(rowMatcher.group(2));
 
                 fiatRecord.add(new ExchangeRateRecord(currency, date, rate));
+
             }
         }
+
         return fiatRecord;
     }
 }
