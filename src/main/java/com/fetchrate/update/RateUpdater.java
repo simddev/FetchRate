@@ -4,6 +4,9 @@ import com.fetchrate.core.ExchangeRateRecord;
 import com.fetchrate.persistence.RateDatabase;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -24,17 +27,53 @@ public class RateUpdater {
         this.database = database;
     }
 
+    private boolean alreadyUpdatedToday() {
+        Path path = Paths.get("data/LastUpdateDate.txt");
+
+        if (!Files.exists(path)) {
+            return false;
+        }
+
+        try {
+            String text = Files.readString(path).trim();
+            LocalDate lastUpdate = LocalDate.parse(text);
+            return lastUpdate.equals(LocalDate.now());
+        } catch (Exception e) {
+            // file corrupted or unreadable → force update
+            return false;
+        }
+    }
+
+    private void writeLastUpdateDate() {
+        try {
+            Files.createDirectories(Paths.get("data"));
+            Files.writeString(
+                    Paths.get("data/LastUpdateDate.txt"),
+                    LocalDate.now().toString()
+            );
+        } catch (Exception e) {
+            // log later if you want; for now ignore
+        }
+    }
+
+
     /**
      * This method is the end point of the Fiat and Crypto update branches and stores their result in a database,
      * located at /FetchRate/data via the RateDatabase methods.
      */
     public void updateRates() {
         //cryptoUpdate.update();
+
+        if (alreadyUpdatedToday()) {
+            return; // absolutely nothing runs
+        }
+
         database.initSchema();
 
         List<ExchangeRateRecord> fiatRecord = fiatUpdate.fetchAndParseFiat();
 
         database.updateFiatRates(fiatRecord);
 
+        writeLastUpdateDate();
     }
 }
