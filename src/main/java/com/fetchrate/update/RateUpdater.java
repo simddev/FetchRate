@@ -3,6 +3,8 @@ package com.fetchrate.update;
 import com.fetchrate.core.ExchangeRateRecord;
 import com.fetchrate.persistence.RateDatabase;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -33,5 +35,6 @@ public class RateUpdater {
         List<ExchangeRateRecord> fiatRecord = fiatUpdate.fetchAndParseFiat();
 
         database.updateFiatRates(fiatRecord);
+
     }
 }
