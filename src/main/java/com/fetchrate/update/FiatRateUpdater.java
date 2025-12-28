@@ -3,6 +3,7 @@ package com.fetchrate.update;
 import org.springframework.stereotype.Service;
 import com.fetchrate.core.ExchangeRateRecord;
 import com.fetchrate.config.ECBURLs;
+
 import java.util.List;
 
 /**
@@ -23,6 +24,7 @@ public class FiatRateUpdater {
 
     /**
      * This method combines the fetching and the parsing and returns a finalized ArrayList of the Records.
+     *
      * @return ArrayList of ExchangeRateRecord type.
      */
     public List<ExchangeRateRecord> fetchAndParseFiat() {

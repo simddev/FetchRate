@@ -3,10 +3,9 @@ package com.fetchrate.core;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record ExchangeRateRecord(
+public record QueryRecord(
+        BigDecimal amount,
         String currency,
-        LocalDate date,
-        BigDecimal rate
+        LocalDate date
 ) {
 }
-
