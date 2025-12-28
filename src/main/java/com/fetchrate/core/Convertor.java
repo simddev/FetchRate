@@ -4,6 +4,7 @@ import com.fetchrate.persistence.RateDatabase;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 public class Convertor {
@@ -23,7 +24,7 @@ public class Convertor {
         rate = record.rate();
         amount = query.amount();
 
-        return rate.multiply(amount);
+        return amount.divide(rate, 2, RoundingMode.HALF_UP);
 
     }
 
