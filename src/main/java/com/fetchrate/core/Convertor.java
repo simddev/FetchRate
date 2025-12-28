@@ -19,8 +19,7 @@ public class Convertor {
         BigDecimal amount;
 
 
-        ExchangeRateRecord record = database.findFiatRate(query).orElseThrow( () -> new IllegalArgumentException("No rate found for " + query.currency() + " on " + query.date()) );
-
+        ExchangeRateRecord record = database.findFiatRate(query);
         rate = record.rate();
         amount = query.amount();
 

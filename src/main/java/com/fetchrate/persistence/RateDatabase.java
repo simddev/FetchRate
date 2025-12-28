@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * This class serves to create, update and query the database in FetchRate/data.
@@ -69,7 +68,8 @@ public class RateDatabase {
      * @param query The Query Record holding the desired date and currency.
      * @return Returns a ExchangeRateRecord single instance.
      */
-    public Optional<ExchangeRateRecord> findFiatRate(QueryRecord query) {
+
+    public ExchangeRateRecord findFiatRate(QueryRecord query) {
         String sql = """
                 SELECT currency, date, rate
                 FROM fiat_rates
@@ -77,34 +77,27 @@ public class RateDatabase {
                 """;
 
         try {
-            ExchangeRateRecord result = jdbc.queryForObject(
+            return jdbc.queryForObject(
                     sql,
-                    // That's a looong lambda beneath, hehe
-                    (match, rowNum) -> new ExchangeRateRecord(match.getString("currency"), LocalDate.parse(match.getString("date")), new BigDecimal(match.getString("rate"))),
-                    query.date().toString(), // These two get bound to the ?
-                    query.currency()         // from the above SQL query
+                    (rs, rowNum) -> new ExchangeRateRecord(
+                            rs.getString("currency"),
+                            LocalDate.parse(rs.getString("date")),
+                            new BigDecimal(rs.getString("rate"))
+                    ),
+                    query.date().toString(),
+                    query.currency()
             );
-
-            return Optional.ofNullable(result);
-
         } catch (EmptyResultDataAccessException e) {
-            return Optional.empty();
+            throw new IllegalArgumentException("No rate found for " + query.currency() + " on " + query.date());
         }
     }
 
-    public Optional<LocalDate> findLatestFiatDate() {
-        String sql = "SELECT MAX(date) FROM fiat_rates";
-        try {
-            String maxDate = jdbc.queryForObject(sql, String.class);
-            if (maxDate == null) return Optional.empty();
 
-            return Optional.of(LocalDate.parse(maxDate));
-
-        } catch (EmptyResultDataAccessException e) {
-
-            return Optional.empty();
-
-        }
+    public LocalDate findLatestFiatDate() {
+        String sql = "SELECT MAX(date) AS max_date FROM fiat_rates";
+        String maxDate = jdbc.queryForObject(sql, String.class);
+        if (maxDate == null) return null;
+        return LocalDate.parse(maxDate);
     }
 
 }
