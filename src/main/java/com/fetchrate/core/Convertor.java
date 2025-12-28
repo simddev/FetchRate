@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+
 @Service
 public class Convertor {
 
@@ -15,6 +16,10 @@ public class Convertor {
         this.database = database;
     }
 
+    /**
+     * A simple converting method, extracts the rate from the ExchangeRateRecord
+     * for the given date, and applies it to the amount given by the QueryRecord.
+     */
     public BigDecimal convert(QueryRecord query) {
         BigDecimal rate;
         BigDecimal amount;

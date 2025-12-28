@@ -5,7 +5,6 @@ import com.fetchrate.persistence.RateDatabase;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
@@ -13,6 +12,8 @@ import java.util.List;
 /**
  * This class serves to combine both Fiat and Crypto updates into one process and consequentially store their end results,
  * their data in a database via the RateDatabase classes from the persistence package.
+ * <p>
+ * It only runs if the last update is older than a day. Once it updates, it overwrites the latest update date.
  */
 @Service
 public class RateUpdater {
@@ -36,7 +37,7 @@ public class RateUpdater {
                     LocalDate.now().toString()
             );
         } catch (Exception e) {
-            // log later if you want; for now ignore
+           System.out.println("");
         }
     }
 
@@ -56,4 +57,5 @@ public class RateUpdater {
 
         writeLastUpdateDate();
     }
+
 }

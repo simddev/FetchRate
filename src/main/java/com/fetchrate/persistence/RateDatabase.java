@@ -62,8 +62,7 @@ public class RateDatabase {
     }
 
     /**
-     * This method queries for the given date and currency. Gives appropriate error exception if the query is faulty.
-     * Uses Optional in case of no matches, so it returns "empty" instead of null or NullPointerException
+     * This method queries for the given date and currency.
      *
      * @param query The Query Record holding the desired date and currency.
      * @return Returns a ExchangeRateRecord single instance.
@@ -93,6 +92,10 @@ public class RateDatabase {
     }
 
 
+    /**
+     * This method just finds the latest update date in the database.
+     * @return A LocalDate, which is the most up-to-date one.
+     */
     public LocalDate findLatestFiatDate() {
         String sql = "SELECT MAX(date) AS max_date FROM fiat_rates";
         String maxDate = jdbc.queryForObject(sql, String.class);

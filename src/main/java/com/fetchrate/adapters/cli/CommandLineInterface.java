@@ -4,6 +4,7 @@ import com.fetchrate.core.Convertor;
 import com.fetchrate.core.QueryRecord;
 import com.fetchrate.update.RateUpdater;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -12,6 +13,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 
+/**
+ * The main class for handling CLI queries.
+ * <p>
+ * It is run first in case the first argument is "convert".
+ */
+@Profile("cli")
 @Component
 public class CommandLineInterface implements CommandLineRunner {
 
@@ -23,6 +30,11 @@ public class CommandLineInterface implements CommandLineRunner {
         this.convertor = convertor;
     }
 
+    /**
+     * Runs first and handles the conversion, checking last update date, updates if necessary,
+     * returns a JSON in case the query was successful.
+     * @param args The command line arguments.
+     */
     @Override
     public void run(String... args) {
         if (args.length == 0) {
@@ -54,9 +66,7 @@ public class CommandLineInterface implements CommandLineRunner {
                 return;
             }
 
-            // autoupdate runs with the query too (your requirement)
-
-
+            // Update runs in case it wasn't updated today.
             if (!alreadyUpdatedToday()) {
                 rateUpdater.updateRates();
             }
@@ -65,7 +75,7 @@ public class CommandLineInterface implements CommandLineRunner {
             QueryRecord query = new QueryRecord(amount, currency, date);
             BigDecimal result = convertor.convert(query);
 
-            // Minimal JSON to stdout (as per bounty spec)
+            // Minimal JSON to stdout.
             System.out.println("{\"amount\":\"" + amount + "\",\"inputCurrency\":\"" + currency +
                     "\",\"date\":\"" + date + "\",\"inEuros\":\"" + result + "\"}");
 
@@ -75,11 +85,18 @@ public class CommandLineInterface implements CommandLineRunner {
         printUsage();
     }
 
+    /**
+     * Shows usage to user in case of wrong format.
+     */
     private void printUsage() {
         System.out.println("Usage:");
         System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency CZK --date YYYY-MM-DD");
     }
 
+    /**
+     * Checks the last update date in the data file.
+     * @return Returns true if it's up to date, false otherwise.
+     */
     private boolean alreadyUpdatedToday() {
         Path path = Paths.get("data/LastUpdateDate.txt");
 
@@ -92,7 +109,7 @@ public class CommandLineInterface implements CommandLineRunner {
             LocalDate lastUpdate = LocalDate.parse(text);
             return lastUpdate.equals(LocalDate.now());
         } catch (Exception e) {
-            // file corrupted or unreadable → force update
+            // If the file is unreadable or corrupted, it updates by default.
             return false;
         }
 

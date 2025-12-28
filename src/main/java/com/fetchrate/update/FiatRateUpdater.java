@@ -29,8 +29,7 @@ public class FiatRateUpdater {
     }
 
     /**
-     * This method checks the latest entry in the database, in order to know what kind of update is needed,
-     * it returns the URL for the daily exchange rate in any case, as this one can change within a day.
+     * This method chooses the appropriate URL depending on the latest update in the database.
      */
     private void chooseECBURL() {
 
