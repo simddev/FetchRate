@@ -27,22 +27,6 @@ public class RateUpdater {
         this.database = database;
     }
 
-    private boolean alreadyUpdatedToday() {
-        Path path = Paths.get("data/LastUpdateDate.txt");
-
-        if (!Files.exists(path)) {
-            return false;
-        }
-
-        try {
-            String text = Files.readString(path).trim();
-            LocalDate lastUpdate = LocalDate.parse(text);
-            return lastUpdate.equals(LocalDate.now());
-        } catch (Exception e) {
-            // file corrupted or unreadable → force update
-            return false;
-        }
-    }
 
     private void writeLastUpdateDate() {
         try {
@@ -63,10 +47,6 @@ public class RateUpdater {
      */
     public void updateRates() {
         //cryptoUpdate.update();
-
-        if (alreadyUpdatedToday()) {
-            return; // absolutely nothing runs
-        }
 
         database.initSchema();
 
