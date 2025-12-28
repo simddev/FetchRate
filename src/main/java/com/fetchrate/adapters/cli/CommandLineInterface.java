@@ -1,4 +1,4 @@
 package com.fetchrate.adapters.cli;
 
-public class CommandLineReader {
+public class CommandLineInterface {
 }
