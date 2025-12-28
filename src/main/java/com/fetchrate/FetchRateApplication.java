@@ -5,9 +5,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * This serves as the entry point of the application employing the Spring framework.
- * It will initiate to run a method from the RateUpdateStarterRunner class,
- * which implements the CommandLineRunner interface, thus starting off the chain
- * which will lead to a running application.
+ * <p>
+ * Once it initiates, a method from the RateUpdateStartupRunner class will automatically run,
+ * since it implements the CommandLineRunner interface, which is a Spring feature.
  * @author Simon
  */
 @SpringBootApplication

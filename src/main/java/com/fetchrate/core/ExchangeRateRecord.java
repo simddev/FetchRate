@@ -6,6 +6,6 @@ import java.time.LocalDate;
 public record ExchangeRateRecord(
         String currency,
         LocalDate date,
-        BigDecimal rateInEur
+        BigDecimal rate
 ) {}
 
