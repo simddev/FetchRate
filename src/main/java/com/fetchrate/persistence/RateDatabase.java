@@ -92,6 +92,21 @@ public class RateDatabase {
         }
     }
 
+    public Optional<LocalDate> findLatestFiatDate() {
+        String sql = "SELECT MAX(date) FROM fiat_rates";
+        try {
+            String maxDate = jdbc.queryForObject(sql, String.class);
+            if (maxDate == null) return Optional.empty();
+
+            return Optional.of(LocalDate.parse(maxDate));
+
+        } catch (EmptyResultDataAccessException e) {
+
+            return Optional.empty();
+
+        }
+    }
+
 }
 
 
