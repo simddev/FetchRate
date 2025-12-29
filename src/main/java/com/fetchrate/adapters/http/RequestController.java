@@ -19,7 +19,6 @@ import java.util.Map;
  */
 @Profile("http")
 @RestController
-@RequestMapping("/")
 public class RequestController {
 
     private final RateUpdater rateUpdater;
