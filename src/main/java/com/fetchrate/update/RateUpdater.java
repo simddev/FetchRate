@@ -51,9 +51,8 @@ public class RateUpdater {
 
         List<CryptoRateRecord> cryptoRecord = cryptoUpdate.fetchAndParseCrypto();
         database.updateCryptoRates(cryptoRecord);
-
+        // Updates last update date after both tables are updated.
         database.setMeta("last_update", LocalDate.now().toString());
-
     }
 
 }
