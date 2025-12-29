@@ -56,7 +56,7 @@ public class CommandLineRequest implements CommandLineRunner {
 
                 if ("--amount".equals(a) && i + 1 < args.length) {
                     amount = new BigDecimal(args[++i]);
-                } else if ("--input-currencySymbol".equals(a) && i + 1 < args.length) {
+                } else if ("--input-currency".equals(a) && i + 1 < args.length) {
                     currency = args[++i].toUpperCase();
                 } else if ("--date".equals(a) && i + 1 < args.length) {
                     date = LocalDate.parse(args[++i]);
@@ -79,15 +79,14 @@ public class CommandLineRequest implements CommandLineRunner {
 
             try {
                 BigDecimal inEuros = convertor.convert(query);
-                ConvertResponse resp = ConvertResponse.of(amount, currency, date, inEuros);
 
-                // This is the CLI equivalent of what Spring does automatically in the controller:
-                System.out.println(objectMapper.writeValueAsString(resp));
+                ConvertResponse response = ConvertResponse.of(amount, currency, date, inEuros);
+
+                System.out.println(objectMapper.writeValueAsString(response));
+
             } catch (IllegalArgumentException e) {
-                // You can also output a structured error JSON here if the client expects it.
                 System.out.println("{\"error\":\"No data available for that input.\"}");
             }
-
 
             return;
         }
@@ -101,7 +100,7 @@ public class CommandLineRequest implements CommandLineRunner {
      */
     private void printUsage() {
         System.out.println("Usage:");
-        System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currencySymbol CZK --date YYYY-MM-DD");
+        System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency CZK --date YYYY-MM-DD");
     }
 
 }
