@@ -33,27 +33,15 @@ public class FiatRateUpdater {
      */
     private void chooseECBURL() {
 
-        LocalDate latestDate = database.findLatestFiatDate();
-
-        long daysBehind = ChronoUnit.DAYS.between(latestDate, LocalDate.now());
+        LocalDate latestDate = database.getLastFiatUpdate();
 
         if (latestDate == null) {
             URLtoBeUsed = URL.getFullURL();
-        }
-
-        if (daysBehind >= 90) {
-            URLtoBeUsed = URL.getFullURL();
-
-        }
-
-        if (daysBehind < 90 && daysBehind > 1) {
-            URLtoBeUsed = URL.getDays90URL();
-
-        }
-
-        if (daysBehind == 1) {
-            URLtoBeUsed = URL.getDailyURL();
-
+        } else {
+            long daysBehind = ChronoUnit.DAYS.between(latestDate, LocalDate.now());
+            if (daysBehind >= 90) URLtoBeUsed = URL.getFullURL();
+            else if (daysBehind > 1) URLtoBeUsed = URL.getDays90URL();
+            else URLtoBeUsed = URL.getDailyURL();
         }
 
     }

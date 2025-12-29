@@ -8,9 +8,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 
 /**
@@ -33,6 +30,7 @@ public class CommandLineInterface implements CommandLineRunner {
     /**
      * Runs first and handles the conversion, checking last update date, updates if necessary,
      * returns a JSON in case the query was successful.
+     *
      * @param args The command line arguments.
      */
     @Override
@@ -67,22 +65,28 @@ public class CommandLineInterface implements CommandLineRunner {
             }
 
             // Update runs in case it wasn't updated today.
-            if (!alreadyUpdatedToday()) {
+            if (!rateUpdater.alreadyUpdatedToday()) {
                 rateUpdater.updateRates();
             }
 
 
             QueryRecord query = new QueryRecord(amount, currency, date);
-            BigDecimal result = convertor.convert(query);
 
-            // Minimal JSON to stdout.
-            System.out.println("{\"amount\":\"" + amount + "\",\"inputCurrency\":\"" + currency +
-                    "\",\"date\":\"" + date + "\",\"inEuros\":\"" + result + "\"}");
+            try {
+                BigDecimal result = convertor.convert(query);
+
+                // Minimal JSON to stdout.
+                System.out.println("{\"amount\":\"" + amount + "\",\"inputCurrency\":\"" + currency +
+                        "\",\"date\":\"" + date + "\",\"inEuros\":\"" + result + "\"}");
+            } catch (IllegalArgumentException e) {
+                System.out.println("No data available for that input.");
+            }
 
             return;
         }
 
         printUsage();
+
     }
 
     /**
@@ -93,25 +97,4 @@ public class CommandLineInterface implements CommandLineRunner {
         System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency CZK --date YYYY-MM-DD");
     }
 
-    /**
-     * Checks the last update date in the data file.
-     * @return Returns true if it's up to date, false otherwise.
-     */
-    private boolean alreadyUpdatedToday() {
-        Path path = Paths.get("data/LastUpdateDate.txt");
-
-        if (!Files.exists(path)) {
-            return false;
-        }
-
-        try {
-            String text = Files.readString(path).trim();
-            LocalDate lastUpdate = LocalDate.parse(text);
-            return lastUpdate.equals(LocalDate.now());
-        } catch (Exception e) {
-            // If the file is unreadable or corrupted, it updates by default.
-            return false;
-        }
-
-    }
 }

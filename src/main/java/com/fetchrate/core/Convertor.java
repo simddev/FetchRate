@@ -24,7 +24,6 @@ public class Convertor {
         BigDecimal rate;
         BigDecimal amount;
 
-
         ExchangeRateRecord record = database.findFiatRate(query);
         rate = record.rate();
         amount = query.amount();
