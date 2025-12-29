@@ -1,5 +1,6 @@
 package com.fetchrate.adapters.http;
 
+import com.fetchrate.core.ConvertResponse;
 import com.fetchrate.core.Convertor;
 import com.fetchrate.core.QueryRecord;
 import com.fetchrate.update.RateUpdater;
@@ -51,32 +52,29 @@ public class RequestController {
         }
 
 
-        QueryRecord query = new QueryRecord(amount, currency, date);
-
-
+        // Tries the convertor method, if successful formats it into a ConvertResponse record.
+        // This ensures the client's format wish.
         try {
-            BigDecimal inEuros = convertor.convert(query);
-
-            // Returning a JSON.
-            return ResponseEntity.ok(Map.of(
-                    "amount", amount.toPlainString(),
-                    "inputCurrency", currency,
-                    "date", date.toString(),
-                    "inEuros", inEuros.toPlainString()
-            ));
-
+            BigDecimal inEuros = convertor.convert(new QueryRecord(amount, currency, date));
+            return ResponseEntity.ok(
+                    ConvertResponse.of(amount, currency, date, inEuros)
+            );
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "error", "No data available for that input.",
-                    "inputCurrency", currency,
-                    "date", date.toString()
+                    "input", Map.of(
+                            "amount", amount.toPlainString(),
+                            "currency", currency,
+                            "date", date.toString()
+                    )
             ));
 
         }
+
     }
 
     /**
-     * Simple health endpoint.
+     * Simple health endpoint for status check.
      * @return Status.
      */
     @GetMapping("/health")
