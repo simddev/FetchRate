@@ -3,8 +3,8 @@ package com.fetchrate.core;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record ExchangeRateRecord(
-        String currency,
+public record CryptoRateRecord(
+        String symbol,
         LocalDate date,
         BigDecimal rate
 ) {

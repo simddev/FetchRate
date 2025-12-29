@@ -2,7 +2,7 @@ package com.fetchrate.update;
 
 import com.fetchrate.persistence.RateDatabase;
 import org.springframework.stereotype.Service;
-import com.fetchrate.core.ExchangeRateRecord;
+import com.fetchrate.core.FiatRateRecord;
 import com.fetchrate.config.ECBURLs;
 
 import java.time.LocalDate;
@@ -33,7 +33,7 @@ public class FiatRateUpdater {
      */
     private void chooseECBURL() {
 
-        LocalDate latestDate = database.getLastFiatUpdate();
+        LocalDate latestDate = database.getLastUpdate();
 
         if (latestDate == null) {
             URLtoBeUsed = URL.getFullURL();
@@ -51,7 +51,7 @@ public class FiatRateUpdater {
      *
      * @return ArrayList of ExchangeRateRecord type.
      */
-    public List<ExchangeRateRecord> fetchAndParseFiat() {
+    public List<FiatRateRecord> fetchAndParseFiat() {
         chooseECBURL();
         String xml = fiatRateFetcher.fetchFiat(URLtoBeUsed);
         return fiatRateParser.parseFiat(xml);

@@ -34,7 +34,7 @@ public class RequestController {
     /**
      * This is the response entity.
      * @param amount The amount.
-     * @param inputCurrency The input currency.
+     * @param inputCurrency The input currencySymbol.
      * @param date The date.
      * @return Returns a JSON including inEuro.
      */
@@ -64,7 +64,7 @@ public class RequestController {
                     "error", "No data available for that input.",
                     "input", Map.of(
                             "amount", amount.toPlainString(),
-                            "currency", currency,
+                            "currencySymbol", currency,
                             "date", date.toString()
                     )
             ));

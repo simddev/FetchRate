@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @JsonPropertyOrder({"input", "output"})
 public record ConvertResponse(Input input, Output output) {
 
-    @JsonPropertyOrder({"amount", "currency", "date"})
+    @JsonPropertyOrder({"amount", "currencySymbol", "date"})
     public record Input(
             String amount,
             String currency,

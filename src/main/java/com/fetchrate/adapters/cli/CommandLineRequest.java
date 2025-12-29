@@ -56,7 +56,7 @@ public class CommandLineRequest implements CommandLineRunner {
 
                 if ("--amount".equals(a) && i + 1 < args.length) {
                     amount = new BigDecimal(args[++i]);
-                } else if ("--input-currency".equals(a) && i + 1 < args.length) {
+                } else if ("--input-currencySymbol".equals(a) && i + 1 < args.length) {
                     currency = args[++i].toUpperCase();
                 } else if ("--date".equals(a) && i + 1 < args.length) {
                     date = LocalDate.parse(args[++i]);
@@ -101,7 +101,7 @@ public class CommandLineRequest implements CommandLineRunner {
      */
     private void printUsage() {
         System.out.println("Usage:");
-        System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency CZK --date YYYY-MM-DD");
+        System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currencySymbol CZK --date YYYY-MM-DD");
     }
 
 }
