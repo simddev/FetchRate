@@ -1,11 +1,13 @@
 package com.fetchrate.adapters.cli;
 
+import com.fetchrate.core.ConvertResponse;
 import com.fetchrate.core.Convertor;
 import com.fetchrate.core.QueryRecord;
 import com.fetchrate.update.RateUpdater;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,14 +19,16 @@ import java.time.LocalDate;
  */
 @Profile("cli")
 @Component
-public class CommandLineInterface implements CommandLineRunner {
+public class CommandLineRequest implements CommandLineRunner {
 
     private final RateUpdater rateUpdater;
     private final Convertor convertor;
+    private final ObjectMapper objectMapper;
 
-    public CommandLineInterface(RateUpdater rateUpdater, Convertor convertor) {
+    public CommandLineRequest(RateUpdater rateUpdater, Convertor convertor, ObjectMapper objectMapper) {
         this.rateUpdater = rateUpdater;
         this.convertor = convertor;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -72,15 +76,18 @@ public class CommandLineInterface implements CommandLineRunner {
 
             QueryRecord query = new QueryRecord(amount, currency, date);
 
-            try {
-                BigDecimal result = convertor.convert(query);
 
-                // Minimal JSON to stdout.
-                System.out.println("{\"amount\":\"" + amount + "\",\"inputCurrency\":\"" + currency +
-                        "\",\"date\":\"" + date + "\",\"inEuros\":\"" + result + "\"}");
+            try {
+                BigDecimal inEuros = convertor.convert(query);
+                ConvertResponse resp = ConvertResponse.of(amount, currency, date, inEuros);
+
+                // This is the CLI equivalent of what Spring does automatically in the controller:
+                System.out.println(objectMapper.writeValueAsString(resp));
             } catch (IllegalArgumentException e) {
-                System.out.println("No data available for that input.");
+                // You can also output a structured error JSON here if the client expects it.
+                System.out.println("{\"error\":\"No data available for that input.\"}");
             }
+
 
             return;
         }
