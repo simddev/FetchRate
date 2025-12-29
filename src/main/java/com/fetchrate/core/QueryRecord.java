@@ -5,7 +5,7 @@ import java.time.LocalDate;
 
 public record QueryRecord(
         BigDecimal amount,
-        String currency,
+        String currencySymbol,
         LocalDate date
 ) {
 }

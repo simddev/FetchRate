@@ -1,6 +1,7 @@
 package com.fetchrate.update;
 
-import com.fetchrate.core.ExchangeRateRecord;
+import com.fetchrate.core.CryptoRateRecord;
+import com.fetchrate.core.FiatRateRecord;
 import com.fetchrate.persistence.RateDatabase;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +33,7 @@ public class RateUpdater {
      */
     public boolean alreadyUpdatedToday() {
         database.initSchema(); // safe to call, creates tables if missing
-        LocalDate last = database.getLastFiatUpdate();
+        LocalDate last = database.getLastUpdate();
         return last != null && last.equals(LocalDate.now());
     }
 
@@ -42,13 +43,16 @@ public class RateUpdater {
      * located at /FetchRate/data via the RateDatabase methods.
      */
     public void updateRates() {
-        //cryptoUpdate.update();
 
         database.initSchema();
 
-        List<ExchangeRateRecord> fiatRecord = fiatUpdate.fetchAndParseFiat();
-
+        List<FiatRateRecord> fiatRecord = fiatUpdate.fetchAndParseFiat();
         database.updateFiatRates(fiatRecord);
+
+        List<CryptoRateRecord> cryptoRecord = cryptoUpdate.fetchAndParseCrypto();
+        database.updateCryptoRates(cryptoRecord);
+
+        database.setMeta("last_update", LocalDate.now().toString());
 
     }
 

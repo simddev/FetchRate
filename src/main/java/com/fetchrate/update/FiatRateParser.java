@@ -1,6 +1,6 @@
 package com.fetchrate.update;
 
-import com.fetchrate.core.ExchangeRateRecord;
+import com.fetchrate.core.FiatRateRecord;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -34,9 +34,9 @@ public class FiatRateParser {
      * @param xml String of the data to be parsed
      * @return ArrayList of ExchangeRateRecord
      */
-    public List<ExchangeRateRecord> parseFiat(String xml) {
+    public List<FiatRateRecord> parseFiat(String xml) {
 
-        List<ExchangeRateRecord> fiatRecord = new ArrayList<>();
+        List<FiatRateRecord> fiatRecord = new ArrayList<>();
 
         Matcher dateMatcher = DATE_BLOCK.matcher(xml);
         while (dateMatcher.find()) {
@@ -48,7 +48,7 @@ public class FiatRateParser {
                 String currency = rowMatcher.group(1);
                 BigDecimal rate = new BigDecimal(rowMatcher.group(2));
 
-                fiatRecord.add(new ExchangeRateRecord(currency, date, rate));
+                fiatRecord.add(new FiatRateRecord(currency, date, rate));
 
             }
         }

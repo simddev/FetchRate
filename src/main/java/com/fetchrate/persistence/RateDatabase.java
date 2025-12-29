@@ -1,6 +1,7 @@
 package com.fetchrate.persistence;
 
-import com.fetchrate.core.ExchangeRateRecord;
+import com.fetchrate.core.CryptoRateRecord;
+import com.fetchrate.core.FiatRateRecord;
 import com.fetchrate.core.QueryRecord;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -46,6 +47,15 @@ public class RateDatabase {
                     )
                 """);
 
+        jdbc.execute("""
+                    CREATE TABLE IF NOT EXISTS crypto_rates (
+                        date TEXT NOT NULL,
+                        symbol TEXT NOT NULL,
+                        rate TEXT NOT NULL,
+                        PRIMARY KEY (date, symbol)
+                    )
+                """);
+
     }
 
     /**
@@ -54,7 +64,7 @@ public class RateDatabase {
      * @param records Takes the ArrayList of ExchangeRateRecords.
      */
     @Transactional
-    public void updateFiatRates(List<ExchangeRateRecord> records) {
+    public void updateFiatRates(List<FiatRateRecord> records) {
 
         String sql = """
                     INSERT INTO fiat_rates(date, currency, rate)
@@ -74,18 +84,16 @@ public class RateDatabase {
                     ps.setString(3, r.rate().toPlainString());
                 });
 
-        setMeta("last_fiat_update", LocalDate.now().toString());
-
     }
 
     /**
-     * This method queries for the given date and currency.
+     * This method queries for the given date and currencySymbol.
      *
-     * @param query The Query Record holding the desired date and currency.
+     * @param query The Query Record holding the desired date and currencySymbol.
      * @return Returns a ExchangeRateRecord single instance.
      */
 
-    public ExchangeRateRecord findFiatRate(QueryRecord query) {
+    public FiatRateRecord findFiatRate(QueryRecord query) {
         String sql = """
                 SELECT currency, date, rate
                 FROM fiat_rates
@@ -95,16 +103,16 @@ public class RateDatabase {
         try {
             return jdbc.queryForObject(
                     sql,
-                    (rs, rowNum) -> new ExchangeRateRecord(
+                    (rs, rowNum) -> new FiatRateRecord(
                             rs.getString("currency"),
                             LocalDate.parse(rs.getString("date")),
                             new BigDecimal(rs.getString("rate"))
                     ),
                     query.date().toString(),
-                    query.currency()
+                    query.currencySymbol()
             );
         } catch (EmptyResultDataAccessException e) {
-            throw new IllegalArgumentException("No rate found for " + query.currency() + " on " + query.date());
+            throw new IllegalArgumentException("No rate found for " + query.currencySymbol() + " on " + query.date());
         }
     }
 
@@ -114,8 +122,8 @@ public class RateDatabase {
      *
      * @return A LocalDate, which is the most up-to-date one.
      */
-    public LocalDate getLastFiatUpdate() {
-        String v = getMeta("last_fiat_update");
+    public LocalDate getLastUpdate() {
+        String v = getMeta("last_update");
         return (v == null) ? null : LocalDate.parse(v);
     }
 
@@ -150,5 +158,55 @@ public class RateDatabase {
                     ON CONFLICT(key) DO UPDATE SET value = excluded.value
                 """, key, value);
     }
+
+
+    //Crypto Table and methods below
+
+    @Transactional
+    public void updateCryptoRates(List<CryptoRateRecord> records) {
+
+        String sql = """
+                    INSERT INTO crypto_rates(date, symbol, rate)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT(date, symbol) DO UPDATE SET rate = excluded.rate
+                """;
+
+        System.out.println("Updating crypto database, please wait...");
+
+        jdbc.batchUpdate(
+                sql,
+                records,
+                2000,
+                (ps, r) -> {
+                    ps.setString(1, r.date().toString());
+                    ps.setString(2, r.symbol());
+                    ps.setString(3, r.rate().toPlainString());
+                });
+
+    }
+
+    public CryptoRateRecord findCryptoRate(QueryRecord query) {
+        String sql = """
+                    SELECT symbol, date, rate
+                    FROM crypto_rates
+                    WHERE date = ? AND symbol = ?
+                """;
+
+        try {
+            return jdbc.queryForObject(
+                    sql,
+                    (rs, rowNum) -> new CryptoRateRecord(
+                            rs.getString("symbol"),
+                            LocalDate.parse(rs.getString("date")),
+                            new BigDecimal(rs.getString("rate"))
+                    ),
+                    query.date().toString(),
+                    query.currencySymbol()
+            );
+        } catch (EmptyResultDataAccessException e) {
+            throw new IllegalArgumentException("No crypto rate found for " + query.currencySymbol() + " on " + query.date());
+        }
+    }
+
 
 }
