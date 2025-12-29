@@ -4,6 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 /**
  * The starting point for Spring Boot.
  * <p>
@@ -16,7 +19,23 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class FetchRateApplication {
 
+    /**
+     * Checks if a local data folder exists, if not, creates it
+     */
+    private static void bootstrapDataFiles() {
+        try {
+            Path dataDir = Path.of("data");
+            Files.createDirectories(dataDir);
+
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to initialize data folder", e);
+        }
+    }
+
     public static void main(String[] args) {
+
+        bootstrapDataFiles();
+
         boolean startServer = args.length > 0 && "start_http_server".equals(args[0]);
 
         SpringApplication app = new SpringApplication(FetchRateApplication.class);

@@ -4,8 +4,6 @@ import com.fetchrate.core.ExchangeRateRecord;
 import com.fetchrate.persistence.RateDatabase;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -28,17 +26,14 @@ public class RateUpdater {
         this.database = database;
     }
 
-
-    private void writeLastUpdateDate() {
-        try {
-            Files.createDirectories(Paths.get("data"));
-            Files.writeString(
-                    Paths.get("data/LastUpdateDate.txt"),
-                    LocalDate.now().toString()
-            );
-        } catch (Exception e) {
-           System.out.println("");
-        }
+    /**
+     * Checks the small meta table in the database to see if the database is up to date.
+     * @return True if updated, False if not
+     */
+    public boolean alreadyUpdatedToday() {
+        database.initSchema(); // safe to call, creates tables if missing
+        LocalDate last = database.getLastFiatUpdate();
+        return last != null && last.equals(LocalDate.now());
     }
 
 
@@ -55,7 +50,6 @@ public class RateUpdater {
 
         database.updateFiatRates(fiatRecord);
 
-        writeLastUpdateDate();
     }
 
 }

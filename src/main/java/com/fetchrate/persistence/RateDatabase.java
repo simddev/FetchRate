@@ -5,13 +5,14 @@ import com.fetchrate.core.QueryRecord;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
 /**
- * This class serves to create, update and query the database in FetchRate/data.
+ * This class serves to create, update and query the database in /data.
  */
 @Repository
 public class RateDatabase {
@@ -24,6 +25,8 @@ public class RateDatabase {
 
     /**
      * This method uses SQL through a SQLite driver to create a table in case it does not exist.
+     * <p>
+     * It also creates a small meta table which keeps track of the last update date.
      */
     public void initSchema() {
 
@@ -36,6 +39,13 @@ public class RateDatabase {
                     )
                 """);
 
+        jdbc.execute("""
+                    CREATE TABLE IF NOT EXISTS meta (
+                        key TEXT PRIMARY KEY,
+                        value TEXT NOT NULL
+                    )
+                """);
+
     }
 
     /**
@@ -43,6 +53,7 @@ public class RateDatabase {
      *
      * @param records Takes the ArrayList of ExchangeRateRecords.
      */
+    @Transactional
     public void updateFiatRates(List<ExchangeRateRecord> records) {
 
         String sql = """
@@ -51,14 +62,20 @@ public class RateDatabase {
                     ON CONFLICT(date, currency) DO UPDATE SET rate = excluded.rate
                 """;
 
-        for (ExchangeRateRecord r : records) {
-            jdbc.update(sql,
-                    r.date().toString(),
-                    r.currency(),
-                    r.rate().toPlainString()
-            );
+        System.out.println("Updating database, please wait...");
 
-        }
+        jdbc.batchUpdate(
+                sql,
+                records,
+                2000, // batch size
+                (ps, r) -> {
+                    ps.setString(1, r.date().toString());
+                    ps.setString(2, r.currency());
+                    ps.setString(3, r.rate().toPlainString());
+                });
+
+        setMeta("last_fiat_update", LocalDate.now().toString());
+
     }
 
     /**
@@ -94,15 +111,44 @@ public class RateDatabase {
 
     /**
      * This method just finds the latest update date in the database.
+     *
      * @return A LocalDate, which is the most up-to-date one.
      */
-    public LocalDate findLatestFiatDate() {
-        String sql = "SELECT MAX(date) AS max_date FROM fiat_rates";
-        String maxDate = jdbc.queryForObject(sql, String.class);
-        if (maxDate == null) return null;
-        return LocalDate.parse(maxDate);
+    public LocalDate getLastFiatUpdate() {
+        String v = getMeta("last_fiat_update");
+        return (v == null) ? null : LocalDate.parse(v);
+    }
+
+    /**
+     * Getter for the meta.
+     *
+     * @param key Last update key.
+     * @return Actual Date at key.
+     */
+    public String getMeta(String key) {
+        try {
+            return jdbc.queryForObject(
+                    "SELECT value FROM meta WHERE key = ?",
+                    String.class,
+                    key
+            );
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Setter for the meta.
+     *
+     * @param key   The key.
+     * @param value The date.
+     */
+    public void setMeta(String key, String value) {
+        jdbc.update("""
+                    INSERT INTO meta(key, value)
+                    VALUES (?, ?)
+                    ON CONFLICT(key) DO UPDATE SET value = excluded.value
+                """, key, value);
     }
 
 }
-
-
