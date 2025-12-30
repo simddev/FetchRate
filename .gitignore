@@ -34,4 +34,3 @@ build/
 
 ### DB ###
 data/*.db
-data/crypto/
