@@ -50,7 +50,12 @@ public class RateUpdater {
         database.updateFiatRates(fiatRecord);
 
         List<CryptoRateRecord> cryptoRecord = cryptoUpdate.fetchAndParseCrypto();
-        database.updateCryptoRates(cryptoRecord);
+        if (cryptoRecord.isEmpty()) {
+            System.err.println("Crypto Database not created because of missing .csv files. Please put the appropriate .csv files in /data/crypto in order to update the Crypto Exchange Rate Database");
+        } else {
+            database.updateCryptoRates(cryptoRecord);
+        }
+
         // Updates last update date after both tables are updated.
         database.setMeta("last_update", LocalDate.now().toString());
     }
