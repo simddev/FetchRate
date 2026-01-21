@@ -29,7 +29,7 @@
             border-radius: 16px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             width: 100%;
-            max-width: 450px;
+            max-width: 550px;
             text-align: center;
             border: 1px solid rgba(255,255,255,0.05);
         }
@@ -199,13 +199,13 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    const amountRaw = data.input.amount;
-                    const amountFormatted = formatNumber(amountRaw);
+                    const amountFormatted = formatNumber(data.input.amount);
                     const euroFormatted = formatNumber(data.output.inEuro);
                     const currencyName = currencyNames[data.input.currencySymbol] || data.input.currencySymbol;
                     const humanDate = formatDate(data.input.date);
+                    const dateISO = data.input.date.replace(/-/g, '/');
 
-                    const rawOutput = `${amountRaw} ${data.input.currencySymbol} on ${data.input.date} was ${data.output.inEuro} Euro.`;
+                    const rawOutput = `${amountFormatted} ${data.input.currencySymbol} on ${dateISO} was ${euroFormatted} EUR.`;
                     const humanOutput = `<div class="human-readable">${amountFormatted} ${currencyName} (${data.input.currencySymbol}) on the ${humanDate} was equivalent to ${euroFormatted} Euro (EUR).</div>`;
 
                     resultDiv.innerHTML = `<div>${rawOutput}</div>${humanOutput}`;
