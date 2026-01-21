@@ -11,7 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * This class serves to parse the data from a String format into an ArrayList of Records format.
+ * This class serves to parse the data from a String format into a List of Records format.
  */
 @Service
 public class FiatRateParser {
@@ -27,12 +27,12 @@ public class FiatRateParser {
 
 
     /**
-     * This method takes a String of the data and converts it into a List of ExchangeRateRecord.
+     * This method takes a String of the data and converts it into a List of FiatRateRecord.
      * <p>
      * It uses regex to extract the data, since the .xml file is in a predictable format.
      *
      * @param xml String of the data to be parsed
-     * @return ArrayList of ExchangeRateRecord
+     * @return List of FiatRateRecord
      */
     public List<FiatRateRecord> parseFiat(String xml) {
 

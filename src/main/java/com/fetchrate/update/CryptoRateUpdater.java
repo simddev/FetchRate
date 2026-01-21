@@ -22,9 +22,9 @@ public class CryptoRateUpdater {
     }
 
     /**
-     * This method creates the final ArrayList by providing the raw data from the fetcher
+     * This method creates the final List by providing the raw data from the fetcher
      * to the parser.
-     * @return ArrayList ready for database entry.
+     * @return List of CryptoRateRecord ready for database entry.
      */
     public List<CryptoRateRecord> fetchAndParseCrypto() {
 
