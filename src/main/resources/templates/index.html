@@ -6,17 +6,17 @@
     <title>FetchRate</title>
     <style>
         :root {
-            --bg-color: #121212;
-            --container-bg: #1e1e1e;
+            --bg-color: #0f0f0f;
+            --container-bg: #1a1a1a;
             --text-color: #e0e0e0;
-            --accent-color: #bb86fc;
-            --input-bg: #2c2c2c;
+            --accent-color: #9d50bb;
+            --input-bg: #242424;
             --input-border: #333;
         }
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -25,21 +25,22 @@
         }
         .container {
             background-color: var(--container-bg);
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             width: 100%;
-            max-width: 500px;
+            max-width: 450px;
             text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
         }
         h1 {
             color: var(--accent-color);
-            font-size: 3rem;
+            font-size: 3.5rem;
             margin-bottom: 2rem;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            font-weight: 700;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            letter-spacing: -1px;
+            font-weight: 800;
+            text-shadow: 0 0 20px rgba(157, 80, 187, 0.3);
+            margin-top: 0;
         }
         .form-group {
             display: flex;
@@ -131,6 +132,13 @@
 
         // Add Enter key listener to amount field
         document.getElementById('amount').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                fetchRate();
+            }
+        });
+
+        // Add Enter key listener to date field
+        document.getElementById('date').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 fetchRate();
             }
