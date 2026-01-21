@@ -68,7 +68,7 @@ public class RequestController {
             );
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "error", "No data available for that input.",
+                    "error", "No data for the selected date.",
                     "input", Map.of(
                             "amount", amount.toPlainString(),
                             "currencySymbol", currency,

@@ -86,7 +86,7 @@ public class CommandLineRequest implements CommandLineRunner {
                 System.out.println(objectMapper.writeValueAsString(response));
 
             } catch (IllegalArgumentException e) {
-                System.out.println("{\"error\":\"No data available for that input.\"}");
+                System.out.println("{\"error\":\"No data for the selected date.\"}");
             }
 
             return;
