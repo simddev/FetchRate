@@ -16,6 +16,10 @@ public class CurrencyClassifier {
             "AUD","BRL","CAD","CNY","HKD","IDR","ILS","INR","KRW","MXN","MYR","NZD","PHP","SGD","THB","ZAR"
     );
 
+    public Set<String> getSupportedFiats() {
+        return FIAT;
+    }
+
     public boolean isFiat(String symbol) {
         return FIAT.contains(symbol);
     }

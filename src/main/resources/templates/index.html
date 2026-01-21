@@ -2,10 +2,164 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>FetchRate Web UI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FetchRate</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-color: #bb86fc;
+            --input-bg: #2c2c2c;
+            --input-border: #333;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: var(--container-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: var(--accent-color);
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .form-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        input, select {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus {
+            border-color: var(--accent-color);
+        }
+        input[type="number"] {
+            flex: 2;
+            min-width: 120px;
+        }
+        select {
+            flex: 1;
+            min-width: 100px;
+        }
+        input[type="date"] {
+            width: 100%;
+            margin-bottom: 1.5rem;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.3s, transform 0.1s;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        #result {
+            margin-top: 2rem;
+            padding: 15px;
+            border-radius: 6px;
+            background-color: rgba(187, 134, 252, 0.1);
+            font-size: 1.2rem;
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .error {
+            color: #cf6679;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to FetchRate</h1>
-    <p>This is the starting point for our Web UI.</p>
+    <div class="container">
+        <h1>FetchRate</h1>
+        <div class="form-group">
+            <input type="number" id="amount" placeholder="Amount" step="0.01" min="0">
+            <select id="currency">
+                <option value="" disabled selected>Currency</option>
+                <option th:each="curr : ${currencies}" th:value="${curr}" th:text="${curr}"></option>
+            </select>
+        </div>
+        <input type="date" id="date">
+        <button onclick="fetchRate()">Fetch Rate</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Set today as default date
+        document.getElementById('date').valueAsDate = new Date();
+
+        async function fetchRate() {
+            const amount = document.getElementById('amount').value;
+            const currency = document.getElementById('currency').value;
+            const date = document.getElementById('date').value;
+            const resultDiv = document.getElementById('result');
+
+            if (!amount || !currency || !date) {
+                resultDiv.innerHTML = '<span class="error">Please fill all fields</span>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const url = `/convert?amount=${amount}&input_currency=${currency}&date=${date}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok) {
+                    const resultText = `'${data.input.amount}' '${data.input.currencySymbol}' on '${data.input.date}' was '${data.output.inEuro}' Euro.`;
+                    resultDiv.innerText = resultText;
+                    resultDiv.classList.remove('error');
+                } else {
+                    resultDiv.innerText = data.error || 'An error occurred';
+                    resultDiv.classList.add('error');
+                }
+            } catch (error) {
+                resultDiv.innerText = 'Failed to connect to server';
+                resultDiv.classList.add('error');
+            }
+            resultDiv.style.display = 'block';
+        }
+    </script>
 </body>
 </html>

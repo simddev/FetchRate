@@ -12,12 +12,13 @@ public record ConvertResponse(Input input, Output output) {
     @JsonPropertyOrder({"amount", "currencySymbol", "date"})
     public record Input(
             String amount,
+            @JsonProperty("currencySymbol")
             String currency,
             String date
     ) {
     }
 
-    public record Output(@JsonProperty("EUR") String eur) {
+    public record Output(@JsonProperty("inEuro") String inEuro) {
 
         public static Output of(BigDecimal eur) {
             return new Output(eur.toPlainString());
