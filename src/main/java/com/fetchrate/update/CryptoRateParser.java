@@ -8,18 +8,18 @@ import java.time.LocalDate;
 import java.util.*;
 
 /**
- * This class serves to turn the data given into the proper format and create an
- * ArrayList out of it, which can be then stored in the database.
+ * This class serves to turn the data given into the proper format and create a
+ * List out of it, which can be then stored in the database.
  */
 @Service
 public class CryptoRateParser {
 
     /**
-     * This method parses the data given to it into a ready for database ArrayList.
+     * This method parses the data given to it into a ready for database List.
      *
      * @param symbol The symbol of the cryptocurrency.
      * @param csv The raw data to be parsed.
-     * @return Returns an ArrayList ready for the database.
+     * @return Returns a List of CryptoRateRecord.
      */
     public List<CryptoRateRecord> parseCrypto(String symbol, String csv) {
 

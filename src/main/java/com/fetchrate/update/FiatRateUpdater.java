@@ -10,12 +10,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
- * This class serves to combine the fetcher and the parser in order to return an ArrayList of ExchangeRateRecords
+ * This class serves to combine the fetcher and the parser in order to return a List of FiatRateRecords.
  */
 @Service
 public class FiatRateUpdater {
 
-    private String URLtoBeUsed;
     private final FiatRateParser fiatRateParser;
     private final FiatRateFetcher fiatRateFetcher;
     private final ECBURLs URL;
@@ -31,29 +30,29 @@ public class FiatRateUpdater {
     /**
      * This method chooses the appropriate URL depending on the latest update in the database.
      */
-    private void chooseECBURL() {
+    private String chooseECBURL() {
 
         LocalDate latestDate = database.getLastUpdate();
 
         if (latestDate == null) {
-            URLtoBeUsed = URL.getFullURL();
+            return URL.getFullURL();
         } else {
             long daysBehind = ChronoUnit.DAYS.between(latestDate, LocalDate.now());
-            if (daysBehind >= 90) URLtoBeUsed = URL.getFullURL();
-            else if (daysBehind > 1) URLtoBeUsed = URL.getDays90URL();
-            else URLtoBeUsed = URL.getDailyURL();
+            if (daysBehind >= 90) return URL.getFullURL();
+            else if (daysBehind > 1) return URL.getDays90URL();
+            else return URL.getDailyURL();
         }
 
     }
 
     /**
-     * This method combines the fetching and the parsing and returns a finalized ArrayList of the Records.
+     * This method combines the fetching and the parsing and returns a finalized List of the Records.
      *
-     * @return ArrayList of ExchangeRateRecord type.
+     * @return List of FiatRateRecord type.
      */
     public List<FiatRateRecord> fetchAndParseFiat() {
-        chooseECBURL();
-        String xml = fiatRateFetcher.fetchFiat(URLtoBeUsed);
+        String urlToBeUsed = chooseECBURL();
+        String xml = fiatRateFetcher.fetchFiat(urlToBeUsed);
         return fiatRateParser.parseFiat(xml);
     }
 }
