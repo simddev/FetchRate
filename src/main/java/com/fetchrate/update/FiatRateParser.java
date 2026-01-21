@@ -1,5 +1,6 @@
 package com.fetchrate.update;
 
+import com.fetchrate.core.CurrencyClassifier;
 import com.fetchrate.core.FiatRateRecord;
 import org.springframework.stereotype.Service;
 
@@ -22,8 +23,15 @@ public class FiatRateParser {
     );
 
     private static final Pattern CURR_AND_RATE = Pattern.compile(
-            "<Cube\\s+currency=['\"]([A-Z]{3})['\"]\\s+rate=['\"]([0-9.]+)['\"]\\s*/>"
+            "<Cube\\s+currency=['\"]([A-Z]{3})['\"]\\s+rate=['\"]([0-9.]+)['\"]\\s*/?>",
+            Pattern.CASE_INSENSITIVE
     );
+
+    private final CurrencyClassifier classifier;
+
+    public FiatRateParser(CurrencyClassifier classifier) {
+        this.classifier = classifier;
+    }
 
 
     /**
@@ -45,7 +53,8 @@ public class FiatRateParser {
 
             Matcher rowMatcher = CURR_AND_RATE.matcher(currencyAndRate);
             while (rowMatcher.find()) {
-                String currency = rowMatcher.group(1);
+                String currency = rowMatcher.group(1).toUpperCase();
+                if (!classifier.isFiat(currency)) continue;
                 BigDecimal rate = new BigDecimal(rowMatcher.group(2));
 
                 fiatRecord.add(new FiatRateRecord(currency, date, rate));
