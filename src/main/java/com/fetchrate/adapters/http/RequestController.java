@@ -33,24 +33,31 @@ public class RequestController {
 
     /**
      * This is the response entity.
-     * @param amount The amount.
+     * @param amountStr The amount as String.
      * @param inputCurrency The input currencySymbol.
      * @param date The date.
      * @return Returns a JSON including inEuro.
      */
     @GetMapping("/convert")
     public ResponseEntity<?> convert(
-            @RequestParam("amount") BigDecimal amount,
+            @RequestParam("amount") String amountStr,
             @RequestParam("input_currency") String inputCurrency,
             @RequestParam("date") LocalDate date
     ) {
         String currency = inputCurrency.toUpperCase();
 
+        // Support for 100,000 and 100_000
+        BigDecimal amount;
+        try {
+            amount = new BigDecimal(amountStr.replace(",", "").replace("_", ""));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid amount format."));
+        }
+
         // Same behavior like the CLI version.
         if (!rateUpdater.alreadyUpdatedToday()) {
             rateUpdater.updateRates();
         }
-
 
         // Tries the convertor method, if successful formats it into a ConvertResponse record.
         // This ensures the client's format wish.
@@ -68,9 +75,7 @@ public class RequestController {
                             "date", date.toString()
                     )
             ));
-
         }
-
     }
 
     /**

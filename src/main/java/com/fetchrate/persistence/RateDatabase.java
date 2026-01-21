@@ -61,7 +61,7 @@ public class RateDatabase {
     /**
      * This method updates the fiat rate table.
      *
-     * @param records Takes the ArrayList of ExchangeRateRecords.
+     * @param records Takes the List of FiatRateRecords.
      */
     @Transactional
     public void updateFiatRates(List<FiatRateRecord> records) {

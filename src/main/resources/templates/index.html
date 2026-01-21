@@ -114,7 +114,7 @@
     <div class="container">
         <h1>FetchRate</h1>
         <div class="form-group">
-            <input type="number" id="amount" placeholder="Amount" step="0.01" min="0">
+            <input type="text" id="amount" placeholder="Amount">
             <select id="currency">
                 <option value="" disabled selected>Currency</option>
                 <option th:each="curr : ${currencies}" th:value="${curr}" th:text="${curr}"></option>
@@ -129,6 +129,13 @@
         // Set today as default date
         document.getElementById('date').valueAsDate = new Date();
 
+        // Add Enter key listener to amount field
+        document.getElementById('amount').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                fetchRate();
+            }
+        });
+
         async function fetchRate() {
             const amount = document.getElementById('amount').value;
             const currency = document.getElementById('currency').value;
@@ -142,12 +149,12 @@
             }
 
             try {
-                const url = `/convert?amount=${amount}&input_currency=${currency}&date=${date}`;
+                const url = `/convert?amount=${encodeURIComponent(amount)}&input_currency=${currency}&date=${date}`;
                 const response = await fetch(url);
                 const data = await response.json();
 
                 if (response.ok) {
-                    const resultText = `'${data.input.amount}' '${data.input.currencySymbol}' on '${data.input.date}' was '${data.output.inEuro}' Euro.`;
+                    const resultText = `${data.input.amount} ${data.input.currencySymbol} on ${data.input.date} was ${data.output.inEuro} Euro.`;
                     resultDiv.innerText = resultText;
                     resultDiv.classList.remove('error');
                 } else {

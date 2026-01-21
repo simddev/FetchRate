@@ -55,7 +55,8 @@ public class CommandLineRequest implements CommandLineRunner {
                 String a = args[i];
 
                 if ("--amount".equals(a) && i + 1 < args.length) {
-                    amount = new BigDecimal(args[++i]);
+                    String amountStr = args[++i];
+                    amount = new BigDecimal(amountStr.replace(",", "").replace("_", ""));
                 } else if ("--input-currency".equals(a) && i + 1 < args.length) {
                     currency = args[++i].toUpperCase();
                 } else if ("--date".equals(a) && i + 1 < args.length) {
