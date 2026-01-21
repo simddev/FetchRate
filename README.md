@@ -38,6 +38,10 @@ Alternatively the user can send the 'start_http_server' argument when running th
 
 /convert?amount=123.456&currency=ABCD&date=YYYY-MM-DD
 
+#### WEB UI   
+
+Once the servlet is started a GUI version is available at /.
+
 ### Database
 
 The data stored in the database are taken from the official European Central Bank website (https://www.ecb.europa.eu).
