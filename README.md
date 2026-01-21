@@ -53,3 +53,7 @@ It currently supports the .CSV files exported from https://coincodex.com/.
 ### Architecture Overview
 
 ![Currency conversion architecture](/images/architecture.png)
+
+## License
+Copyright (c) 2026 Simon D. All rights reserved.
+No permission is granted to use, copy, modify, or distribute this project without a written license.
