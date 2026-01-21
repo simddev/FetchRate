@@ -109,11 +109,28 @@
         .error {
             color: #cf6679;
         }
+        .instructions {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            line-height: 1.4;
+        }
+        .human-readable {
+            margin-top: 1rem;
+            font-size: 1rem;
+            color: #b0b0b0;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 1rem;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>FetchRate</h1>
+        <div class="instructions">
+            Enter the amount and currency on a given date to learn how much it was worth in Euro on that day.<br>
+            Exchange rates used are from the official European Central Bank Database.
+        </div>
         <div class="form-group">
             <input type="text" id="amount" placeholder="Amount">
             <select id="currency">
@@ -126,7 +143,9 @@
         <div id="result"></div>
     </div>
 
-    <script>
+    <script th:inline="javascript">
+        const currencyNames = /*[[${currencyNames}]]*/ {};
+
         // Set today as default date
         document.getElementById('date').valueAsDate = new Date();
 
@@ -144,26 +163,52 @@
             }
         });
 
+        function formatNumber(num) {
+            return new Intl.NumberFormat('en-US').format(num);
+        }
+
+        function getOrdinal(n) {
+            const s = ["th", "st", "nd", "rd"];
+            const v = n % 100;
+            return n + (s[(v - 20) % 10] || s[v] || s[0]);
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const day = getOrdinal(date.getDate());
+            const month = date.toLocaleString('en-US', { month: 'long' });
+            const year = date.getFullYear();
+            return `${day} of ${month} ${year}`;
+        }
+
         async function fetchRate() {
-            const amount = document.getElementById('amount').value;
+            const amountInput = document.getElementById('amount').value;
             const currency = document.getElementById('currency').value;
             const date = document.getElementById('date').value;
             const resultDiv = document.getElementById('result');
 
-            if (!amount || !currency || !date) {
+            if (!amountInput || !currency || !date) {
                 resultDiv.innerHTML = '<span class="error">Please fill all fields</span>';
                 resultDiv.style.display = 'block';
                 return;
             }
 
             try {
-                const url = `/convert?amount=${encodeURIComponent(amount)}&input_currency=${currency}&date=${date}`;
+                const url = `/convert?amount=${encodeURIComponent(amountInput)}&input_currency=${currency}&date=${date}`;
                 const response = await fetch(url);
                 const data = await response.json();
 
                 if (response.ok) {
-                    const resultText = `${data.input.amount} ${data.input.currencySymbol} on ${data.input.date} was ${data.output.inEuro} Euro.`;
-                    resultDiv.innerText = resultText;
+                    const amountRaw = data.input.amount;
+                    const amountFormatted = formatNumber(amountRaw);
+                    const euroFormatted = formatNumber(data.output.inEuro);
+                    const currencyName = currencyNames[data.input.currencySymbol] || data.input.currencySymbol;
+                    const humanDate = formatDate(data.input.date);
+
+                    const rawOutput = `${amountRaw} ${data.input.currencySymbol} on ${data.input.date} was ${data.output.inEuro} Euro.`;
+                    const humanOutput = `<div class="human-readable">${amountFormatted} ${currencyName} (${data.input.currencySymbol}) on the ${humanDate} was equivalent to ${euroFormatted} Euro (EUR).</div>`;
+
+                    resultDiv.innerHTML = `<div>${rawOutput}</div>${humanOutput}`;
                     resultDiv.classList.remove('error');
                 } else {
                     resultDiv.innerText = data.error || 'An error occurred';

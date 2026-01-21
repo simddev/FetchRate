@@ -24,6 +24,7 @@ public class WebController {
                 .sorted()
                 .toList();
         model.addAttribute("currencies", currencies);
+        model.addAttribute("currencyNames", classifier.getCurrencyNames());
         return "index";
     }
 }
