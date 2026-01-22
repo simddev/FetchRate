@@ -24,6 +24,10 @@ public class Convertor {
     public BigDecimal convert(QueryRecord query) {
         String currencySymbol = query.currencySymbol().toUpperCase();
 
+        if (!classifier.isSupported(currencySymbol)) {
+            throw new IllegalArgumentException("Unsupported currency: " + currencySymbol);
+        }
+
         // Safety net if user enters EUR.
         if ("EUR".equals(currencySymbol)) {
             return query.amount().setScale(2, RoundingMode.HALF_UP);
@@ -37,14 +41,22 @@ public class Convertor {
                     new QueryRecord(amount, currencySymbol, query.date())
             );
 
+            if (fiatRecord == null) {
+                throw new IllegalArgumentException("No fiat rate found for " + currencySymbol + " on " + query.date());
+            }
+
             // The ECB gives us 1 EUR = Amount Foreign Currency.
             return amount.divide(fiatRecord.rate(), 2, RoundingMode.HALF_UP);
         }
 
-        // If given currency or symbol not in currency list, treat as crypto.
+        // At this point it must be crypto
         CryptoRateRecord cryptoRecord = database.findCryptoRate(
                 new QueryRecord(amount, currencySymbol, query.date())
         );
+
+        if (cryptoRecord == null) {
+            throw new IllegalArgumentException("No crypto rate found for " + currencySymbol + " on " + query.date());
+        }
 
         // Crypto CSV give rate of Amount EUR per 1 coin, so we multiply here.
         return amount.multiply(cryptoRecord.rate()).setScale(2, RoundingMode.HALF_UP);

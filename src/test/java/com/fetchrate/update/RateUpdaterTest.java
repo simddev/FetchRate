@@ -31,6 +31,7 @@ class RateUpdaterTest {
     @Test
     void testUpdateRatesWithMissingCryptoFiles() {
         // Arrange
+        when(database.getLastUpdate()).thenReturn(null);
         when(fiatUpdate.fetchAndParseFiat()).thenReturn(Collections.emptyList());
         when(cryptoUpdate.fetchAndParseCrypto()).thenReturn(Collections.emptyList());
         
@@ -49,5 +50,20 @@ class RateUpdaterTest {
         
         // Cleanup
         System.setErr(System.err);
+    }
+
+    @Test
+    void testUpdateRatesSkipsIfAlreadyUpdated() {
+        // Arrange
+        when(database.getLastUpdate()).thenReturn(LocalDate.now());
+
+        // Act
+        rateUpdater.updateRates();
+
+        // Assert
+        verify(fiatUpdate, never()).fetchAndParseFiat();
+        verify(cryptoUpdate, never()).fetchAndParseCrypto();
+        verify(database, never()).updateFiatRates(anyList());
+        verify(database, never()).setMeta(anyString(), anyString());
     }
 }
