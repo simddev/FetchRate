@@ -73,6 +73,10 @@ public class CurrencyClassifier {
     }
 
     public boolean isSupported(String symbol) {
-        return isFiat(symbol) || isCrypto(symbol) || "EUR".equals(symbol);
+        return isFiat(symbol) || isCrypto(symbol) || "EUR".equals(symbol) || looksLikeCrypto(symbol);
+    }
+
+    private boolean looksLikeCrypto(String symbol) {
+        return symbol != null && symbol.matches("^[A-Z0-9]{2,10}$");
     }
 }
