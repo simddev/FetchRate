@@ -59,23 +59,22 @@ public class CryptoRateUpdater {
         if (config.getApiKey() != null && !config.getApiKey().isBlank()) {
             System.out.println("Using LiveCoinWatch API for crypto rates...");
             List<CryptoRateRecord> allRecords = new ArrayList<>();
-            // For now we fetch for all supported cryptos
+            // We fetch for a fixed set of popular cryptos
+            List<String> symbolsToUpdate = List.of("BTC", "ETH", "LTC", "DOGE", "SOL", "USDT");
             LocalDate end = LocalDate.now();
-            LocalDate start = end.minusDays(30); // Reduced to 30 days to avoid overloading and daily limits
+            LocalDate start = end.minusDays(30);
 
-            for (String symbol : classifier.getCurrencyNames().keySet()) {
-                if (classifier.isCrypto(symbol)) {
-                    try {
-                        String json = fetcher.fetchFromLiveCoinWatch(symbol, start, end);
-                        List<CryptoRateRecord> records = parser.parseLiveCoinWatch(symbol, json);
-                        if (records.isEmpty()) {
-                            System.out.println("No records returned from API for " + symbol);
-                        } else {
-                            allRecords.addAll(records);
-                        }
-                    } catch (Exception e) {
-                        System.err.println("Failed to fetch LiveCoinWatch data for " + symbol + ": " + e.getMessage());
+            for (String symbol : symbolsToUpdate) {
+                try {
+                    String json = fetcher.fetchFromLiveCoinWatch(symbol, start, end);
+                    List<CryptoRateRecord> records = parser.parseLiveCoinWatch(symbol, json);
+                    if (records.isEmpty()) {
+                        System.out.println("No records returned from API for " + symbol);
+                    } else {
+                        allRecords.addAll(records);
                     }
+                } catch (Exception e) {
+                    System.err.println("Failed to fetch LiveCoinWatch data for " + symbol + ": " + e.getMessage());
                 }
             }
             // If we have an API key, we ignore CSVs as per user request
