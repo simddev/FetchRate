@@ -55,10 +55,19 @@ public class CryptoRateUpdater {
      * @return List of CryptoRateRecord ready for database entry.
      */
     public List<CryptoRateRecord> fetchAndParseCrypto() {
+        List<CryptoRateRecord> allRecords = new ArrayList<>();
 
+        // 1) Always check for CSV files to fill gaps
+        Map<String, String> csvBySymbol = fetcher.fetchAllCsv();
+        for (var entry : csvBySymbol.entrySet()) {
+            String symbol = entry.getKey();
+            String csv = entry.getValue();
+            allRecords.addAll(parser.parseCrypto(symbol, csv));
+        }
+
+        // 2) If API key is present, fetch the last 30 days via API
         if (config.getApiKey() != null && !config.getApiKey().isBlank()) {
-            System.out.println("Using LiveCoinWatch API for crypto rates...");
-            List<CryptoRateRecord> allRecords = new ArrayList<>();
+            System.out.println("Using LiveCoinWatch API for recent crypto rates...");
             // We fetch for a fixed set of popular cryptos
             List<String> symbolsToUpdate = List.of("BTC", "ETH", "LTC", "DOGE", "SOL", "USDT");
             LocalDate end = LocalDate.now();
@@ -77,20 +86,10 @@ public class CryptoRateUpdater {
                     System.err.println("Failed to fetch LiveCoinWatch data for " + symbol + ": " + e.getMessage());
                 }
             }
-            // If we have an API key, we ignore CSVs as per user request
-            return allRecords;
+        } else if (allRecords.isEmpty()) {
+            System.out.println("No API key and no CSV files found for crypto rates.");
         }
 
-        System.out.println("No API key found. Falling back to local CSV files...");
-        Map<String, String> csvBySymbol = fetcher.fetchAllCsv();
-
-        List<CryptoRateRecord> cryptoRateRecords = new ArrayList<>();
-        for (var entry : csvBySymbol.entrySet()) {
-            String symbol = entry.getKey();
-            String csv = entry.getValue();
-            cryptoRateRecords.addAll(parser.parseCrypto(symbol, csv));
-        }
-
-        return cryptoRateRecords;
+        return allRecords;
     }
 }
