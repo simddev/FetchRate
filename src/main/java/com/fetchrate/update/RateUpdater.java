@@ -32,7 +32,6 @@ public class RateUpdater {
      * @return True if updated, False if not
      */
     public boolean alreadyUpdatedToday() {
-        database.initSchema(); // safe to call, creates tables if missing
         LocalDate last = database.getLastUpdate();
         return last != null && last.equals(LocalDate.now());
     }
@@ -42,9 +41,15 @@ public class RateUpdater {
      * This method is the end point of the Fiat and Crypto update branches and stores their result in a database,
      * located at /FetchRate/data via the RateDatabase methods.
      */
-    public void updateRates() {
+    public synchronized void updateRates() {
+
+        if (alreadyUpdatedToday()) {
+            return;
+        }
 
         database.initSchema();
+
+        System.out.println("Updating database, please wait...");
 
         List<FiatRateRecord> fiatRecord = fiatUpdate.fetchAndParseFiat();
         database.updateFiatRates(fiatRecord);

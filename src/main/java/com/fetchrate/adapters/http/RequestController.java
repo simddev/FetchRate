@@ -35,16 +35,23 @@ public class RequestController {
      * This is the response entity.
      * @param amountStr The amount as String.
      * @param inputCurrency The input currencySymbol.
-     * @param date The date.
+     * @param dateStr The date as String.
      * @return Returns a JSON including inEuro.
      */
     @GetMapping("/convert")
     public ResponseEntity<?> convert(
             @RequestParam("amount") String amountStr,
             @RequestParam("input_currency") String inputCurrency,
-            @RequestParam("date") LocalDate date
+            @RequestParam("date") String dateStr
     ) {
         String currency = inputCurrency.toUpperCase();
+
+        LocalDate date;
+        try {
+            date = LocalDate.parse(dateStr);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid date format. Use YYYY-MM-DD."));
+        }
 
         // Support for 100,000 and 100_000
         BigDecimal amount;
@@ -68,12 +75,16 @@ public class RequestController {
             );
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "error", "No data for the selected date.",
+                    "error", e.getMessage(),
                     "input", Map.of(
                             "amount", amount.toPlainString(),
-                            "currencySymbol", currency,
+                            "currency", currency,
                             "date", date.toString()
                     )
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "error", "An unexpected error occurred: " + e.getMessage()
             ));
         }
     }

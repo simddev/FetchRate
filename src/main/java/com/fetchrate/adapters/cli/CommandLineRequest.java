@@ -56,11 +56,21 @@ public class CommandLineRequest implements CommandLineRunner {
 
                 if ("--amount".equals(a) && i + 1 < args.length) {
                     String amountStr = args[++i];
-                    amount = new BigDecimal(amountStr.replace(",", "").replace("_", ""));
+                    try {
+                        amount = new BigDecimal(amountStr.replace(",", "").replace("_", ""));
+                    } catch (NumberFormatException e) {
+                        System.out.println("{\"error\":\"Invalid amount format: " + amountStr + "\"}");
+                        return;
+                    }
                 } else if ("--input-currency".equals(a) && i + 1 < args.length) {
                     currency = args[++i].toUpperCase();
                 } else if ("--date".equals(a) && i + 1 < args.length) {
-                    date = LocalDate.parse(args[++i]);
+                    try {
+                        date = LocalDate.parse(args[++i]);
+                    } catch (Exception e) {
+                        System.out.println("{\"error\":\"Invalid date format. Use YYYY-MM-DD.\"}");
+                        return;
+                    }
                 }
             }
 
@@ -85,8 +95,8 @@ public class CommandLineRequest implements CommandLineRunner {
 
                 System.out.println(objectMapper.writeValueAsString(response));
 
-            } catch (IllegalArgumentException e) {
-                System.out.println("{\"error\":\"No data for the selected date.\"}");
+            } catch (Exception e) {
+                System.out.println("{\"error\":\"" + e.getMessage() + "\"}");
             }
 
             return;

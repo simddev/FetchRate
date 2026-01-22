@@ -133,9 +133,14 @@
         </div>
         <div class="form-group">
             <input type="text" id="amount" placeholder="Amount">
-            <select id="currency">
-                <option value="" disabled selected>Currency</option>
-                <option th:each="curr : ${currencies}" th:value="${curr}" th:text="${curr}"></option>
+            <select id="fiat-currency" onchange="clearOther(this, 'crypto-currency')">
+                <option value="" disabled selected>Fiat</option>
+                <option value="EUR">EUR - Euro</option>
+                <option th:each="curr : ${fiats}" th:value="${curr}" th:text="${curr} + ' - ' + ${currencyNames.get(curr)}"></option>
+            </select>
+            <select id="crypto-currency" onchange="clearOther(this, 'fiat-currency')">
+                <option value="" disabled selected>Crypto</option>
+                <option th:each="curr : ${cryptos}" th:value="${curr}" th:text="${curr} + ' - ' + ${currencyNames.get(curr)}"></option>
             </select>
         </div>
         <input type="date" id="date">
@@ -181,9 +186,17 @@
             return `${day} of ${month} ${year}`;
         }
 
+        function clearOther(current, otherId) {
+            if (current.value) {
+                document.getElementById(otherId).selectedIndex = 0;
+            }
+        }
+
         async function fetchRate() {
             const amountInput = document.getElementById('amount').value;
-            const currency = document.getElementById('currency').value;
+            const fiatSelect = document.getElementById('fiat-currency');
+            const cryptoSelect = document.getElementById('crypto-currency');
+            const currency = fiatSelect.value || cryptoSelect.value;
             const date = document.getElementById('date').value;
             const resultDiv = document.getElementById('result');
 
