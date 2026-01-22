@@ -51,17 +51,23 @@ public class RateUpdater {
 
         System.out.println("Updating database, please wait...");
 
-        List<FiatRateRecord> fiatRecord = fiatUpdate.fetchAndParseFiat();
-        database.updateFiatRates(fiatRecord);
-
-        List<CryptoRateRecord> cryptoRecord = cryptoUpdate.fetchAndParseCrypto();
-        if (cryptoRecord.isEmpty()) {
-            System.err.println("Crypto Database not created because of missing .csv files. Please put the appropriate .csv files in /data/crypto in order to update the Crypto Exchange Rate Database");
-        } else {
-            database.updateCryptoRates(cryptoRecord);
+        try {
+            List<FiatRateRecord> fiatRecord = fiatUpdate.fetchAndParseFiat();
+            database.updateFiatRates(fiatRecord);
+        } catch (Exception e) {
+            System.err.println("Failed to update fiat rates: " + e.getMessage());
         }
 
-        // Updates last update date after both tables are updated.
+        try {
+            List<CryptoRateRecord> cryptoRecord = cryptoUpdate.fetchAndParseCrypto();
+            if (cryptoRecord != null && !cryptoRecord.isEmpty()) {
+                database.updateCryptoRates(cryptoRecord);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to update crypto rates: " + e.getMessage());
+        }
+
+        // Updates last update date after both tables are attempted to be updated.
         database.setMeta("last_update", LocalDate.now().toString());
     }
 
