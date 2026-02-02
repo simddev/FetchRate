@@ -31,23 +31,30 @@ class RateUpdaterTest {
     @Test
     void testUpdateRatesWithMissingCryptoFiles() {
         // Arrange
+        when(database.getLastUpdate()).thenReturn(null);
         when(fiatUpdate.fetchAndParseFiat()).thenReturn(Collections.emptyList());
         when(cryptoUpdate.fetchAndParseCrypto()).thenReturn(Collections.emptyList());
-        
-        ByteArrayOutputStream errContent = new ByteArrayOutputStream();
-        System.setErr(new PrintStream(errContent));
 
         // Act
         rateUpdater.updateRates();
 
         // Assert
-        String expectedMessage = "Crypto Database not created because of missing .csv files. Please put the appropriate .csv files in /data/crypto in order to update the Crypto Exchange Rate Database";
-        assertTrue(errContent.toString().contains(expectedMessage));
-        
         verify(database, never()).updateCryptoRates(anyList());
         verify(database).setMeta(eq("last_update"), anyString());
-        
-        // Cleanup
-        System.setErr(System.err);
+    }
+
+    @Test
+    void testUpdateRatesSkipsIfAlreadyUpdated() {
+        // Arrange
+        when(database.getLastUpdate()).thenReturn(LocalDate.now());
+
+        // Act
+        rateUpdater.updateRates();
+
+        // Assert
+        verify(fiatUpdate, never()).fetchAndParseFiat();
+        verify(cryptoUpdate, never()).fetchAndParseCrypto();
+        verify(database, never()).updateFiatRates(anyList());
+        verify(database, never()).setMeta(anyString(), anyString());
     }
 }

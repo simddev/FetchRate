@@ -20,10 +20,11 @@ public class WebController {
 
     @GetMapping("/")
     public String index(Model model) {
-        List<String> currencies = classifier.getSupportedFiats().stream()
+        model.addAttribute("fiats", classifier.getSupportedFiats().stream().sorted().toList());
+        model.addAttribute("cryptos", classifier.getCurrencyNames().keySet().stream()
+                .filter(classifier::isCrypto)
                 .sorted()
-                .toList();
-        model.addAttribute("currencies", currencies);
+                .toList());
         model.addAttribute("currencyNames", classifier.getCurrencyNames());
         return "index";
     }
