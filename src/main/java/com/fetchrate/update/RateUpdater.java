@@ -32,7 +32,6 @@ public class RateUpdater {
      * @return True if updated, False if not
      */
     public boolean alreadyUpdatedToday() {
-        database.initSchema(); // safe to call, creates tables if missing
         LocalDate last = database.getLastUpdate();
         return last != null && last.equals(LocalDate.now());
     }
@@ -42,21 +41,33 @@ public class RateUpdater {
      * This method is the end point of the Fiat and Crypto update branches and stores their result in a database,
      * located at /FetchRate/data via the RateDatabase methods.
      */
-    public void updateRates() {
+    public synchronized void updateRates() {
+
+        if (alreadyUpdatedToday()) {
+            return;
+        }
 
         database.initSchema();
 
-        List<FiatRateRecord> fiatRecord = fiatUpdate.fetchAndParseFiat();
-        database.updateFiatRates(fiatRecord);
+        System.out.println("Updating database, please wait...");
 
-        List<CryptoRateRecord> cryptoRecord = cryptoUpdate.fetchAndParseCrypto();
-        if (cryptoRecord.isEmpty()) {
-            System.err.println("Crypto Database not created because of missing .csv files. Please put the appropriate .csv files in /data/crypto in order to update the Crypto Exchange Rate Database");
-        } else {
-            database.updateCryptoRates(cryptoRecord);
+        try {
+            List<FiatRateRecord> fiatRecord = fiatUpdate.fetchAndParseFiat();
+            database.updateFiatRates(fiatRecord);
+        } catch (Exception e) {
+            System.err.println("Failed to update fiat rates: " + e.getMessage());
         }
 
-        // Updates last update date after both tables are updated.
+        try {
+            List<CryptoRateRecord> cryptoRecord = cryptoUpdate.fetchAndParseCrypto();
+            if (cryptoRecord != null && !cryptoRecord.isEmpty()) {
+                database.updateCryptoRates(cryptoRecord);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to update crypto rates: " + e.getMessage());
+        }
+
+        // Updates last update date after both tables are attempted to be updated.
         database.setMeta("last_update", LocalDate.now().toString());
     }
 

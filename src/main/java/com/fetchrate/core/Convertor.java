@@ -5,16 +5,19 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 @Service
 public class Convertor {
 
     private final RateDatabase database;
     private final CurrencyClassifier classifier;
+    private final com.fetchrate.update.CryptoRateUpdater cryptoUpdater;
 
-    public Convertor(RateDatabase database, CurrencyClassifier classifier) {
+    public Convertor(RateDatabase database, CurrencyClassifier classifier, com.fetchrate.update.CryptoRateUpdater cryptoUpdater) {
         this.database = database;
         this.classifier = classifier;
+        this.cryptoUpdater = cryptoUpdater;
     }
 
     /**
@@ -23,6 +26,10 @@ public class Convertor {
      */
     public BigDecimal convert(QueryRecord query) {
         String currencySymbol = query.currencySymbol().toUpperCase();
+
+        if (!classifier.isSupported(currencySymbol)) {
+            throw new IllegalArgumentException("Unsupported currency: " + currencySymbol);
+        }
 
         // Safety net if user enters EUR.
         if ("EUR".equals(currencySymbol)) {
@@ -37,18 +44,34 @@ public class Convertor {
                     new QueryRecord(amount, currencySymbol, query.date())
             );
 
+            if (fiatRecord == null) {
+                throw new IllegalArgumentException("No fiat rate found for " + currencySymbol + " on " + query.date());
+            }
+
             // The ECB gives us 1 EUR = Amount Foreign Currency.
             return amount.divide(fiatRecord.rate(), 2, RoundingMode.HALF_UP);
         }
 
-        // If given currency or symbol not in currency list, treat as crypto.
-        CryptoRateRecord cryptoRecord = database.findCryptoRate(
-                new QueryRecord(amount, currencySymbol, query.date())
-        );
+        // At this point it must be crypto
+        CryptoRateRecord cryptoRecord;
+        try {
+            cryptoRecord = database.findCryptoRate(
+                    new QueryRecord(amount, currencySymbol, query.date())
+            );
+        } catch (IllegalArgumentException e) {
+            // Try lazy fetch if not found
+            System.out.println("Rate not in database. Attempting to fetch " + currencySymbol + " for " + query.date() + "...");
+            List<CryptoRateRecord> fetched = cryptoUpdater.fetchAndParseSpecific(currencySymbol, query.date());
+            if (!fetched.isEmpty()) {
+                database.updateCryptoRates(fetched);
+                cryptoRecord = database.findCryptoRate(new QueryRecord(amount, currencySymbol, query.date()));
+            } else {
+                throw e;
+            }
+        }
 
         // Crypto CSV give rate of Amount EUR per 1 coin, so we multiply here.
         return amount.multiply(cryptoRecord.rate()).setScale(2, RoundingMode.HALF_UP);
-
     }
 
 }

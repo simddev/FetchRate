@@ -2,9 +2,13 @@ package com.fetchrate.update;
 
 import com.fetchrate.core.CryptoRateRecord;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.*;
 
 /**
@@ -13,6 +17,12 @@ import java.util.*;
  */
 @Service
 public class CryptoRateParser {
+
+    private final ObjectMapper objectMapper;
+
+    public CryptoRateParser(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * This method parses the data given to it into a ready for database List.
@@ -56,5 +66,83 @@ public class CryptoRateParser {
         }
 
         return cryptoRecord;
+    }
+
+    /**
+     * Parses the JSON response from LiveCoinWatch.
+     *
+     * @param json The JSON string from the API.
+     * @return List of CryptoRateRecord.
+     */
+    public List<CryptoRateRecord> parseLiveCoinWatch(String symbol, String json) {
+        List<CryptoRateRecord> cryptoRecord = new ArrayList<>();
+        try {
+            if (json == null || json.isBlank()) return cryptoRecord;
+            
+            // Try regular Jackson parsing first
+            try {
+                JsonNode root = objectMapper.readTree(json);
+                String symbolFromJson = root.path("code").asText().toUpperCase();
+                String effectiveSymbol = symbolFromJson.isEmpty() ? symbol : symbolFromJson;
+                
+                JsonNode historyNode = root.path("history");
+                if (historyNode.isArray()) {
+                    for (JsonNode entry : historyNode) {
+                        JsonNode dateNode = entry.path("date");
+                        JsonNode rateNode = entry.path("rate");
+                        if (!dateNode.isMissingNode() && !rateNode.isMissingNode()) {
+                            long timestamp = dateNode.asLong();
+                            BigDecimal rate = new BigDecimal(rateNode.asText());
+                            // API returns history entries for a specific time. 
+                            // We use UTC to ensure consistent date mapping.
+                            LocalDate date = Instant.ofEpochMilli(timestamp).atZone(ZoneOffset.UTC).toLocalDate();
+                            cryptoRecord.add(new CryptoRateRecord(effectiveSymbol, date, rate));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Fall through to manual extraction
+            }
+
+            // Manual extraction for truncated or slightly malformed JSON
+            if (cryptoRecord.isEmpty()) {
+                manualExtractFromTruncatedJson(symbol, cryptoRecord, json);
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Failed to parse LiveCoinWatch JSON for " + symbol + ": " + e.getMessage());
+        }
+        return cryptoRecord;
+    }
+
+    private void manualExtractFromTruncatedJson(String symbol, List<CryptoRateRecord> cryptoRecord, String json) {
+        try {
+            // Find symbol if present in JSON
+            String symbolFromJson = null;
+            java.util.regex.Pattern symbolPattern = java.util.regex.Pattern.compile("\"code\"\\s*:\\s*\"([A-Z0-9]+)\"", java.util.regex.Pattern.CASE_INSENSITIVE);
+            java.util.regex.Matcher symbolMatcher = symbolPattern.matcher(json);
+            if (symbolMatcher.find()) {
+                symbolFromJson = symbolMatcher.group(1).toUpperCase();
+            }
+            
+            String effectiveSymbol = (symbolFromJson != null) ? symbolFromJson : symbol;
+
+            java.util.regex.Pattern entryPattern = java.util.regex.Pattern.compile("\"date\"\\s*:\\s*(\\d+)\\s*,\\s*\"rate\"\\s*:\\s*([\\d.]+)");
+            java.util.regex.Matcher entryMatcher = entryPattern.matcher(json);
+            while (entryMatcher.find()) {
+                try {
+                    long timestamp = Long.parseLong(entryMatcher.group(1));
+                    BigDecimal rate = new BigDecimal(entryMatcher.group(2));
+                    LocalDate date = Instant.ofEpochMilli(timestamp).atZone(ZoneOffset.UTC).toLocalDate();
+                    if (effectiveSymbol != null) {
+                        cryptoRecord.add(new CryptoRateRecord(effectiveSymbol, date, rate));
+                    }
+                } catch (Exception e) {
+                    // Ignore
+                }
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
     }
 }

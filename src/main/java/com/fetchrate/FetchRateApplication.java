@@ -38,15 +38,15 @@ public class FetchRateApplication {
 
         boolean startServer = args.length > 0 && "start_http_server".equals(args[0]);
 
-        SpringApplication app = new SpringApplication(FetchRateApplication.class);
+        var context = new SpringApplication(FetchRateApplication.class);
 
         // 1) Picks a profile, application-cli.properties or application-http.properties
-        app.setAdditionalProfiles(startServer ? "http" : "cli");
+        context.setAdditionalProfiles(startServer ? "http" : "cli");
 
         // 2) Forces the app type, guarantees no server for CLI
-        app.setWebApplicationType(startServer ? WebApplicationType.SERVLET : WebApplicationType.NONE);
+        context.setWebApplicationType(startServer ? WebApplicationType.SERVLET : WebApplicationType.NONE);
 
-        app.run(args);
+        var app = context.run(args);
     }
 
 }

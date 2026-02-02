@@ -1,8 +1,11 @@
 package com.fetchrate.update;
 
+import com.fetchrate.config.LiveCoinWatchConfig;
 import com.fetchrate.core.CryptoRateRecord;
+import com.fetchrate.core.CurrencyClassifier;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,10 +18,35 @@ public class CryptoRateUpdater {
 
     private final CryptoRateFetcher fetcher;
     private final CryptoRateParser parser;
+    private final LiveCoinWatchConfig config;
+    private final CurrencyClassifier classifier;
 
-    public CryptoRateUpdater(CryptoRateFetcher fetcher, CryptoRateParser parser) {
+    public CryptoRateUpdater(CryptoRateFetcher fetcher, CryptoRateParser parser, LiveCoinWatchConfig config, CurrencyClassifier classifier) {
         this.fetcher = fetcher;
         this.parser = parser;
+        this.config = config;
+        this.classifier = classifier;
+    }
+
+    /**
+     * Fetches and parses crypto rates for a specific symbol and date range.
+     * Useful for lazy-loading historical data.
+     */
+    public List<CryptoRateRecord> fetchAndParseSpecific(String symbol, LocalDate date) {
+        if (config.getApiKey() == null || config.getApiKey().isBlank()) {
+            return List.of();
+        }
+
+        try {
+            // Fetch a 3-day window to be safe and potentially provide adjacent dates
+            LocalDate start = date.minusDays(1);
+            LocalDate end = date.plusDays(1);
+            String json = fetcher.fetchFromLiveCoinWatch(symbol, start, end);
+            return parser.parseLiveCoinWatch(symbol, json);
+        } catch (Exception e) {
+            System.err.println("Failed to lazy-fetch LiveCoinWatch data for " + symbol + " on " + date + ": " + e.getMessage());
+            return List.of();
+        }
     }
 
     /**
@@ -27,16 +55,41 @@ public class CryptoRateUpdater {
      * @return List of CryptoRateRecord ready for database entry.
      */
     public List<CryptoRateRecord> fetchAndParseCrypto() {
+        List<CryptoRateRecord> allRecords = new ArrayList<>();
 
+        // 1) Always check for CSV files to fill gaps
         Map<String, String> csvBySymbol = fetcher.fetchAllCsv();
-
-        List<CryptoRateRecord> cryptoRateRecords = new ArrayList<>();
         for (var entry : csvBySymbol.entrySet()) {
             String symbol = entry.getKey();
             String csv = entry.getValue();
-            cryptoRateRecords.addAll(parser.parseCrypto(symbol, csv));
+            allRecords.addAll(parser.parseCrypto(symbol, csv));
         }
 
-        return cryptoRateRecords;
+        // 2) If API key is present, fetch the last 30 days via API
+        if (config.getApiKey() != null && !config.getApiKey().isBlank()) {
+            System.out.println("Using LiveCoinWatch API for recent crypto rates...");
+            // We fetch for a fixed set of popular cryptos
+            List<String> symbolsToUpdate = List.of("BTC", "ETH", "LTC", "DOGE", "SOL", "USDT");
+            LocalDate end = LocalDate.now();
+            LocalDate start = end.minusDays(30);
+
+            for (String symbol : symbolsToUpdate) {
+                try {
+                    String json = fetcher.fetchFromLiveCoinWatch(symbol, start, end);
+                    List<CryptoRateRecord> records = parser.parseLiveCoinWatch(symbol, json);
+                    if (records.isEmpty()) {
+                        System.out.println("No records returned from API for " + symbol);
+                    } else {
+                        allRecords.addAll(records);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Failed to fetch LiveCoinWatch data for " + symbol + ": " + e.getMessage());
+                }
+            }
+        } else if (allRecords.isEmpty()) {
+            System.out.println("No API key and no CSV files found for crypto rates.");
+        }
+
+        return allRecords;
     }
 }
