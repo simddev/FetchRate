@@ -72,8 +72,6 @@ public class RateDatabase {
                     ON CONFLICT(date, currency) DO UPDATE SET rate = excluded.rate
                 """;
 
-        System.out.println("Updating database, please wait...");
-
         jdbc.batchUpdate(
                 sql,
                 records,
@@ -142,6 +140,12 @@ public class RateDatabase {
             );
         } catch (EmptyResultDataAccessException e) {
             return null;
+        } catch (org.springframework.dao.DataAccessException e) {
+            // Handle case where 'meta' table does not exist yet or other SQL issues
+            if (e.getMessage() != null && e.getMessage().contains("meta")) {
+                return null;
+            }
+            throw e;
         }
     }
 
