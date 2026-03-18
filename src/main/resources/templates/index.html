@@ -151,8 +151,10 @@
     <script th:inline="javascript">
         const currencyNames = /*[[${currencyNames}]]*/ {};
 
-        // Set today as default date
-        document.getElementById('date').valueAsDate = new Date();
+        // Set today as default date and block future dates
+        const dateInput = document.getElementById('date');
+        dateInput.valueAsDate = new Date();
+        dateInput.max = new Date().toISOString().split('T')[0];
 
         // Add Enter key listener to amount field
         document.getElementById('amount').addEventListener('keypress', function (e) {
@@ -199,12 +201,16 @@
             const currency = fiatSelect.value || cryptoSelect.value;
             const date = document.getElementById('date').value;
             const resultDiv = document.getElementById('result');
+            const btn = document.querySelector('button');
 
             if (!amountInput || !currency || !date) {
                 resultDiv.innerHTML = '<span class="error">Please fill all fields</span>';
                 resultDiv.style.display = 'block';
                 return;
             }
+
+            btn.disabled = true;
+            btn.textContent = 'Fetching...';
 
             try {
                 const url = `/convert?amount=${encodeURIComponent(amountInput)}&input_currency=${currency}&date=${date}`;
@@ -230,6 +236,9 @@
             } catch (error) {
                 resultDiv.innerText = 'Failed to connect to server';
                 resultDiv.classList.add('error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Fetch Rate';
             }
             resultDiv.style.display = 'block';
         }

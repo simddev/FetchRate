@@ -1,8 +1,8 @@
 ## FetchRate  
 
-v0.1
+v0.2
 
-FetchRate is an application that provides one service through two interfaces.  
+FetchRate is an application that provides one service through three interfaces.
 
 The service provided is that the application takes three parameters:
 * Amount
@@ -16,9 +16,9 @@ The format in which the application returns the results of its service is a JSON
 {
      "input": {
          "amount": <str>,
-         "currency": <str>
+         "currency": <str>,
          "date": <str>
-     }
+     },
      "output": {
          "EUR": <str>
      }
@@ -66,8 +66,13 @@ This allows for full historical coverage and support for any cryptocurrency symb
 
 ### Configuration
 
-To use the cryptocurrency features via API, add your API key to `src/main/resources/application-cli.properties` or `application-http.properties`:
-`livecoinwatch.api-key=YOUR_API_KEY`
+To use the cryptocurrency features via API, set the following environment variable before running the application:
+
+```
+export LIVECOINWATCH_API_KEY=your_api_key_here
+```
+
+The crypto CSV directory defaults to `data/crypto` and can be overridden with the `fetchrate.crypto-dir` property.
 
 ### Architecture Overview
 
