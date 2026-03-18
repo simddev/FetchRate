@@ -48,10 +48,6 @@ public class Convertor {
                     new QueryRecord(amount, currencySymbol, query.date())
             );
 
-            if (fiatRecord == null) {
-                throw new IllegalArgumentException("No fiat rate found for " + currencySymbol + " on " + query.date());
-            }
-
             // The ECB gives us 1 EUR = Amount Foreign Currency.
             return amount.divide(fiatRecord.rate(), 2, RoundingMode.HALF_UP);
         }
