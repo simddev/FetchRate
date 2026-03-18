@@ -3,6 +3,8 @@ package com.fetchrate.update;
 import com.fetchrate.core.CryptoRateRecord;
 import com.fetchrate.core.FiatRateRecord;
 import com.fetchrate.persistence.RateDatabase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -16,6 +18,8 @@ import java.util.List;
  */
 @Service
 public class RateUpdater {
+
+    private static final Logger log = LoggerFactory.getLogger(RateUpdater.class);
 
     private final CryptoRateUpdater cryptoUpdate;
     private final FiatRateUpdater fiatUpdate;
@@ -49,13 +53,13 @@ public class RateUpdater {
 
         database.initSchema();
 
-        System.out.println("Updating database, please wait...");
+        log.info("Updating database, please wait...");
 
         try {
             List<FiatRateRecord> fiatRecord = fiatUpdate.fetchAndParseFiat();
             database.updateFiatRates(fiatRecord);
         } catch (Exception e) {
-            System.err.println("Failed to update fiat rates: " + e.getMessage());
+            log.error("Failed to update fiat rates: {}", e.getMessage());
         }
 
         try {
@@ -64,7 +68,7 @@ public class RateUpdater {
                 database.updateCryptoRates(cryptoRecord);
             }
         } catch (Exception e) {
-            System.err.println("Failed to update crypto rates: " + e.getMessage());
+            log.error("Failed to update crypto rates: {}", e.getMessage());
         }
 
         // Updates last update date after both tables are attempted to be updated.

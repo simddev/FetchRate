@@ -1,6 +1,8 @@
 package com.fetchrate.core;
 
 import com.fetchrate.persistence.RateDatabase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -9,6 +11,8 @@ import java.util.List;
 
 @Service
 public class Convertor {
+
+    private static final Logger log = LoggerFactory.getLogger(Convertor.class);
 
     private final RateDatabase database;
     private final CurrencyClassifier classifier;
@@ -60,7 +64,7 @@ public class Convertor {
             );
         } catch (IllegalArgumentException e) {
             // Try lazy fetch if not found
-            System.out.println("Rate not in database. Attempting to fetch " + currencySymbol + " for " + query.date() + "...");
+            log.info("Rate not in database. Attempting to fetch {} for {}...", currencySymbol, query.date());
             List<CryptoRateRecord> fetched = cryptoUpdater.fetchAndParseSpecific(currencySymbol, query.date());
             if (!fetched.isEmpty()) {
                 database.updateCryptoRates(fetched);

@@ -3,6 +3,8 @@ package com.fetchrate.persistence;
 import com.fetchrate.core.CryptoRateRecord;
 import com.fetchrate.core.FiatRateRecord;
 import com.fetchrate.core.QueryRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -17,6 +19,8 @@ import java.util.List;
  */
 @Repository
 public class RateDatabase {
+
+    private static final Logger log = LoggerFactory.getLogger(RateDatabase.class);
 
     private final JdbcTemplate jdbc;
 
@@ -55,6 +59,9 @@ public class RateDatabase {
                         PRIMARY KEY (date, symbol)
                     )
                 """);
+
+        jdbc.execute("CREATE INDEX IF NOT EXISTS idx_fiat_rates_date_currency ON fiat_rates(date, currency)");
+        jdbc.execute("CREATE INDEX IF NOT EXISTS idx_crypto_rates_date_symbol ON crypto_rates(date, symbol)");
 
     }
 
@@ -175,7 +182,7 @@ public class RateDatabase {
                     ON CONFLICT(date, symbol) DO UPDATE SET rate = excluded.rate
                 """;
 
-        System.out.println("Updating crypto database, please wait...");
+        log.info("Updating crypto database, please wait...");
 
         jdbc.batchUpdate(
                 sql,
