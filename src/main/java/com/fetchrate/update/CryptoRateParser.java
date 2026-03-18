@@ -142,11 +142,11 @@ public class CryptoRateParser {
                         cryptoRecord.add(new CryptoRateRecord(effectiveSymbol, date, rate));
                     }
                 } catch (Exception e) {
-                    // Ignore
+                    log.debug("Skipping malformed entry during manual JSON extraction for {}: {}", symbol, e.getMessage());
                 }
             }
         } catch (Exception e) {
-            // Ignore
+            log.debug("Manual JSON extraction failed for {}: {}", symbol, e.getMessage());
         }
     }
 }

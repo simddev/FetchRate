@@ -64,7 +64,7 @@ class ConvertorTest {
     void convert_fiatRateNotFoundThrowsException() {
         when(classifier.isSupported("USD")).thenReturn(true);
         when(classifier.isFiat("USD")).thenReturn(true);
-        when(database.findFiatRate(any())).thenReturn(null);
+        when(database.findFiatRate(any())).thenThrow(new IllegalArgumentException("No rate found"));
 
         assertThrows(IllegalArgumentException.class, () ->
                 convertor.convert(new QueryRecord(new BigDecimal("100"), "USD", testDate)));
