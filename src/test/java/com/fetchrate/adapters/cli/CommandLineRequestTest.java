@@ -134,6 +134,18 @@ class CommandLineRequestTest {
     }
 
     @Test
+    void run_shortFlags_outputsJson() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convert(any())).thenReturn(new BigDecimal("92.50"));
+
+        cli.run("convert", "-a", "100", "-c", "USD", "-d", "2024-01-15");
+
+        String out = output();
+        assertTrue(out.contains("inEuro"));
+        assertTrue(out.contains("92.50"));
+    }
+
+    @Test
     void run_amountWithUnderscores_outputsJson() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
         when(convertor.convert(any())).thenReturn(new BigDecimal("91500.00"));
