@@ -1,8 +1,6 @@
 package com.fetchrate.update;
 
-import com.fetchrate.config.LiveCoinWatchConfig;
 import com.fetchrate.core.CryptoRateRecord;
-import com.fetchrate.core.CurrencyClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,14 +20,10 @@ public class CryptoRateUpdater {
 
     private final CryptoRateFetcher fetcher;
     private final CryptoRateParser parser;
-    private final LiveCoinWatchConfig config;
-    private final CurrencyClassifier classifier;
 
-    public CryptoRateUpdater(CryptoRateFetcher fetcher, CryptoRateParser parser, LiveCoinWatchConfig config, CurrencyClassifier classifier) {
+    public CryptoRateUpdater(CryptoRateFetcher fetcher, CryptoRateParser parser) {
         this.fetcher = fetcher;
         this.parser = parser;
-        this.config = config;
-        this.classifier = classifier;
     }
 
     /**
@@ -37,7 +31,7 @@ public class CryptoRateUpdater {
      * Useful for lazy-loading historical data.
      */
     public List<CryptoRateRecord> fetchAndParseSpecific(String symbol, LocalDate date) {
-        if (config.getApiKey() == null || config.getApiKey().isBlank()) {
+        if (!fetcher.isApiKeyAvailable()) {
             return List.of();
         }
 
@@ -70,7 +64,7 @@ public class CryptoRateUpdater {
         }
 
         // 2) If API key is present, fetch the last 30 days via API
-        if (config.getApiKey() != null && !config.getApiKey().isBlank()) {
+        if (fetcher.isApiKeyAvailable()) {
             log.info("Using LiveCoinWatch API for recent crypto rates...");
             // We fetch for a fixed set of popular cryptos
             List<String> symbolsToUpdate = List.of("BTC", "ETH", "LTC", "DOGE", "SOL", "USDT");
