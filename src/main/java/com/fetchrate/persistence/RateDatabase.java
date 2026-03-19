@@ -3,6 +3,7 @@ package com.fetchrate.persistence;
 import com.fetchrate.core.CryptoRateRecord;
 import com.fetchrate.core.FiatRateRecord;
 import com.fetchrate.core.QueryRecord;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -29,10 +30,9 @@ public class RateDatabase {
     }
 
     /**
-     * This method uses SQL through a SQLite driver to create a table in case it does not exist.
-     * <p>
-     * It also creates a small meta table which keeps track of the last update date.
+     * Creates all tables and indexes on startup if they do not already exist.
      */
+    @PostConstruct
     public void initSchema() {
 
         jdbc.execute("""
@@ -147,12 +147,6 @@ public class RateDatabase {
             );
         } catch (EmptyResultDataAccessException e) {
             return null;
-        } catch (org.springframework.dao.DataAccessException e) {
-            // Handle case where 'meta' table does not exist yet or other SQL issues
-            if (e.getMessage() != null && e.getMessage().contains("meta")) {
-                return null;
-            }
-            throw e;
         }
     }
 
