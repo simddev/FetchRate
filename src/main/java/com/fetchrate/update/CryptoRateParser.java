@@ -63,10 +63,13 @@ public class CryptoRateParser {
             if (dateString.isEmpty() || closeString.isEmpty()) continue;
             if ("null".equalsIgnoreCase(closeString)) continue;
 
-            LocalDate date = LocalDate.parse(dateString);
-            BigDecimal rate = new BigDecimal(closeString);
-
-            cryptoRecord.add(new CryptoRateRecord(symbol.toUpperCase(), date, rate));
+            try {
+                LocalDate date = LocalDate.parse(dateString);
+                BigDecimal rate = new BigDecimal(closeString);
+                cryptoRecord.add(new CryptoRateRecord(symbol.toUpperCase(), date, rate));
+            } catch (Exception e) {
+                log.debug("Skipping malformed CSV line for {}: {}", symbol, e.getMessage());
+            }
         }
 
         return cryptoRecord;
