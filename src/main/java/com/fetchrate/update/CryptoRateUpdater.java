@@ -3,6 +3,8 @@ package com.fetchrate.update;
 import com.fetchrate.config.LiveCoinWatchConfig;
 import com.fetchrate.core.CryptoRateRecord;
 import com.fetchrate.core.CurrencyClassifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -15,6 +17,8 @@ import java.util.Map;
  */
 @Service
 public class CryptoRateUpdater {
+
+    private static final Logger log = LoggerFactory.getLogger(CryptoRateUpdater.class);
 
     private final CryptoRateFetcher fetcher;
     private final CryptoRateParser parser;
@@ -44,7 +48,7 @@ public class CryptoRateUpdater {
             String json = fetcher.fetchFromLiveCoinWatch(symbol, start, end);
             return parser.parseLiveCoinWatch(symbol, json);
         } catch (Exception e) {
-            System.err.println("Failed to lazy-fetch LiveCoinWatch data for " + symbol + " on " + date + ": " + e.getMessage());
+            log.error("Failed to lazy-fetch LiveCoinWatch data for {} on {}: {}", symbol, date, e.getMessage());
             return List.of();
         }
     }
@@ -67,7 +71,7 @@ public class CryptoRateUpdater {
 
         // 2) If API key is present, fetch the last 30 days via API
         if (config.getApiKey() != null && !config.getApiKey().isBlank()) {
-            System.out.println("Using LiveCoinWatch API for recent crypto rates...");
+            log.info("Using LiveCoinWatch API for recent crypto rates...");
             // We fetch for a fixed set of popular cryptos
             List<String> symbolsToUpdate = List.of("BTC", "ETH", "LTC", "DOGE", "SOL", "USDT");
             LocalDate end = LocalDate.now();
@@ -78,16 +82,16 @@ public class CryptoRateUpdater {
                     String json = fetcher.fetchFromLiveCoinWatch(symbol, start, end);
                     List<CryptoRateRecord> records = parser.parseLiveCoinWatch(symbol, json);
                     if (records.isEmpty()) {
-                        System.out.println("No records returned from API for " + symbol);
+                        log.warn("No records returned from API for {}", symbol);
                     } else {
                         allRecords.addAll(records);
                     }
                 } catch (Exception e) {
-                    System.err.println("Failed to fetch LiveCoinWatch data for " + symbol + ": " + e.getMessage());
+                    log.error("Failed to fetch LiveCoinWatch data for {}: {}", symbol, e.getMessage());
                 }
             }
         } else if (allRecords.isEmpty()) {
-            System.out.println("No API key and no CSV files found for crypto rates.");
+            log.warn("No API key and no CSV files found for crypto rates.");
         }
 
         return allRecords;

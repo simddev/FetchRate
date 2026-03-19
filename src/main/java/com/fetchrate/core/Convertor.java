@@ -1,6 +1,8 @@
 package com.fetchrate.core;
 
 import com.fetchrate.persistence.RateDatabase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -9,6 +11,8 @@ import java.util.List;
 
 @Service
 public class Convertor {
+
+    private static final Logger log = LoggerFactory.getLogger(Convertor.class);
 
     private final RateDatabase database;
     private final CurrencyClassifier classifier;
@@ -44,10 +48,6 @@ public class Convertor {
                     new QueryRecord(amount, currencySymbol, query.date())
             );
 
-            if (fiatRecord == null) {
-                throw new IllegalArgumentException("No fiat rate found for " + currencySymbol + " on " + query.date());
-            }
-
             // The ECB gives us 1 EUR = Amount Foreign Currency.
             return amount.divide(fiatRecord.rate(), 2, RoundingMode.HALF_UP);
         }
@@ -60,7 +60,7 @@ public class Convertor {
             );
         } catch (IllegalArgumentException e) {
             // Try lazy fetch if not found
-            System.out.println("Rate not in database. Attempting to fetch " + currencySymbol + " for " + query.date() + "...");
+            log.info("Rate not in database. Attempting to fetch {} for {}...", currencySymbol, query.date());
             List<CryptoRateRecord> fetched = cryptoUpdater.fetchAndParseSpecific(currencySymbol, query.date());
             if (!fetched.isEmpty()) {
                 database.updateCryptoRates(fetched);
