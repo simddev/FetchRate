@@ -143,6 +143,34 @@ class CommandLineRequestTest {
     }
 
     @Test
+    void run_configSetKey_writesFileAndOutputsSaved() throws Exception {
+        java.nio.file.Path propsFile = java.nio.file.Path.of("fetchrate.properties");
+        try {
+            cli.run("config", "--set-key", "test-api-key-abc");
+            assertTrue(output().contains("saved"));
+            assertTrue(java.nio.file.Files.exists(propsFile));
+            String content = java.nio.file.Files.readString(propsFile);
+            assertTrue(content.contains("livecoinwatch.api-key=test-api-key-abc"));
+        } finally {
+            java.nio.file.Files.deleteIfExists(propsFile);
+        }
+    }
+
+    @Test
+    void run_configSetKey_updatesExistingEntry() throws Exception {
+        java.nio.file.Path propsFile = java.nio.file.Path.of("fetchrate.properties");
+        try {
+            java.nio.file.Files.writeString(propsFile, "livecoinwatch.api-key=old-key\n");
+            cli.run("config", "--set-key", "new-key");
+            String content = java.nio.file.Files.readString(propsFile);
+            assertTrue(content.contains("new-key"));
+            assertFalse(content.contains("old-key"));
+        } finally {
+            java.nio.file.Files.deleteIfExists(propsFile);
+        }
+    }
+
+    @Test
     void run_currencyNotFound_outputsError() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
         when(convertor.convert(any())).thenThrow(new IllegalArgumentException("No rate found for FAKE"));

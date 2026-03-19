@@ -39,3 +39,4 @@ data/*.db
 
 ### Env ###
 .env
+fetchrate.properties
