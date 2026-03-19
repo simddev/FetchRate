@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,6 +50,15 @@ public class SettingsController {
             database.setMeta("livecoinwatch_api_key", apiKey.trim());
         }
         if (hasUrl) {
+            try {
+                URI uri = URI.create(providerUrl.trim());
+                String scheme = uri.getScheme();
+                if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Provider URL must use http or https"));
+                }
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid provider URL format"));
+            }
             database.setMeta("livecoinwatch_history_url", providerUrl.trim());
         }
 
