@@ -6,6 +6,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * The starting point for Spring Boot.
@@ -38,6 +41,20 @@ public class FetchRateApplication {
 
         boolean startServer = args.length > 0 && "start_http_server".equals(args[0]);
 
+        // Translate --port N → --server.port=N so Spring picks it up
+        String[] springArgs = args;
+        if (startServer) {
+            List<String> argList = new ArrayList<>(Arrays.asList(args));
+            for (int i = 1; i < argList.size() - 1; i++) {
+                if ("--port".equals(argList.get(i))) {
+                    String port = argList.remove(i + 1);
+                    argList.set(i, "--server.port=" + port);
+                    break;
+                }
+            }
+            springArgs = argList.toArray(new String[0]);
+        }
+
         var context = new SpringApplication(FetchRateApplication.class);
 
         // 1) Picks a profile, application-cli.properties or application-http.properties
@@ -46,7 +63,7 @@ public class FetchRateApplication {
         // 2) Forces the app type, guarantees no server for CLI
         context.setWebApplicationType(startServer ? WebApplicationType.SERVLET : WebApplicationType.NONE);
 
-        var app = context.run(args);
+        context.run(springArgs);
     }
 
 }
