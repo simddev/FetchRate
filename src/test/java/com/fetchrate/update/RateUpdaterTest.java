@@ -44,6 +44,28 @@ class RateUpdaterTest {
     }
 
     @Test
+    void updateRates_bothFail_doesNotSetLastUpdate() {
+        when(database.getLastUpdate()).thenReturn(null);
+        when(fiatUpdate.fetchAndParseFiat()).thenThrow(new RuntimeException("ECB down"));
+        when(cryptoUpdate.fetchAndParseCrypto()).thenThrow(new RuntimeException("API down"));
+
+        rateUpdater.updateRates();
+
+        verify(database, never()).setMeta(eq("last_update"), anyString());
+    }
+
+    @Test
+    void updateRates_onlyFiatSucceeds_setsLastUpdate() {
+        when(database.getLastUpdate()).thenReturn(null);
+        when(fiatUpdate.fetchAndParseFiat()).thenReturn(Collections.emptyList());
+        when(cryptoUpdate.fetchAndParseCrypto()).thenThrow(new RuntimeException("API down"));
+
+        rateUpdater.updateRates();
+
+        verify(database).setMeta(eq("last_update"), anyString());
+    }
+
+    @Test
     void testUpdateRatesSkipsIfAlreadyUpdated() {
         // Arrange
         when(database.getLastUpdate()).thenReturn(LocalDate.now());
