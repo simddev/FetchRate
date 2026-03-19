@@ -91,7 +91,9 @@ public class CryptoRateFetcher {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
-                throw new RuntimeException("Failed to fetch from LiveCoinWatch: " + response.statusCode() + " " + response.body());
+                String responseBody = response.body();
+                String snippet = responseBody != null && responseBody.length() > 200 ? responseBody.substring(0, 200) + "..." : responseBody;
+                throw new RuntimeException("Failed to fetch from LiveCoinWatch: " + response.statusCode() + " " + snippet);
             }
             return response.body();
         } catch (IOException e) {
