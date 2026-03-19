@@ -102,3 +102,5 @@ The crypto CSV directory defaults to `data/crypto` and can be overridden with th
 ## License
 Copyright (c) 2026 Simon D. All rights reserved.
 No permission is granted to use, copy, modify, or distribute this project without a written license.
+
+For commercial use or licensing inquiries, contact: simon.d.dev@proton.me
