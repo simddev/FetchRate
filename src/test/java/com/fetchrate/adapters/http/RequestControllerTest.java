@@ -82,6 +82,14 @@ class RequestControllerTest {
     }
 
     @Test
+    void convert_blankCurrency_returns400() {
+        ResponseEntity<?> response = controller.convert("100", "  ", "2024-01-15");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verifyNoInteractions(convertor);
+    }
+
+    @Test
     void convert_amountWithCommas_parsesAndReturns200() {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
         when(convertor.convert(any(QueryRecord.class))).thenReturn(new BigDecimal("91500.00"));
