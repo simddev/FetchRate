@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -44,6 +46,17 @@ public class Convertor {
 
         // Checking if the user entered a currency or a symbol.
         if (classifier.isFiat(currencySymbol)) {
+            DayOfWeek dow = query.date().getDayOfWeek();
+            if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
+                LocalDate friday = (dow == DayOfWeek.SATURDAY)
+                        ? query.date().minusDays(1)
+                        : query.date().minusDays(2);
+                throw new IllegalArgumentException(
+                        "No ECB rate for " + query.date() + " (weekend). " +
+                        "The ECB only publishes rates on weekdays — try " + friday + " (Friday)."
+                );
+            }
+
             FiatRateRecord fiatRecord = database.findFiatRate(
                     new QueryRecord(amount, currencySymbol, query.date())
             );
