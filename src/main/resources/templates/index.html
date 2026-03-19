@@ -355,9 +355,15 @@
                     : '<span class="error">✗ Not set — crypto rates will not update</span>';
 
                 const urlEl = document.getElementById('provider-url-status');
-                urlEl.innerHTML = data.providerUrl
-                    ? '<span style="color:#6abf69">✓ Custom: ' + data.providerUrl + '</span>'
-                    : '<span style="color:#555">Using default (LiveCoinWatch)</span>';
+                if (data.providerUrl) {
+                    urlEl.innerHTML = '<span style="color:#6abf69">✓ Custom: </span>';
+                    const safe = document.createElement('span');
+                    safe.style.color = '#6abf69';
+                    safe.textContent = data.providerUrl;
+                    urlEl.appendChild(safe);
+                } else {
+                    urlEl.innerHTML = '<span style="color:#555">Using default (LiveCoinWatch)</span>';
+                }
             } catch (e) {}
         }
 
