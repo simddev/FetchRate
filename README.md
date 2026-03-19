@@ -1,28 +1,36 @@
-## FetchRate  
+## FetchRate
 
 v0.3
 
-FetchRate is an application that provides one service through three interfaces.
+FetchRate converts a given amount of any currency or cryptocurrency into Euro on a specified historical date.
+It provides three interfaces for the same service: a CLI, a REST API, and a web UI.
 
-The service provided is that the application takes three parameters:
-* Amount
-* Currency/Symbol
-* Date
+### Input / Output
 
-And returns the equivalent amount of that currency or symbol on that date in Euro.
+The service takes three parameters:
 
-The format in which the application returns the results of its service is a JSON file in the format:
+| Parameter | Description |
+|---|---|
+| `amount` | The amount to convert |
+| `currency` | ISO currency symbol or crypto ticker (e.g. `USD`, `BTC`) |
+| `date` | Date in `YYYY-MM-DD` format |
 
+And returns a JSON response:
+
+```json
 {
-     "input": {
-         "amount": <str>,
-         "currencySymbol": <str>,
-         "date": <str>
-     },
-     "output": {
-         "inEuro": <str>
-     }
+    "input": {
+        "amount": "100",
+        "currencySymbol": "USD",
+        "date": "2024-01-15"
+    },
+    "output": {
+        "inEuro": "92.50"
+    }
 }
+```
+
+---
 
 ### Building & Running
 
@@ -33,72 +41,99 @@ Build the JAR:
 mvn package -DskipTests
 ```
 
-Run as CLI:
+**CLI:**
 ```bash
 java -jar target/FetchRate-0.3.jar convert --amount 100 --input-currency USD --date 2024-01-15
+
+# Short flags are also supported:
+java -jar target/FetchRate-0.3.jar convert -a 100 -c USD -d 2024-01-15
 ```
 
-Run as HTTP server (web UI available at `http://localhost:8000`):
+**HTTP server** (web UI at `http://localhost:8000`, REST API at `/convert`):
 ```bash
 java -jar target/FetchRate-0.3.jar start_http_server
+
+# Custom port:
+java -jar target/FetchRate-0.3.jar start_http_server --port 9090
+```
+
+For a full list of commands and options:
+```bash
+java -jar target/FetchRate-0.3.jar --help
 ```
 
 ---
 
-### Instructions
+### Interfaces
 
 #### CLI
 
-The user can send the `convert --amount 123 --input-currency PLN --date YYYY-MM-DD` argument when running
-the .jar file to receive the JSON printed.
+```
+convert -a <amount> -c <symbol> -d <YYYY-MM-DD>
+```
 
-#### HTTP Servlet
+Prints the JSON result to stdout. Errors are also returned as JSON.
 
-Alternatively the user can send the `start_http_server` argument when running the .jar to start a servlet at
-0.0.0.0:8000, which responds with the JSON file after a GET request in the following format:
+#### HTTP API
 
-`/convert?amount=123.456&input_currency=ABCD&date=YYYY-MM-DD`
+```
+GET /convert?amount=<n>&input_currency=<symbol>&date=<YYYY-MM-DD>
+```
+
+Returns the JSON response on success. Returns an `error` field with an appropriate HTTP status on failure.
+
+```
+GET /health
+```
+
+Returns `{"status": "ok"}`.
 
 #### Web UI
 
-Once the servlet is started a GUI version is available at `/`.
+Once the HTTP server is started, a browser interface is available at `/`.
 
-![FetchRate web interface](images/ui-preview.png)
+<p align="center">
+  <img src="images/ui-preview.png" width="380" alt="FetchRate web interface">
+</p>
+
+---
 
 ### Database & Updates
 
-The application maintains a local SQLite database in the `/data` folder to ensure fast responses.
+The application maintains a local SQLite database in the `data/` directory for fast responses.
 
 #### Automatic Updates
-The application automatically checks for updates once a day:
-- **Fiat Currencies**: Latest rates are fetched from the official European Central Bank website (https://www.ecb.europa.eu).
-- **Cryptocurrencies**: If a LiveCoinWatch API key is configured, it automatically fetches the last 30 days of data for standard coins (BTC, ETH, LTC, DOGE, SOL, USDT).
 
-If the database is already updated for the current day, the application skips redundant network calls.
+Rates are refreshed once per day on the first request of the day:
 
-#### On-Demand Fetching (Lazy-Loading)
-If a user requests a cryptocurrency rate that is missing from the database, the application will:
-1. Attempt to fetch it immediately via the LiveCoinWatch API (if a key is provided).
-2. Store the result in the database for future use.
-This allows for full historical coverage and support for any cryptocurrency symbol supported by the API.
+- **Fiat currencies** — fetched from the [European Central Bank](https://www.ecb.europa.eu). The appropriate feed is selected automatically: full history, 90-day, or daily, based on how long ago the database was last updated.
+- **Cryptocurrencies** — if an API key is configured, the last 30 days of rates are fetched for BTC, ETH, LTC, DOGE, SOL, and USDT. Fiat and crypto updates are independent; a failure in one does not prevent the other from completing.
 
-#### Initial Setup & CSV Fallback
-- On the first run, the application will attempt to fetch the full fiat history and the last 30 days of crypto rates.
-- If `.csv` files are present in the `/data/crypto` folder, the application will use them to fill in historical gaps in the database. This is particularly useful for building a large initial historical database without exhausting API credits.
-- Supported CSV format is currently the one exported from https://coincodex.com/.
+If both sources fail (e.g. no network), the daily timestamp is not updated so that the next request retries.
+
+#### On-Demand Fetching
+
+If a crypto rate for the requested date is not in the database, the application attempts to fetch it immediately via the API before returning an error. The result is stored for future use.
+
+#### CSV Fallback
+
+Place `.csv` files in `data/crypto/` to seed historical crypto rates without using API credits.
+The filename should match the coin symbol (e.g. `BTC.csv`). The supported format is the export from [CoinCodex](https://coincodex.com/).
+
+---
 
 ### Configuration
 
-#### API Key (for crypto rate updates)
+#### API Key
 
-There are three ways to provide your LiveCoinWatch API key:
+Three ways to provide a crypto data provider API key:
 
-**Option 1 — Config file (recommended):** Create a `fetchrate.properties` file next to the jar:
+**Option 1 — Properties file (recommended):** create `fetchrate.properties` next to the jar:
 ```
 livecoinwatch.api-key=your_api_key_here
 ```
 
-**Option 2 — CLI command:**
+**Option 2 — CLI:**
 ```bash
 java -jar FetchRate-0.3.jar config --set-key your_api_key_here
 java -jar FetchRate-0.3.jar config --set-url https://your-provider/endpoint
@@ -109,16 +144,20 @@ java -jar FetchRate-0.3.jar config --set-url https://your-provider/endpoint
 export LIVECOINWATCH_API_KEY=your_api_key_here
 ```
 
-When running in HTTP mode, both the API key and provider URL can be set through the web UI under **⚙ API Settings**.
+When running in HTTP mode, the API key and provider URL can also be set via the web UI under **⚙ API Settings**.
 
 The crypto CSV directory defaults to `data/crypto` and can be overridden with the `fetchrate.crypto-dir` property.
+
+---
 
 ### Architecture Overview
 
 ![Currency conversion architecture](images/architecture.png)
 
+---
+
 ## License
 Copyright (c) 2026 Simon D. All rights reserved.
 No permission is granted to use, copy, modify, or distribute this project without a written license.
 
-For commercial use or licensing inquiries, contact: simon.d.dev@proton.me
+For licensing inquiries, contact: simon.d.dev@proton.me
