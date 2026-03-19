@@ -1,6 +1,6 @@
 ## FetchRate  
 
-v0.2
+v0.3
 
 FetchRate is an application that provides one service through three interfaces.
 

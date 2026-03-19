@@ -144,7 +144,7 @@
             </select>
         </div>
         <input type="date" id="date" aria-label="Date">
-        <button onclick="fetchRate()">Fetch Rate</button>
+        <button id="fetch-btn" onclick="fetchRate()">Fetch Rate</button>
         <div id="result"></div>
     </div>
 
@@ -153,8 +153,9 @@
 
         // Set today as default date and block future dates
         const dateInput = document.getElementById('date');
-        dateInput.valueAsDate = new Date();
-        dateInput.max = new Date().toISOString().split('T')[0];
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+        dateInput.max = today;
 
         // Add Enter key listener to amount field
         document.getElementById('amount').addEventListener('keypress', function (e) {
@@ -199,7 +200,7 @@
             const currency = fiatSelect.value || cryptoSelect.value;
             const date = document.getElementById('date').value;
             const resultDiv = document.getElementById('result');
-            const btn = document.querySelector('button');
+            const btn = document.getElementById('fetch-btn');
 
             if (!amountInput || !currency || !date) {
                 resultDiv.innerHTML = '<span class="error">Please fill all fields</span>';
