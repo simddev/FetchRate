@@ -13,6 +13,7 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,6 +59,34 @@ class ConvertorTest {
 
         assertThrows(IllegalArgumentException.class, () ->
                 convertor.convert(new QueryRecord(new BigDecimal("100"), "FAKE", testDate)));
+    }
+
+    @Test
+    void convert_fiatOnSaturday_throwsWithWeekendMessage() {
+        when(classifier.isSupported("USD")).thenReturn(true);
+        when(classifier.isFiat("USD")).thenReturn(true);
+        LocalDate saturday = LocalDate.of(2024, 1, 13); // known Saturday
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                convertor.convert(new QueryRecord(new BigDecimal("100"), "USD", saturday)));
+
+        assertTrue(ex.getMessage().contains("weekend"));
+        assertTrue(ex.getMessage().contains("2024-01-12")); // previous Friday
+        verifyNoInteractions(database);
+    }
+
+    @Test
+    void convert_fiatOnSunday_throwsWithWeekendMessage() {
+        when(classifier.isSupported("USD")).thenReturn(true);
+        when(classifier.isFiat("USD")).thenReturn(true);
+        LocalDate sunday = LocalDate.of(2024, 1, 14); // known Sunday
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                convertor.convert(new QueryRecord(new BigDecimal("100"), "USD", sunday)));
+
+        assertTrue(ex.getMessage().contains("weekend"));
+        assertTrue(ex.getMessage().contains("2024-01-12")); // previous Friday
+        verifyNoInteractions(database);
     }
 
     @Test
