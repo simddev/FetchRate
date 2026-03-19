@@ -35,12 +35,12 @@ mvn package -DskipTests
 
 Run as CLI:
 ```bash
-java -jar target/FetchRate-0.2.jar convert --amount 100 --input-currency USD --date 2024-01-15
+java -jar target/FetchRate-0.3.jar convert --amount 100 --input-currency USD --date 2024-01-15
 ```
 
 Run as HTTP server (web UI available at `http://localhost:8000`):
 ```bash
-java -jar target/FetchRate-0.2.jar start_http_server
+java -jar target/FetchRate-0.3.jar start_http_server
 ```
 
 ---
@@ -87,11 +87,26 @@ This allows for full historical coverage and support for any cryptocurrency symb
 
 ### Configuration
 
-To use the cryptocurrency features via API, set the following environment variable before running the application:
+#### API Key (for crypto rate updates)
 
+There are three ways to provide your LiveCoinWatch API key:
+
+**Option 1 — Config file (recommended):** Create a `fetchrate.properties` file next to the jar:
 ```
+livecoinwatch.api-key=your_api_key_here
+```
+
+**Option 2 — CLI command:**
+```bash
+java -jar FetchRate-0.3.jar config --set-key your_api_key_here
+```
+
+**Option 3 — Environment variable:**
+```bash
 export LIVECOINWATCH_API_KEY=your_api_key_here
 ```
+
+When running in HTTP mode, the API key can also be set through the web UI under **⚙ API Settings**.
 
 The crypto CSV directory defaults to `data/crypto` and can be overridden with the `fetchrate.crypto-dir` property.
 

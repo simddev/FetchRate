@@ -137,6 +137,12 @@ class CommandLineRequestTest {
     }
 
     @Test
+    void run_configNoArgs_outputsUsage() throws Exception {
+        cli.run("config");
+        assertTrue(output().contains("Usage"));
+    }
+
+    @Test
     void run_currencyNotFound_outputsError() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
         when(convertor.convert(any())).thenThrow(new IllegalArgumentException("No rate found for FAKE"));

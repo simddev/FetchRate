@@ -1,6 +1,7 @@
 package com.fetchrate.update;
 
 import com.fetchrate.config.LiveCoinWatchConfig;
+import com.fetchrate.persistence.RateDatabase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -25,12 +26,23 @@ public class CryptoRateFetcher {
 
     private final Path cryptoDir;
     private final LiveCoinWatchConfig config;
+    private final RateDatabase database;
     private final HttpClient client = HttpClient.newHttpClient();
 
     public CryptoRateFetcher(@Value("${fetchrate.crypto-dir:data/crypto}") String cryptoDir,
-                             LiveCoinWatchConfig config) {
+                             LiveCoinWatchConfig config,
+                             RateDatabase database) {
         this.cryptoDir = Path.of(cryptoDir);
         this.config = config;
+        this.database = database;
+    }
+
+    private String resolveApiKey() {
+        String dbKey = database.getMeta("livecoinwatch_api_key");
+        if (dbKey != null && !dbKey.isBlank()) {
+            return dbKey;
+        }
+        return config.getApiKey();
     }
 
     /**
@@ -69,7 +81,8 @@ public class CryptoRateFetcher {
      * @return JSON response from API.
      */
     public String fetchFromLiveCoinWatch(String symbol, LocalDate start, LocalDate end) {
-        if (config.getApiKey() == null || config.getApiKey().isBlank()) {
+        String apiKey = resolveApiKey();
+        if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("LiveCoinWatch API key is not configured.");
         }
 
@@ -84,7 +97,7 @@ public class CryptoRateFetcher {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(config.getHistoryUrl()))
                 .header("content-type", "application/json")
-                .header("x-api-key", config.getApiKey())
+                .header("x-api-key", apiKey)
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
 
