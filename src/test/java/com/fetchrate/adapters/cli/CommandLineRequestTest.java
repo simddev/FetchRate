@@ -170,6 +170,20 @@ class CommandLineRequestTest {
     }
 
     @Test
+    void run_configSetKey_handlesSpecialRegexCharsInValue() throws Exception {
+        java.nio.file.Path propsFile = java.nio.file.Path.of("fetchrate.properties");
+        try {
+            // Keys with $ or \ would break replaceAll without Matcher.quoteReplacement
+            cli.run("config", "--set-key", "key$with\\special");
+            assertTrue(output().contains("saved"));
+            String content = java.nio.file.Files.readString(propsFile);
+            assertTrue(content.contains("livecoinwatch.api-key=key$with\\special"));
+        } finally {
+            java.nio.file.Files.deleteIfExists(propsFile);
+        }
+    }
+
+    @Test
     void run_configSetKey_updatesExistingEntry() throws Exception {
         java.nio.file.Path propsFile = java.nio.file.Path.of("fetchrate.properties");
         try {
