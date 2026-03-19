@@ -11,6 +11,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.*;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.HashMap;
@@ -27,7 +28,9 @@ public class CryptoRateFetcher {
     private final Path cryptoDir;
     private final LiveCoinWatchConfig config;
     private final RateDatabase database;
-    private final HttpClient client = HttpClient.newHttpClient();
+    private final HttpClient client = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
 
     public CryptoRateFetcher(@Value("${fetchrate.crypto-dir:data/crypto}") String cryptoDir,
                              LiveCoinWatchConfig config,
@@ -109,6 +112,7 @@ public class CryptoRateFetcher {
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(resolveHistoryUrl()))
+                .timeout(Duration.ofSeconds(15))
                 .header("content-type", "application/json")
                 .header("x-api-key", apiKey)
                 .POST(HttpRequest.BodyPublishers.ofString(body))

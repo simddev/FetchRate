@@ -7,6 +7,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 
 /**
  * This class serves to provide the fetchFiat method, which fetches the raw .xml file from the provided URL,
@@ -16,7 +17,9 @@ import java.net.http.HttpResponse;
 @Service
 public class FiatRateFetcher {
 
-    private final HttpClient client = HttpClient.newHttpClient();
+    private final HttpClient client = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
 
     /**
      * Method which takes a URL, fetches it via java.net.http packages, and returns it in String format.
@@ -26,7 +29,11 @@ public class FiatRateFetcher {
      */
     public String fetchFiat(String URL) {
 
-        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(URL)).GET().build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(URL))
+                .timeout(Duration.ofSeconds(15))
+                .GET()
+                .build();
 
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
