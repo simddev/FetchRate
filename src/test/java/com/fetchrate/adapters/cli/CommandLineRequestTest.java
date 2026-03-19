@@ -114,4 +114,36 @@ class CommandLineRequestTest {
         assertTrue(out.contains("inEuro"));
         assertTrue(out.contains("92.50"));
     }
+
+    @Test
+    void run_amountWithUnderscores_outputsJson() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convert(any())).thenReturn(new BigDecimal("91500.00"));
+
+        cli.run("convert", "--amount", "100_000", "--input-currency", "USD", "--date", "2024-01-15");
+
+        assertTrue(output().contains("inEuro"));
+    }
+
+    @Test
+    void run_lowercaseCurrency_isNormalized() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convert(any())).thenReturn(new BigDecimal("92.50"));
+
+        cli.run("convert", "--amount", "100", "--input-currency", "usd", "--date", "2024-01-15");
+
+        String out = output();
+        assertTrue(out.contains("USD"));
+    }
+
+    @Test
+    void run_currencyNotFound_outputsError() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convert(any())).thenThrow(new IllegalArgumentException("No rate found for FAKE"));
+
+        cli.run("convert", "--amount", "100", "--input-currency", "FAKE", "--date", "2024-01-15");
+
+        assertTrue(output().contains("error"));
+        assertTrue(output().contains("FAKE"));
+    }
 }
