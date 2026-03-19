@@ -51,7 +51,10 @@ public class RequestController {
             @RequestParam("input_currency") String inputCurrency,
             @RequestParam("date") String dateStr
     ) {
-        String currency = inputCurrency.toUpperCase();
+        if (inputCurrency == null || inputCurrency.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Currency symbol must not be blank."));
+        }
+        String currency = inputCurrency.strip().toUpperCase();
 
         LocalDate date;
         try {
