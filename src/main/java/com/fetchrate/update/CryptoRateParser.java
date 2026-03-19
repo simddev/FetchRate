@@ -54,11 +54,11 @@ public class CryptoRateParser {
             String line = lines[i].trim();
             if (line.isEmpty()) continue;
 
-            String[] colons = line.split(",", -1);
-            if (colons.length <= Math.max(startIndex, closeIndex)) continue;
+            String[] fields = line.split(",", -1);
+            if (fields.length <= Math.max(startIndex, closeIndex)) continue;
 
-            String dateString = colons[startIndex].trim();
-            String closeString = colons[closeIndex].trim();
+            String dateString = fields[startIndex].trim();
+            String closeString = fields[closeIndex].trim();
 
             if (dateString.isEmpty() || closeString.isEmpty()) continue;
             if ("null".equalsIgnoreCase(closeString)) continue;

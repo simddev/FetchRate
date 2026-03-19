@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
+import java.util.regex.Matcher;
 
 /**
  * The main class for handling CLI queries.
@@ -153,7 +154,7 @@ public class CommandLineRequest implements CommandLineRunner {
                 String content = Files.readString(config);
                 String escapedKey = propertyKey.replace(".", "\\.");
                 if (content.matches("(?s).*(?m)^" + escapedKey + "=.*$.*")) {
-                    content = content.replaceAll("(?m)^" + escapedKey + "=.*$", entry.trim());
+                    content = content.replaceAll("(?m)^" + escapedKey + "=.*$", Matcher.quoteReplacement(entry.trim()));
                     Files.writeString(config, content);
                 } else {
                     Files.writeString(config, content + entry, StandardOpenOption.APPEND);
