@@ -52,6 +52,11 @@ public class CommandLineRequest implements CommandLineRunner {
 
         String command = args[0];
 
+        if ("-h".equals(command) || "--help".equals(command)) {
+            printHelp();
+            return;
+        }
+
         if ("config".equals(command)) {
             handleConfig(args);
             return;
@@ -129,6 +134,12 @@ public class CommandLineRequest implements CommandLineRunner {
 
     private void handleConfig(String[] args) {
         for (int i = 1; i < args.length; i++) {
+            if ("-h".equals(args[i]) || "--help".equals(args[i])) {
+                System.out.println("Configure the LiveCoinWatch integration:");
+                System.out.println("  java -jar fetchrate.jar config --set-key YOUR_API_KEY   Save your LiveCoinWatch API key");
+                System.out.println("  java -jar fetchrate.jar config --set-url URL            Override the default data provider URL");
+                return;
+            }
             if ("--set-key".equals(args[i]) && i + 1 < args.length) {
                 writeProperty("livecoinwatch.api-key", args[++i].trim(), "API key");
                 return;
@@ -177,14 +188,45 @@ public class CommandLineRequest implements CommandLineRunner {
         }
     }
 
-    /**
-     * Shows usage to user in case of wrong format.
-     */
+    /** Prints a short usage reminder used when a command is missing or malformed. */
     private void printUsage() {
-        System.out.println("Usage:");
-        System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency CZK --date YYYY-MM-DD");
+        System.out.println("Usage: java -jar fetchrate.jar <command> [options]");
+        System.out.println("Commands: convert, config, start_http_server");
+        System.out.println("Run with -h or --help for full documentation.");
+    }
+
+    /** Prints the full help text covering all available commands and options. */
+    private void printHelp() {
+        System.out.println("FetchRate — currency to EUR converter");
+        System.out.println();
+        System.out.println("USAGE");
+        System.out.println("  java -jar fetchrate.jar <command> [options]");
+        System.out.println();
+        System.out.println("COMMANDS");
+        System.out.println("  convert               Convert an amount to EUR");
+        System.out.println("    --amount <n>         Amount to convert (commas and underscores allowed as separators)");
+        System.out.println("    --input-currency <s> Currency or crypto symbol (e.g. USD, BTC)");
+        System.out.println("    --date <YYYY-MM-DD>  Date of the exchange rate");
+        System.out.println();
+        System.out.println("  start_http_server     Start the HTTP server on port 8000");
+        System.out.println("                        Web UI available at http://localhost:8000");
+        System.out.println("                        API endpoint: GET /convert?amount=N&input_currency=X&date=YYYY-MM-DD");
+        System.out.println();
+        System.out.println("  config                Manage runtime configuration");
+        System.out.println("    --set-key <key>      Save your LiveCoinWatch API key");
+        System.out.println("    --set-url <url>      Override the default crypto data provider URL");
+        System.out.println();
+        System.out.println("  -h, --help            Show this help message");
+        System.out.println();
+        System.out.println("SUPPORTED CURRENCIES");
+        System.out.println("  Fiat (ECB): USD, GBP, CHF, JPY, PLN, CZK, SEK, NOK, DKK, and more");
+        System.out.println("  Crypto:     BTC, ETH, LTC, DOGE, SOL, USDT (and any symbol via LiveCoinWatch API)");
+        System.out.println();
+        System.out.println("EXAMPLES");
+        System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency USD --date 2024-01-15");
+        System.out.println("  java -jar fetchrate.jar convert --amount 0.5 --input-currency BTC --date 2024-01-15");
+        System.out.println("  java -jar fetchrate.jar start_http_server");
         System.out.println("  java -jar fetchrate.jar config --set-key YOUR_API_KEY");
-        System.out.println("  java -jar fetchrate.jar config --set-url https://your-provider/endpoint");
     }
 
 }
