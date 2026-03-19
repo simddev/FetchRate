@@ -30,11 +30,15 @@ public class FiatRateFetcher {
 
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("ECB returned HTTP " + response.statusCode() + " for " + URL);
+            }
             return response.body();
-
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Failed to fetch fiat rates from ECB", e);
-
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while fetching fiat rates from ECB", e);
         }
     }
 }
