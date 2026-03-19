@@ -4,6 +4,8 @@ import com.fetchrate.core.ConvertResponse;
 import com.fetchrate.core.Convertor;
 import com.fetchrate.core.QueryRecord;
 import com.fetchrate.update.RateUpdater;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,8 @@ import java.util.Map;
 @Profile("http")
 @RestController
 public class RequestController {
+
+    private static final Logger log = LoggerFactory.getLogger(RequestController.class);
 
     private final RateUpdater rateUpdater;
     private final Convertor convertor;
@@ -91,8 +95,9 @@ public class RequestController {
                     )
             ));
         } catch (Exception e) {
+            log.error("Unexpected error during conversion", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "error", "An unexpected error occurred: " + e.getMessage()
+                    "error", "An unexpected error occurred."
             ));
         }
     }
