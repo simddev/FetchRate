@@ -144,6 +144,49 @@
         .footer a:hover {
             color: var(--accent-color);
         }
+        .settings-toggle {
+            background: none;
+            border: none;
+            color: #444;
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 4px 0;
+            width: auto;
+            margin-top: 1.2rem;
+            display: block;
+            transition: color 0.2s;
+        }
+        .settings-toggle:hover {
+            color: #777;
+            opacity: 1;
+            transform: none;
+        }
+        #settings-panel {
+            margin-top: 0.75rem;
+            text-align: left;
+        }
+        .api-key-status {
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+        .api-key-row {
+            display: flex;
+            gap: 8px;
+        }
+        .api-key-row input {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        .api-key-row button {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        #settings-msg {
+            font-size: 0.8rem;
+            margin-top: 6px;
+            min-height: 1.2em;
+        }
     </style>
 </head>
 <body>
@@ -169,6 +212,15 @@
         <input type="date" id="date" aria-label="Date">
         <button id="fetch-btn" onclick="fetchRate()">Fetch Rate</button>
         <div id="result"></div>
+        <button class="settings-toggle" onclick="toggleSettings()" aria-label="Toggle API settings">⚙ API Settings</button>
+        <div id="settings-panel" style="display:none">
+            <div id="api-key-status" class="api-key-status"></div>
+            <div class="api-key-row">
+                <input type="password" id="api-key-input" placeholder="LiveCoinWatch API key" aria-label="API key">
+                <button onclick="saveApiKey()">Save</button>
+            </div>
+            <div id="settings-msg"></div>
+        </div>
         <div class="footer">
             For commercial use: <a href="mailto:simon.d.dev@proton.me">simon.d.dev@proton.me</a>
         </div>
@@ -273,6 +325,53 @@
                 btn.textContent = 'Fetch Rate';
             }
             resultDiv.style.display = 'block';
+        }
+        async function loadApiKeyStatus() {
+            try {
+                const res = await fetch('/settings');
+                const data = await res.json();
+                const el = document.getElementById('api-key-status');
+                if (data.apiKeyConfigured) {
+                    el.innerHTML = '<span style="color:#6abf69">✓ API key is configured</span>';
+                } else {
+                    el.innerHTML = '<span class="error">✗ No API key set — crypto rates will not update</span>';
+                }
+            } catch (e) {}
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                loadApiKeyStatus();
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        async function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            const msg = document.getElementById('settings-msg');
+            if (!key) {
+                msg.innerHTML = '<span class="error">Please enter an API key</span>';
+                return;
+            }
+            try {
+                const res = await fetch('/settings', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({apiKey: key})
+                });
+                if (res.ok) {
+                    msg.innerHTML = '<span style="color:#6abf69">Saved</span>';
+                    document.getElementById('api-key-input').value = '';
+                    loadApiKeyStatus();
+                } else {
+                    msg.innerHTML = '<span class="error">Failed to save</span>';
+                }
+            } catch (e) {
+                msg.innerHTML = '<span class="error">Failed to connect</span>';
+            }
         }
     </script>
 </body>

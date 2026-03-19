@@ -9,7 +9,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 
 /**
@@ -45,6 +49,11 @@ public class CommandLineRequest implements CommandLineRunner {
         }
 
         String command = args[0];
+
+        if ("config".equals(command)) {
+            handleConfig(args);
+            return;
+        }
 
         if ("convert".equals(command)) {
             BigDecimal amount = null;
@@ -116,12 +125,46 @@ public class CommandLineRequest implements CommandLineRunner {
 
     }
 
+    private void handleConfig(String[] args) {
+        for (int i = 1; i < args.length; i++) {
+            if ("--set-key".equals(args[i]) && i + 1 < args.length) {
+                String key = args[++i].trim();
+                if (key.isBlank()) {
+                    System.out.println("{\"error\":\"API key must not be empty.\"}");
+                    return;
+                }
+                try {
+                    Path config = Path.of("fetchrate.properties");
+                    String entry = "livecoinwatch.api-key=" + key + System.lineSeparator();
+                    if (Files.exists(config)) {
+                        String content = Files.readString(config);
+                        if (content.contains("livecoinwatch.api-key=")) {
+                            content = content.replaceAll("(?m)^livecoinwatch\\.api-key=.*$", entry.trim());
+                            Files.writeString(config, content);
+                        } else {
+                            Files.writeString(config, content + entry, StandardOpenOption.APPEND);
+                        }
+                    } else {
+                        Files.writeString(config, entry);
+                    }
+                    System.out.println("{\"status\":\"API key saved to fetchrate.properties\"}");
+                } catch (IOException e) {
+                    System.out.println("{\"error\":\"Could not write fetchrate.properties: " + e.getMessage() + "\"}");
+                }
+                return;
+            }
+        }
+        System.out.println("Usage:");
+        System.out.println("  java -jar fetchrate.jar config --set-key YOUR_API_KEY");
+    }
+
     /**
      * Shows usage to user in case of wrong format.
      */
     private void printUsage() {
         System.out.println("Usage:");
         System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency CZK --date YYYY-MM-DD");
+        System.out.println("  java -jar fetchrate.jar config --set-key YOUR_API_KEY");
     }
 
 }

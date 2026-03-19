@@ -1,0 +1,5 @@
+# FetchRate local configuration
+# Copy or rename this file to fetchrate.properties and place it next to the jar.
+# Values here override environment variables and defaults.
+
+livecoinwatch.api-key=YOUR_API_KEY_HERE
