@@ -45,6 +45,11 @@ public class CryptoRateFetcher {
         return config.getApiKey();
     }
 
+    public boolean isApiKeyAvailable() {
+        String key = resolveApiKey();
+        return key != null && !key.isBlank();
+    }
+
     private String resolveHistoryUrl() {
         String dbUrl = database.getMeta("livecoinwatch_history_url");
         if (dbUrl != null && !dbUrl.isBlank()) {
