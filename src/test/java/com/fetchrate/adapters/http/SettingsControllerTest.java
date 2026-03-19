@@ -112,4 +112,28 @@ class SettingsControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(database).setMeta("livecoinwatch_api_key", "my-key");
     }
+
+    @Test
+    void saveSettings_invalidUrl_returns400() {
+        ResponseEntity<?> response = controller.saveSettings(Map.of("providerUrl", "not a url at all"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(database, never()).setMeta(eq("livecoinwatch_history_url"), any());
+    }
+
+    @Test
+    void saveSettings_nonHttpScheme_returns400() {
+        ResponseEntity<?> response = controller.saveSettings(Map.of("providerUrl", "ftp://example.com/api"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(database, never()).setMeta(eq("livecoinwatch_history_url"), any());
+    }
+
+    @Test
+    void saveSettings_httpUrlAllowed() {
+        ResponseEntity<?> response = controller.saveSettings(Map.of("providerUrl", "http://localhost:8080/api"));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(database).setMeta("livecoinwatch_history_url", "http://localhost:8080/api");
+    }
 }
