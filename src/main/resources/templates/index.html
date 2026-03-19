@@ -234,12 +234,24 @@
             padding-top: 1rem;
             border-top: 1px solid rgba(255,255,255,0.05);
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
+            gap: 0.75rem;
+            text-align: center;
         }
         .footer-sources {
             font-size: 0.75rem;
             color: var(--muted);
+        }
+        .footer-sources a {
+            color: var(--muted);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .footer-sources a:hover {
+            color: var(--muted-light);
+            border-color: var(--muted-light);
         }
         .contact-btn {
             font-size: 0.78rem;
@@ -247,7 +259,7 @@
             text-decoration: none;
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 6px;
-            padding: 5px 12px;
+            padding: 5px 16px;
             transition: color 0.2s, border-color 0.2s;
         }
         .contact-btn:hover {
@@ -260,7 +272,7 @@
     <div class="container">
         <div class="header">
             <h1>FetchRate</h1>
-            <p class="tagline">Historical exchange rates &mdash; converted to EUR</p>
+            <p class="tagline">Any currency or crypto, any date &mdash; in Euro.</p>
         </div>
 
         <div class="field-group">
@@ -313,7 +325,11 @@
         </div>
 
         <div class="footer">
-            <span class="footer-sources">Fiat: ECB &nbsp;·&nbsp; Crypto: configurable</span>
+            <span class="footer-sources">
+                Fiat: <a href="https://www.ecb.europa.eu/stats/eurofxref/" target="_blank" rel="noopener noreferrer">ECB</a>
+                &nbsp;·&nbsp;
+                Crypto: <span id="footer-crypto-source">—</span>
+            </span>
             <a class="contact-btn" href="mailto:simon.d.dev@proton.me">Contact</a>
         </div>
     </div>
@@ -415,17 +431,27 @@
                     : '<span class="error-text">✗ Not set — crypto rates will not update</span>';
 
                 const urlEl = document.getElementById('provider-url-status');
+                const footerCryptoEl = document.getElementById('footer-crypto-source');
                 if (data.providerUrl) {
                     urlEl.innerHTML = '<span style="color:#6abf69">✓ Custom: </span>';
                     const safe = document.createElement('span');
                     safe.style.color = '#6abf69';
                     safe.textContent = data.providerUrl;
                     urlEl.appendChild(safe);
+
+                    try {
+                        footerCryptoEl.textContent = new URL(data.providerUrl).hostname;
+                    } catch {
+                        footerCryptoEl.textContent = 'Custom provider';
+                    }
                 } else {
                     urlEl.innerHTML = '<span style="color:#555">Using default provider</span>';
+                    footerCryptoEl.innerHTML = '<a href="https://www.livecoinwatch.com" target="_blank" rel="noopener noreferrer">LiveCoinWatch</a>';
                 }
             } catch (e) {}
         }
+
+        loadSettings();
 
         function toggleSettings() {
             const panel = document.getElementById('settings-panel');
