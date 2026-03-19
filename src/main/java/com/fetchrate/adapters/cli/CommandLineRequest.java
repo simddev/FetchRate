@@ -221,7 +221,7 @@ public class CommandLineRequest implements CommandLineRunner {
         System.out.println();
         System.out.println("SUPPORTED CURRENCIES");
         System.out.println("  Fiat (ECB): USD, GBP, CHF, JPY, PLN, CZK, SEK, NOK, DKK, and more");
-        System.out.println("  Crypto:     BTC, ETH, LTC, DOGE, SOL, USDT (and any symbol via LiveCoinWatch API)");
+        System.out.println("  Crypto:     BTC, ETH, LTC, DOGE, SOL, USDT (and any symbol via configured provider)");
         System.out.println();
         System.out.println("EXAMPLES");
         System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency USD --date 2024-01-15");

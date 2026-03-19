@@ -50,7 +50,7 @@ public class CryptoRateUpdater {
             String json = fetcher.fetchFromLiveCoinWatch(symbol, start, end);
             return parser.parseLiveCoinWatch(symbol, json);
         } catch (Exception e) {
-            log.error("Failed to lazy-fetch LiveCoinWatch data for {} on {}: {}", symbol, date, e.getMessage());
+            log.error("Failed to lazy-fetch crypto data for {} on {}: {}", symbol, date, e.getMessage());
             return List.of();
         }
     }
@@ -75,7 +75,7 @@ public class CryptoRateUpdater {
 
         // 2) If API key is present, fetch the last 30 days via API
         if (fetcher.isApiKeyAvailable()) {
-            log.info("Using LiveCoinWatch API for recent crypto rates...");
+            log.info("Using crypto data provider API for recent crypto rates...");
             // We fetch for a fixed set of popular cryptos
             List<String> symbolsToUpdate = List.of("BTC", "ETH", "LTC", "DOGE", "SOL", "USDT");
             LocalDate end = LocalDate.now();
@@ -91,7 +91,7 @@ public class CryptoRateUpdater {
                         allRecords.addAll(records);
                     }
                 } catch (Exception e) {
-                    log.error("Failed to fetch LiveCoinWatch data for {}: {}", symbol, e.getMessage());
+                    log.error("Failed to fetch crypto data for {}: {}", symbol, e.getMessage());
                 }
             }
         } else if (allRecords.isEmpty()) {
