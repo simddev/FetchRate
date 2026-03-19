@@ -51,8 +51,6 @@ public class RateUpdater {
             return;
         }
 
-        database.initSchema();
-
         log.info("Updating database, please wait...");
 
         boolean fiatOk = false;
