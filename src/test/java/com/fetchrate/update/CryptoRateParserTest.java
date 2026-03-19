@@ -74,4 +74,19 @@ class CryptoRateParserTest {
         List<CryptoRateRecord> records = parser.parseLiveCoinWatch("BTC", "");
         assertTrue(records.isEmpty());
     }
+
+    @Test
+    void parseCrypto_malformedLinesAreSkippedAndValidLinesStillParsed() {
+        String csv = "Start,End,Open,High,Low,Close,Volume\n" +
+                "2024-01-13,2024-01-14,0,0,0,100.00,0\n" +    // valid
+                "2024-01-14,NOT-A-DATE,0,0,0,200.00,0\n" +     // bad date → skip
+                "2024-01-15,2024-01-16,0,0,0,BADNUM,0\n" +     // bad rate → skip
+                "2024-01-16,2024-01-17,0,0,0,300.00,0";        // valid
+
+        List<CryptoRateRecord> records = parser.parseCrypto("BTC", csv);
+
+        assertEquals(2, records.size());
+        assertEquals(new BigDecimal("100.00"), records.get(0).rate());
+        assertEquals(new BigDecimal("300.00"), records.get(1).rate());
+    }
 }
