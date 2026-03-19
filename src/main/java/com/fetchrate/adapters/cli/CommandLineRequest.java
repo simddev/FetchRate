@@ -79,6 +79,16 @@ public class CommandLineRequest implements CommandLineRunner {
                 return;
             }
 
+            if (date.isAfter(LocalDate.now())) {
+                System.out.println("{\"error\":\"Date cannot be in the future.\"}");
+                return;
+            }
+
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                System.out.println("{\"error\":\"Amount must be greater than zero.\"}");
+                return;
+            }
+
             // Update runs in case it wasn't updated today.
             if (!rateUpdater.alreadyUpdatedToday()) {
                 rateUpdater.updateRates();

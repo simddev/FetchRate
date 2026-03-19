@@ -69,4 +69,17 @@ class ConvertorTest {
         assertThrows(IllegalArgumentException.class, () ->
                 convertor.convert(new QueryRecord(new BigDecimal("100"), "USD", testDate)));
     }
+
+    @Test
+    void convert_cryptoCurrencyMultipliesByRate() {
+        when(classifier.isSupported("BTC")).thenReturn(true);
+        when(classifier.isFiat("BTC")).thenReturn(false);
+        when(database.findCryptoRate(any())).thenReturn(
+                new CryptoRateRecord("BTC", testDate, new BigDecimal("40000.00"))
+        );
+
+        BigDecimal result = convertor.convert(new QueryRecord(new BigDecimal("2.00"), "BTC", testDate));
+
+        assertEquals(new BigDecimal("80000.00"), result);
+    }
 }
