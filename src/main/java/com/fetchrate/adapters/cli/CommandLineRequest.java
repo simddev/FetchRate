@@ -157,7 +157,7 @@ public class CommandLineRequest implements CommandLineRunner {
                     content = content.replaceAll("(?m)^" + escapedKey + "=.*$", Matcher.quoteReplacement(entry.trim()));
                     Files.writeString(config, content);
                 } else {
-                    Files.writeString(config, content + entry, StandardOpenOption.APPEND);
+                    Files.writeString(config, entry, StandardOpenOption.APPEND);
                 }
             } else {
                 Files.writeString(config, entry);

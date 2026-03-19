@@ -15,7 +15,9 @@ import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -192,6 +194,22 @@ class CommandLineRequestTest {
             String content = java.nio.file.Files.readString(propsFile);
             assertTrue(content.contains("new-key"));
             assertFalse(content.contains("old-key"));
+        } finally {
+            java.nio.file.Files.deleteIfExists(propsFile);
+        }
+    }
+
+    @Test
+    void run_configSetUrl_appendsToExistingFileWithoutDuplicatingContent() throws Exception {
+        java.nio.file.Path propsFile = java.nio.file.Path.of("fetchrate.properties");
+        try {
+            java.nio.file.Files.writeString(propsFile, "livecoinwatch.api-key=my-key\n");
+            cli.run("config", "--set-url", "https://custom.example.com/api");
+            String content = java.nio.file.Files.readString(propsFile);
+            assertTrue(content.contains("livecoinwatch.api-key=my-key"));
+            assertTrue(content.contains("livecoinwatch.history-url=https://custom.example.com/api"));
+            // api-key line must appear exactly once (no duplication)
+            assertEquals(1, content.lines().filter(l -> l.startsWith("livecoinwatch.api-key=")).count());
         } finally {
             java.nio.file.Files.deleteIfExists(propsFile);
         }
