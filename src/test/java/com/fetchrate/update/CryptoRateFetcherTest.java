@@ -125,4 +125,34 @@ class CryptoRateFetcherTest {
 
         verify(config).getHistoryUrl();
     }
+
+    // --- isApiKeyAvailable ---
+
+    @Test
+    void isApiKeyAvailable_dbKeyPresent_returnsTrue() {
+        when(database.getMeta("livecoinwatch_api_key")).thenReturn("some-key");
+        assertTrue(fetcher.isApiKeyAvailable());
+        verify(config, never()).getApiKey();
+    }
+
+    @Test
+    void isApiKeyAvailable_dbKeyBlankConfigKeyPresent_returnsTrue() {
+        when(database.getMeta("livecoinwatch_api_key")).thenReturn("");
+        when(config.getApiKey()).thenReturn("config-key");
+        assertTrue(fetcher.isApiKeyAvailable());
+    }
+
+    @Test
+    void isApiKeyAvailable_noKeyAnywhere_returnsFalse() {
+        when(database.getMeta("livecoinwatch_api_key")).thenReturn(null);
+        when(config.getApiKey()).thenReturn(null);
+        assertFalse(fetcher.isApiKeyAvailable());
+    }
+
+    @Test
+    void isApiKeyAvailable_dbKeyBlankConfigKeyBlank_returnsFalse() {
+        when(database.getMeta("livecoinwatch_api_key")).thenReturn("  ");
+        when(config.getApiKey()).thenReturn("  ");
+        assertFalse(fetcher.isApiKeyAvailable());
+    }
 }
