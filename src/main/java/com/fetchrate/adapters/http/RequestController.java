@@ -86,7 +86,7 @@ public class RequestController {
                     "error", e.getMessage(),
                     "input", Map.of(
                             "amount", amount.toPlainString(),
-                            "currency", currency,
+                            "currencySymbol", currency,
                             "date", date.toString()
                     )
             ));
