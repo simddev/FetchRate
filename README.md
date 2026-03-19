@@ -72,7 +72,7 @@ To use the cryptocurrency features via API, set the following environment variab
 export LIVECOINWATCH_API_KEY=your_api_key_here
 ```
 
-The crypto CSV directory defaults to `data/crypto` and can be overridden with the `fetchrate.crypto-dir` property.
+For full details on configuring the crypto API provider, using CSV fallbacks, switching to an alternative provider, or understanding the request/response format expected, see [CRYPTO_API.md](CRYPTO_API.md).
 
 ### Architecture Overview
 
