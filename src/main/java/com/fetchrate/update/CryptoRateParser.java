@@ -1,6 +1,8 @@
 package com.fetchrate.update;
 
 import com.fetchrate.core.CryptoRateRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -17,6 +19,8 @@ import java.util.*;
  */
 @Service
 public class CryptoRateParser {
+
+    private static final Logger log = LoggerFactory.getLogger(CryptoRateParser.class);
 
     private final ObjectMapper objectMapper;
 
@@ -110,7 +114,7 @@ public class CryptoRateParser {
             }
             
         } catch (Exception e) {
-            System.err.println("Failed to parse LiveCoinWatch JSON for " + symbol + ": " + e.getMessage());
+            log.warn("Failed to parse LiveCoinWatch JSON for {}: {}", symbol, e.getMessage());
         }
         return cryptoRecord;
     }
@@ -138,11 +142,11 @@ public class CryptoRateParser {
                         cryptoRecord.add(new CryptoRateRecord(effectiveSymbol, date, rate));
                     }
                 } catch (Exception e) {
-                    // Ignore
+                    log.debug("Skipping malformed entry during manual JSON extraction for {}: {}", symbol, e.getMessage());
                 }
             }
         } catch (Exception e) {
-            // Ignore
+            log.debug("Manual JSON extraction failed for {}: {}", symbol, e.getMessage());
         }
     }
 }

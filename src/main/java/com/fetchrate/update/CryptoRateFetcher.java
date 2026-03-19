@@ -1,6 +1,7 @@
 package com.fetchrate.update;
 
 import com.fetchrate.config.LiveCoinWatchConfig;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -22,11 +23,13 @@ import java.util.Map;
 @Service
 public class CryptoRateFetcher {
 
-    private static final Path CRYPTO_DIR = Path.of("data", "crypto");
+    private final Path cryptoDir;
     private final LiveCoinWatchConfig config;
     private final HttpClient client = HttpClient.newHttpClient();
 
-    public CryptoRateFetcher(LiveCoinWatchConfig config) {
+    public CryptoRateFetcher(@Value("${fetchrate.crypto-dir:data/crypto}") String cryptoDir,
+                             LiveCoinWatchConfig config) {
+        this.cryptoDir = Path.of(cryptoDir);
         this.config = config;
     }
 
@@ -37,11 +40,11 @@ public class CryptoRateFetcher {
     public Map<String, String> fetchAllCsv() {
         try {
 
-            Files.createDirectories(CRYPTO_DIR);
+            Files.createDirectories(cryptoDir);
 
             Map<String, String> collectionCsvData = new HashMap<>();
 
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(CRYPTO_DIR, "*.csv")) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(cryptoDir, "*.csv")) {
                 for (Path path : stream) {
                     String filename = path.getFileName().toString(); // Gets filename like BTC.csv
                     String symbol = filename.substring(0, filename.length() - 4).toUpperCase(); // Strips ".csv".
@@ -53,7 +56,7 @@ public class CryptoRateFetcher {
             return collectionCsvData;
 
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read crypto CSV files from " + CRYPTO_DIR, e);
+            throw new RuntimeException("Failed to read crypto CSV files from " + cryptoDir, e);
         }
     }
 
@@ -91,7 +94,10 @@ public class CryptoRateFetcher {
                 throw new RuntimeException("Failed to fetch from LiveCoinWatch: " + response.statusCode() + " " + response.body());
             }
             return response.body();
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
+            throw new RuntimeException("Error calling LiveCoinWatch API", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException("Error calling LiveCoinWatch API", e);
         }
     }
