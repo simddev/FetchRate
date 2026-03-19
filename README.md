@@ -24,6 +24,27 @@ The format in which the application returns the results of its service is a JSON
      }
 }
 
+### Building & Running
+
+**Requirements:** Java 17+, Maven 4
+
+Build the JAR:
+```bash
+mvn package -DskipTests
+```
+
+Run as CLI:
+```bash
+java -jar target/FetchRate-0.2.jar convert --amount 100 --input-currency USD --date 2024-01-15
+```
+
+Run as HTTP server (web UI available at `http://localhost:8000`):
+```bash
+java -jar target/FetchRate-0.2.jar start_http_server
+```
+
+---
+
 ### Instructions
 
 #### CLI
