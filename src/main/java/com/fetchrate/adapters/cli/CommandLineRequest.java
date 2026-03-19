@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.regex.Matcher;
 
 /**
@@ -69,7 +70,7 @@ public class CommandLineRequest implements CommandLineRunner {
                     try {
                         amount = new BigDecimal(amountStr.replace(",", "").replace("_", ""));
                     } catch (NumberFormatException e) {
-                        System.out.println("{\"error\":\"Invalid amount format: " + amountStr + "\"}");
+                        printError("Invalid amount format: " + amountStr);
                         return;
                     }
                 } else if ("--input-currency".equals(a) && i + 1 < args.length) {
@@ -116,7 +117,7 @@ public class CommandLineRequest implements CommandLineRunner {
                 System.out.println(objectMapper.writeValueAsString(response));
 
             } catch (Exception e) {
-                System.out.println("{\"error\":\"" + e.getMessage() + "\"}");
+                printError(e.getMessage() != null ? e.getMessage() : "Conversion failed");
             }
 
             return;
@@ -165,6 +166,14 @@ public class CommandLineRequest implements CommandLineRunner {
             System.out.println("{\"status\":\"" + label + " saved to fetchrate.properties\"}");
         } catch (IOException e) {
             System.out.println("{\"error\":\"Could not write fetchrate.properties: " + e.getMessage() + "\"}");
+        }
+    }
+
+    private void printError(String message) {
+        try {
+            System.out.println(objectMapper.writeValueAsString(Map.of("error", message)));
+        } catch (Exception e) {
+            System.out.println("{\"error\":\"An unexpected error occurred\"}");
         }
     }
 
