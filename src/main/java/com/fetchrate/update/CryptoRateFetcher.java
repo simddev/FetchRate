@@ -117,7 +117,7 @@ public class CryptoRateFetcher {
     public String fetchFromLiveCoinWatch(String symbol, LocalDate start, LocalDate end) {
         String apiKey = resolveApiKey();
         if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException("LiveCoinWatch API key is not configured.");
+            throw new IllegalStateException("Crypto data provider API key is not configured.");
         }
 
         long startMs = start.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
@@ -141,14 +141,14 @@ public class CryptoRateFetcher {
             if (response.statusCode() != 200) {
                 String responseBody = response.body();
                 String snippet = responseBody != null && responseBody.length() > 200 ? responseBody.substring(0, 200) + "..." : responseBody;
-                throw new RuntimeException("Failed to fetch from LiveCoinWatch: " + response.statusCode() + " " + snippet);
+                throw new RuntimeException("Crypto provider fetch failed: " + response.statusCode() + " " + snippet);
             }
             return response.body();
         } catch (IOException e) {
-            throw new RuntimeException("Error calling LiveCoinWatch API", e);
+            throw new RuntimeException("Error calling crypto data provider API", e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Error calling LiveCoinWatch API", e);
+            throw new RuntimeException("Error calling crypto data provider API", e);
         }
     }
 }
