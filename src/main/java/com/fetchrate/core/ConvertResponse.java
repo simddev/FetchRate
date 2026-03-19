@@ -6,6 +6,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * JSON response body returned by the {@code /convert} endpoint.
+ * Contains the original request details in {@code input} and the converted EUR amount in {@code output}.
+ */
 @JsonPropertyOrder({"input", "output"})
 public record ConvertResponse(Input input, Output output) {
 

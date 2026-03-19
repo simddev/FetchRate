@@ -10,9 +10,8 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 
 /**
- * This class serves to provide the fetchFiat method, which fetches the raw .xml file from the provided URL,
- * and returns it in String form.
- * It is set up to be a bean serving the FiatRateUpdater class.
+ * Fetches raw ECB exchange rate data from a remote URL.
+ * Used by {@link FiatRateUpdater} to retrieve the XML feed before parsing.
  */
 @Service
 public class FiatRateFetcher {
@@ -22,15 +21,17 @@ public class FiatRateFetcher {
             .build();
 
     /**
-     * Method which takes a URL, fetches it via java.net.http packages, and returns it in String format.
+     * Fetches the XML content at the given URL and returns it as a string.
      *
-     * @param URL String of the URL.
-     * @return String of the contents.
+     * @param url The URL to fetch.
+     * @return The response body as a string.
+     * @throws RuntimeException if the server returns a non-200 status, the connection fails,
+     *                          or the thread is interrupted.
      */
-    public String fetchFiat(String URL) {
+    public String fetchFiat(String url) {
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(URL))
+                .uri(URI.create(url))
                 .timeout(Duration.ofSeconds(15))
                 .GET()
                 .build();
@@ -38,7 +39,7 @@ public class FiatRateFetcher {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
-                throw new RuntimeException("ECB returned HTTP " + response.statusCode() + " for " + URL);
+                throw new RuntimeException("ECB returned HTTP " + response.statusCode() + " for " + url);
             }
             return response.body();
         } catch (IOException e) {
