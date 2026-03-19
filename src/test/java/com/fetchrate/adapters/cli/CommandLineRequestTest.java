@@ -56,6 +56,22 @@ class CommandLineRequestTest {
     }
 
     @Test
+    void run_helpFlag_outputsFullHelp() throws Exception {
+        cli.run("--help");
+        String out = output();
+        assertTrue(out.contains("start_http_server"));
+        assertTrue(out.contains("convert"));
+        assertTrue(out.contains("config"));
+        assertTrue(out.contains("--amount"));
+    }
+
+    @Test
+    void run_shortHelpFlag_outputsFullHelp() throws Exception {
+        cli.run("-h");
+        assertTrue(output().contains("start_http_server"));
+    }
+
+    @Test
     void run_unknownCommand_outputsUsage() throws Exception {
         cli.run("unknown");
         assertTrue(output().contains("Usage"));
