@@ -141,11 +141,11 @@ public class CommandLineRequest implements CommandLineRunner {
                 return;
             }
             if ("--set-key".equals(args[i]) && i + 1 < args.length) {
-                writeProperty("livecoinwatch.api-key", args[++i].trim(), "API key");
+                writeProperty("fetchrate.api-key", args[++i].trim(), "API key");
                 return;
             }
             if ("--set-url".equals(args[i]) && i + 1 < args.length) {
-                writeProperty("livecoinwatch.history-url", args[++i].trim(), "Provider URL");
+                writeProperty("fetchrate.provider-url", args[++i].trim(), "Provider URL");
                 return;
             }
         }

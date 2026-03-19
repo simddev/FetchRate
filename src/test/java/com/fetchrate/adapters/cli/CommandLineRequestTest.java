@@ -180,7 +180,7 @@ class CommandLineRequestTest {
             assertTrue(output().contains("saved"));
             assertTrue(java.nio.file.Files.exists(propsFile));
             String content = java.nio.file.Files.readString(propsFile);
-            assertTrue(content.contains("livecoinwatch.api-key=test-api-key-abc"));
+            assertTrue(content.contains("fetchrate.api-key=test-api-key-abc"));
         } finally {
             java.nio.file.Files.deleteIfExists(propsFile);
         }
@@ -193,7 +193,7 @@ class CommandLineRequestTest {
             cli.run("config", "--set-url", "https://custom.example.com/api");
             assertTrue(output().contains("saved"));
             String content = java.nio.file.Files.readString(propsFile);
-            assertTrue(content.contains("livecoinwatch.history-url=https://custom.example.com/api"));
+            assertTrue(content.contains("fetchrate.provider-url=https://custom.example.com/api"));
         } finally {
             java.nio.file.Files.deleteIfExists(propsFile);
         }
@@ -207,7 +207,7 @@ class CommandLineRequestTest {
             cli.run("config", "--set-key", "key$with\\special");
             assertTrue(output().contains("saved"));
             String content = java.nio.file.Files.readString(propsFile);
-            assertTrue(content.contains("livecoinwatch.api-key=key$with\\special"));
+            assertTrue(content.contains("fetchrate.api-key=key$with\\special"));
         } finally {
             java.nio.file.Files.deleteIfExists(propsFile);
         }
@@ -217,7 +217,7 @@ class CommandLineRequestTest {
     void run_configSetKey_updatesExistingEntry() throws Exception {
         java.nio.file.Path propsFile = java.nio.file.Path.of("fetchrate.properties");
         try {
-            java.nio.file.Files.writeString(propsFile, "livecoinwatch.api-key=old-key\n");
+            java.nio.file.Files.writeString(propsFile, "fetchrate.api-key=old-key\n");
             cli.run("config", "--set-key", "new-key");
             String content = java.nio.file.Files.readString(propsFile);
             assertTrue(content.contains("new-key"));
@@ -231,13 +231,13 @@ class CommandLineRequestTest {
     void run_configSetUrl_appendsToExistingFileWithoutDuplicatingContent() throws Exception {
         java.nio.file.Path propsFile = java.nio.file.Path.of("fetchrate.properties");
         try {
-            java.nio.file.Files.writeString(propsFile, "livecoinwatch.api-key=my-key\n");
+            java.nio.file.Files.writeString(propsFile, "fetchrate.api-key=my-key\n");
             cli.run("config", "--set-url", "https://custom.example.com/api");
             String content = java.nio.file.Files.readString(propsFile);
-            assertTrue(content.contains("livecoinwatch.api-key=my-key"));
-            assertTrue(content.contains("livecoinwatch.history-url=https://custom.example.com/api"));
+            assertTrue(content.contains("fetchrate.api-key=my-key"));
+            assertTrue(content.contains("fetchrate.provider-url=https://custom.example.com/api"));
             // api-key line must appear exactly once (no duplication)
-            assertEquals(1, content.lines().filter(l -> l.startsWith("livecoinwatch.api-key=")).count());
+            assertEquals(1, content.lines().filter(l -> l.startsWith("fetchrate.api-key=")).count());
         } finally {
             java.nio.file.Files.deleteIfExists(propsFile);
         }

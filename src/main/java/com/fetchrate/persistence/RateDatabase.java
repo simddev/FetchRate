@@ -139,7 +139,7 @@ public class RateDatabase {
      * Returns the value stored in the {@code meta} table for the given key,
      * or {@code null} if the key does not exist.
      *
-     * @param key The meta key (e.g., {@code "last_update"}, {@code "livecoinwatch_api_key"}).
+     * @param key The meta key (e.g., {@code "last_update"}, {@code "crypto_api_key"}).
      * @return The stored value, or {@code null}.
      */
     public String getMeta(String key) {
