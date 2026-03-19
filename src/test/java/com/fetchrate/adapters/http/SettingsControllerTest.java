@@ -27,8 +27,8 @@ class SettingsControllerTest {
 
     @Test
     void getSettings_keyConfigured_returnsTrue() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn("some-key");
-        when(database.getMeta("livecoinwatch_history_url")).thenReturn(null);
+        when(database.getMeta("crypto_api_key")).thenReturn("some-key");
+        when(database.getMeta("crypto_provider_url")).thenReturn(null);
 
         var result = controller.getSettings();
 
@@ -38,8 +38,8 @@ class SettingsControllerTest {
 
     @Test
     void getSettings_keyNotSet_returnsFalse() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn(null);
-        when(database.getMeta("livecoinwatch_history_url")).thenReturn(null);
+        when(database.getMeta("crypto_api_key")).thenReturn(null);
+        when(database.getMeta("crypto_provider_url")).thenReturn(null);
 
         var result = controller.getSettings();
 
@@ -49,8 +49,8 @@ class SettingsControllerTest {
 
     @Test
     void getSettings_customUrlSet_returnsUrl() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn("some-key");
-        when(database.getMeta("livecoinwatch_history_url")).thenReturn("https://custom.example.com/api");
+        when(database.getMeta("crypto_api_key")).thenReturn("some-key");
+        when(database.getMeta("crypto_provider_url")).thenReturn("https://custom.example.com/api");
 
         var result = controller.getSettings();
 
@@ -64,8 +64,8 @@ class SettingsControllerTest {
         ResponseEntity<?> response = controller.saveSettings(Map.of("apiKey", "my-api-key"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(database).setMeta("livecoinwatch_api_key", "my-api-key");
-        verify(database, never()).setMeta(eq("livecoinwatch_history_url"), any());
+        verify(database).setMeta("crypto_api_key", "my-api-key");
+        verify(database, never()).setMeta(eq("crypto_provider_url"), any());
     }
 
     @Test
@@ -73,8 +73,8 @@ class SettingsControllerTest {
         ResponseEntity<?> response = controller.saveSettings(Map.of("providerUrl", "https://custom.example.com/api"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(database).setMeta("livecoinwatch_history_url", "https://custom.example.com/api");
-        verify(database, never()).setMeta(eq("livecoinwatch_api_key"), any());
+        verify(database).setMeta("crypto_provider_url", "https://custom.example.com/api");
+        verify(database, never()).setMeta(eq("crypto_api_key"), any());
     }
 
     @Test
@@ -85,8 +85,8 @@ class SettingsControllerTest {
         ));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(database).setMeta("livecoinwatch_api_key", "my-key");
-        verify(database).setMeta("livecoinwatch_history_url", "https://custom.example.com/api");
+        verify(database).setMeta("crypto_api_key", "my-key");
+        verify(database).setMeta("crypto_provider_url", "https://custom.example.com/api");
     }
 
     @Test
@@ -110,7 +110,7 @@ class SettingsControllerTest {
         ResponseEntity<?> response = controller.saveSettings(Map.of("apiKey", "  my-key  "));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(database).setMeta("livecoinwatch_api_key", "my-key");
+        verify(database).setMeta("crypto_api_key", "my-key");
     }
 
     @Test
@@ -118,7 +118,7 @@ class SettingsControllerTest {
         ResponseEntity<?> response = controller.saveSettings(Map.of("providerUrl", "not a url at all"));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        verify(database, never()).setMeta(eq("livecoinwatch_history_url"), any());
+        verify(database, never()).setMeta(eq("crypto_provider_url"), any());
     }
 
     @Test
@@ -126,7 +126,7 @@ class SettingsControllerTest {
         ResponseEntity<?> response = controller.saveSettings(Map.of("providerUrl", "ftp://example.com/api"));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        verify(database, never()).setMeta(eq("livecoinwatch_history_url"), any());
+        verify(database, never()).setMeta(eq("crypto_provider_url"), any());
     }
 
     @Test
@@ -134,6 +134,6 @@ class SettingsControllerTest {
         ResponseEntity<?> response = controller.saveSettings(Map.of("providerUrl", "http://localhost:8080/api"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(database).setMeta("livecoinwatch_history_url", "http://localhost:8080/api");
+        verify(database).setMeta("crypto_provider_url", "http://localhost:8080/api");
     }
 }

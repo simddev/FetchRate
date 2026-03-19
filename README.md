@@ -130,7 +130,7 @@ Three ways to provide a crypto data provider API key:
 
 **Option 1 — Properties file (recommended):** create `fetchrate.properties` next to the jar:
 ```
-livecoinwatch.api-key=your_api_key_here
+fetchrate.api-key=your_api_key_here
 ```
 
 **Option 2 — CLI:**
@@ -141,7 +141,7 @@ java -jar FetchRate-0.3.jar config --set-url https://your-provider/endpoint
 
 **Option 3 — Environment variable:**
 ```bash
-export LIVECOINWATCH_API_KEY=your_api_key_here
+export FETCHRATE_API_KEY=your_api_key_here
 ```
 
 When running in HTTP mode, the API key and provider URL can also be set via the web UI under **⚙ API Settings**.

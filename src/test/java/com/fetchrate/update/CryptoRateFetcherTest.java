@@ -33,7 +33,7 @@ class CryptoRateFetcherTest {
 
     @Test
     void fetchFromLiveCoinWatch_noKeyAnywhere_throwsIllegalState() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn(null);
+        when(database.getMeta("crypto_api_key")).thenReturn(null);
         when(config.getApiKey()).thenReturn("");
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
@@ -43,7 +43,7 @@ class CryptoRateFetcherTest {
 
     @Test
     void fetchFromLiveCoinWatch_bothNull_throwsIllegalState() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn(null);
+        when(database.getMeta("crypto_api_key")).thenReturn(null);
         when(config.getApiKey()).thenReturn(null);
 
         assertThrows(IllegalStateException.class, () ->
@@ -52,8 +52,8 @@ class CryptoRateFetcherTest {
 
     @Test
     void fetchFromLiveCoinWatch_dbKeyPresent_usedWithoutCallingConfig() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn("db-key");
-        when(config.getHistoryUrl()).thenReturn("http://localhost:1");
+        when(database.getMeta("crypto_api_key")).thenReturn("db-key");
+        when(config.getProviderUrl()).thenReturn("http://localhost:1");
 
         // Should throw RuntimeException (network/IO), not IllegalStateException
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
@@ -66,9 +66,9 @@ class CryptoRateFetcherTest {
 
     @Test
     void fetchFromLiveCoinWatch_dbKeyBlankFallsBackToConfig() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn("   ");
+        when(database.getMeta("crypto_api_key")).thenReturn("   ");
         when(config.getApiKey()).thenReturn("config-key");
-        when(config.getHistoryUrl()).thenReturn("http://localhost:1");
+        when(config.getProviderUrl()).thenReturn("http://localhost:1");
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
                 fetcher.fetchFromLiveCoinWatch("BTC", start, end));
@@ -79,9 +79,9 @@ class CryptoRateFetcherTest {
 
     @Test
     void fetchFromLiveCoinWatch_dbKeyEmptyStringFallsBackToConfig() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn("");
+        when(database.getMeta("crypto_api_key")).thenReturn("");
         when(config.getApiKey()).thenReturn("config-key");
-        when(config.getHistoryUrl()).thenReturn("http://localhost:1");
+        when(config.getProviderUrl()).thenReturn("http://localhost:1");
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
                 fetcher.fetchFromLiveCoinWatch("BTC", start, end));
@@ -93,65 +93,65 @@ class CryptoRateFetcherTest {
 
     @Test
     void fetchFromLiveCoinWatch_dbUrlPresent_usedWithoutCallingConfigUrl() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn("key");
-        when(database.getMeta("livecoinwatch_history_url")).thenReturn("http://localhost:1/custom");
+        when(database.getMeta("crypto_api_key")).thenReturn("key");
+        when(database.getMeta("crypto_provider_url")).thenReturn("http://localhost:1/custom");
 
         assertThrows(RuntimeException.class, () ->
                 fetcher.fetchFromLiveCoinWatch("BTC", start, end));
 
-        verify(config, never()).getHistoryUrl();
+        verify(config, never()).getProviderUrl();
     }
 
     @Test
     void fetchFromLiveCoinWatch_dbUrlBlankFallsBackToConfigUrl() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn("key");
-        when(database.getMeta("livecoinwatch_history_url")).thenReturn("  ");
-        when(config.getHistoryUrl()).thenReturn("http://localhost:1");
+        when(database.getMeta("crypto_api_key")).thenReturn("key");
+        when(database.getMeta("crypto_provider_url")).thenReturn("  ");
+        when(config.getProviderUrl()).thenReturn("http://localhost:1");
 
         assertThrows(RuntimeException.class, () ->
                 fetcher.fetchFromLiveCoinWatch("BTC", start, end));
 
-        verify(config).getHistoryUrl();
+        verify(config).getProviderUrl();
     }
 
     @Test
     void fetchFromLiveCoinWatch_dbUrlNullFallsBackToConfigUrl() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn("key");
-        when(database.getMeta("livecoinwatch_history_url")).thenReturn(null);
-        when(config.getHistoryUrl()).thenReturn("http://localhost:1");
+        when(database.getMeta("crypto_api_key")).thenReturn("key");
+        when(database.getMeta("crypto_provider_url")).thenReturn(null);
+        when(config.getProviderUrl()).thenReturn("http://localhost:1");
 
         assertThrows(RuntimeException.class, () ->
                 fetcher.fetchFromLiveCoinWatch("BTC", start, end));
 
-        verify(config).getHistoryUrl();
+        verify(config).getProviderUrl();
     }
 
     // --- isApiKeyAvailable ---
 
     @Test
     void isApiKeyAvailable_dbKeyPresent_returnsTrue() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn("some-key");
+        when(database.getMeta("crypto_api_key")).thenReturn("some-key");
         assertTrue(fetcher.isApiKeyAvailable());
         verify(config, never()).getApiKey();
     }
 
     @Test
     void isApiKeyAvailable_dbKeyBlankConfigKeyPresent_returnsTrue() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn("");
+        when(database.getMeta("crypto_api_key")).thenReturn("");
         when(config.getApiKey()).thenReturn("config-key");
         assertTrue(fetcher.isApiKeyAvailable());
     }
 
     @Test
     void isApiKeyAvailable_noKeyAnywhere_returnsFalse() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn(null);
+        when(database.getMeta("crypto_api_key")).thenReturn(null);
         when(config.getApiKey()).thenReturn(null);
         assertFalse(fetcher.isApiKeyAvailable());
     }
 
     @Test
     void isApiKeyAvailable_dbKeyBlankConfigKeyBlank_returnsFalse() {
-        when(database.getMeta("livecoinwatch_api_key")).thenReturn("  ");
+        when(database.getMeta("crypto_api_key")).thenReturn("  ");
         when(config.getApiKey()).thenReturn("  ");
         assertFalse(fetcher.isApiKeyAvailable());
     }

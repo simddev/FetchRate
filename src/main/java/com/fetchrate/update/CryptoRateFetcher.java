@@ -46,7 +46,7 @@ public class CryptoRateFetcher {
      * (set via the settings UI or CLI) over the application properties file.
      */
     private String resolveApiKey() {
-        String dbKey = database.getMeta("livecoinwatch_api_key");
+        String dbKey = database.getMeta("crypto_api_key");
         if (dbKey != null && !dbKey.isBlank()) {
             return dbKey;
         }
@@ -67,11 +67,11 @@ public class CryptoRateFetcher {
      * over the default from application properties.
      */
     private String resolveHistoryUrl() {
-        String dbUrl = database.getMeta("livecoinwatch_history_url");
+        String dbUrl = database.getMeta("crypto_provider_url");
         if (dbUrl != null && !dbUrl.isBlank()) {
             return dbUrl;
         }
-        return config.getHistoryUrl();
+        return config.getProviderUrl();
     }
 
     /**
