@@ -52,8 +52,8 @@ public class Convertor {
                         ? query.date().minusDays(1)
                         : query.date().minusDays(2);
                 throw new IllegalArgumentException(
-                        "No ECB rate for " + query.date() + " (weekend). " +
-                        "The ECB only publishes rates on weekdays — try " + friday + " (Friday)."
+                        "No ECB rate for " + query.date() + " (weekend or holiday). " +
+                        "The ECB only publishes rates on business days — try " + friday + " (Friday)."
                 );
             }
 
