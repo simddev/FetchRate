@@ -24,6 +24,13 @@ public class SettingsController {
         this.database = database;
     }
 
+    /**
+     * Returns the current runtime settings as a JSON object.
+     * {@code apiKeyConfigured} is {@code true} when a non-blank API key is stored.
+     * {@code providerUrl} contains the custom endpoint URL, or {@code null} if the default is used.
+     *
+     * @return Map containing {@code apiKeyConfigured} (Boolean) and {@code providerUrl} (String or null).
+     */
     @GetMapping
     public Map<String, Object> getSettings() {
         String key = database.getMeta("livecoinwatch_api_key");
@@ -34,6 +41,14 @@ public class SettingsController {
         return result;
     }
 
+    /**
+     * Saves one or both runtime settings to the database.
+     * At least one field ({@code apiKey} or {@code providerUrl}) must be present and non-blank.
+     * The provider URL, if supplied, must use the {@code http} or {@code https} scheme.
+     *
+     * @param body Request body containing optional {@code apiKey} and/or {@code providerUrl} fields.
+     * @return 200 OK on success, 400 Bad Request if no valid field is provided or the URL is invalid.
+     */
     @PostMapping
     public ResponseEntity<?> saveSettings(@RequestBody Map<String, String> body) {
         String apiKey = body.get("apiKey");

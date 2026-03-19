@@ -53,6 +53,7 @@ public class CurrencyClassifier {
             "USDT", "Tether"
     );
 
+    /** Returns a combined map of all supported currency symbols to their full names, including EUR. */
     public Map<String, String> getCurrencyNames() {
         Map<String, String> all = new java.util.HashMap<>(FIAT_NAMES);
         all.putAll(CRYPTO_NAMES);
@@ -60,18 +61,26 @@ public class CurrencyClassifier {
         return all;
     }
 
+    /** Returns the set of all supported fiat currency symbols. */
     public Set<String> getSupportedFiats() {
         return FIAT_NAMES.keySet();
     }
 
+    /** Returns {@code true} if the symbol is a known fiat currency tracked by the ECB. */
     public boolean isFiat(String symbol) {
         return FIAT_NAMES.containsKey(symbol);
     }
 
+    /** Returns {@code true} if the symbol is a known cryptocurrency. */
     public boolean isCrypto(String symbol) {
         return CRYPTO_NAMES.containsKey(symbol);
     }
 
+    /**
+     * Returns {@code true} if the symbol is supported for conversion.
+     * Known fiats, known cryptos, EUR, and any uppercase alphanumeric token (2–10 chars)
+     * are considered supported, allowing unlisted crypto symbols to pass validation.
+     */
     public boolean isSupported(String symbol) {
         return isFiat(symbol) || isCrypto(symbol) || "EUR".equals(symbol) || looksLikeCrypto(symbol);
     }

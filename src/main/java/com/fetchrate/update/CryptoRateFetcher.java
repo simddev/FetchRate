@@ -18,9 +18,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This class serves to acquire crypto exchange rate data.
- * It can fetch data from local .csv files in /data/crypto,
- * or from LiveCoinWatch API if an API key is provided.
+ * Acquires cryptocurrency exchange rate data from two sources:
+ * local CSV files placed in {@code data/crypto/}, and the LiveCoinWatch REST API
+ * when an API key is available. The API key is resolved from the database first,
+ * then falls back to the application properties file.
  */
 @Service
 public class CryptoRateFetcher {
@@ -40,6 +41,10 @@ public class CryptoRateFetcher {
         this.database = database;
     }
 
+    /**
+     * Resolves the LiveCoinWatch API key, preferring the value stored in the database
+     * (set via the settings UI or CLI) over the application properties file.
+     */
     private String resolveApiKey() {
         String dbKey = database.getMeta("livecoinwatch_api_key");
         if (dbKey != null && !dbKey.isBlank()) {
@@ -48,11 +53,19 @@ public class CryptoRateFetcher {
         return config.getApiKey();
     }
 
+    /**
+     * Returns {@code true} if a non-blank LiveCoinWatch API key is available from either
+     * the database or application properties.
+     */
     public boolean isApiKeyAvailable() {
         String key = resolveApiKey();
         return key != null && !key.isBlank();
     }
 
+    /**
+     * Resolves the LiveCoinWatch history endpoint URL, preferring the value stored in the database
+     * over the default from application properties.
+     */
     private String resolveHistoryUrl() {
         String dbUrl = database.getMeta("livecoinwatch_history_url");
         if (dbUrl != null && !dbUrl.isBlank()) {
@@ -62,8 +75,11 @@ public class CryptoRateFetcher {
     }
 
     /**
-     * Reads all *.csv files in data/crypto and returns:
-     *   symbol -> csv text
+     * Reads all {@code *.csv} files from the configured crypto directory (default: {@code data/crypto}).
+     * Each file should be named after the coin symbol (e.g., {@code BTC.csv}).
+     *
+     * @return A map of upper-cased coin symbol to raw CSV content.
+     * @throws RuntimeException if the directory cannot be read.
      */
     public Map<String, String> fetchAllCsv() {
         try {
@@ -89,12 +105,14 @@ public class CryptoRateFetcher {
     }
 
     /**
-     * Fetches historical rates for a given coin from LiveCoinWatch.
+     * Fetches historical EUR rates for a given coin from the LiveCoinWatch API.
      *
-     * @param symbol The crypto symbol (e.g., BTC).
-     * @param start  Start date.
-     * @param end    End date.
-     * @return JSON response from API.
+     * @param symbol The crypto symbol (e.g., {@code BTC}).
+     * @param start  Start date (inclusive).
+     * @param end    End date (inclusive).
+     * @return Raw JSON response body from the API.
+     * @throws IllegalStateException if no API key is configured.
+     * @throws RuntimeException      if the API returns a non-200 status or the request fails.
      */
     public String fetchFromLiveCoinWatch(String symbol, LocalDate start, LocalDate end) {
         String apiKey = resolveApiKey();

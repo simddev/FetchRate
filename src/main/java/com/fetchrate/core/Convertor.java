@@ -11,6 +11,13 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Converts a given amount in a foreign currency to EUR using rates stored in the database.
+ * <p>
+ * Fiat conversions use ECB daily exchange rates (EUR base). Crypto conversions use rates
+ * fetched from CSV files or the LiveCoinWatch API. If a crypto rate is missing for the
+ * requested date, a lazy fetch is attempted before throwing.
+ */
 @Service
 public class Convertor {
 
@@ -27,8 +34,16 @@ public class Convertor {
     }
 
     /**
-     * A simple converting method, extracts the rate from the ExchangeRateRecord
-     * for the given date, and applies it to the amount given by the QueryRecord.
+     * Converts the amount in the given currency to EUR for the requested date.
+     * <p>
+     * For fiat currencies, divides the amount by the ECB rate (1 EUR = N foreign units).
+     * For crypto, multiplies the amount by the stored rate (1 coin = N EUR).
+     * Weekends are rejected for fiat because the ECB does not publish rates on those days.
+     *
+     * @param query The query containing the amount, currency symbol, and date.
+     * @return The converted amount in EUR, rounded to 2 decimal places.
+     * @throws IllegalArgumentException if the currency is unsupported, the date falls on a
+     *                                  weekend (for fiat), or no rate is found in the database.
      */
     public BigDecimal convert(QueryRecord query) {
         String currencySymbol = query.currencySymbol().toUpperCase();

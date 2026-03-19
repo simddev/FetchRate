@@ -17,8 +17,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class serves to turn the data given into the proper format and create a
- * List out of it, which can be then stored in the database.
+ * Parses cryptocurrency rate data from two formats into {@link com.fetchrate.core.CryptoRateRecord} lists:
+ * CSV files (for historical bulk imports) and LiveCoinWatch JSON API responses.
+ * Malformed lines and entries are skipped individually so that one bad record does not
+ * abort the entire parse.
  */
 @Service
 public class CryptoRateParser {
@@ -32,11 +34,15 @@ public class CryptoRateParser {
     }
 
     /**
-     * This method parses the data given to it into a ready for database List.
+     * Parses a CSV file of historical cryptocurrency prices into a list of records.
+     * <p>
+     * The CSV must contain at least an {@code end} column (ISO date) and a {@code close} column
+     * (closing price in EUR). Header names are matched case-insensitively. Lines with missing,
+     * blank, or unparseable values are silently skipped.
      *
-     * @param symbol The symbol of the cryptocurrency.
-     * @param csv The raw data to be parsed.
-     * @return Returns a List of CryptoRateRecord.
+     * @param symbol The coin symbol (e.g., {@code BTC}); stored in upper case.
+     * @param csv    The raw CSV content including a header row.
+     * @return List of parsed {@link com.fetchrate.core.CryptoRateRecord} objects.
      */
     public List<CryptoRateRecord> parseCrypto(String symbol, String csv) {
 
@@ -79,10 +85,15 @@ public class CryptoRateParser {
     }
 
     /**
-     * Parses the JSON response from LiveCoinWatch.
+     * Parses a LiveCoinWatch API JSON response into a list of records.
+     * <p>
+     * Attempts standard Jackson deserialization first; if that fails (e.g., truncated response),
+     * falls back to regex-based manual extraction. The coin symbol is read from the {@code code}
+     * field in the JSON when present, otherwise the provided {@code symbol} parameter is used.
      *
-     * @param json The JSON string from the API.
-     * @return List of CryptoRateRecord.
+     * @param symbol Fallback coin symbol if none is found in the JSON.
+     * @param json   The raw JSON string from the LiveCoinWatch API.
+     * @return List of parsed {@link com.fetchrate.core.CryptoRateRecord} objects.
      */
     public List<CryptoRateRecord> parseLiveCoinWatch(String symbol, String json) {
         List<CryptoRateRecord> cryptoRecord = new ArrayList<>();

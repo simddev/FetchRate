@@ -12,7 +12,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * This class serves to parse the data from a String format into a List of Records format.
+ * Parses ECB XML exchange rate feeds into a list of {@link com.fetchrate.core.FiatRateRecord} objects.
+ * Uses regex to extract date blocks and currency/rate pairs from the predictable ECB XML format.
+ * Only currencies recognized by {@link com.fetchrate.core.CurrencyClassifier} are retained.
  */
 @Service
 public class FiatRateParser {
