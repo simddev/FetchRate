@@ -59,9 +59,11 @@ Alternatively the user can send the `start_http_server` argument when running th
 
 `/convert?amount=123.456&input_currency=ABCD&date=YYYY-MM-DD`
 
-#### WEB UI   
+#### Web UI
 
 Once the servlet is started a GUI version is available at `/`.
+
+![FetchRate web interface](images/ui-preview.png)
 
 ### Database & Updates
 
@@ -113,7 +115,7 @@ The crypto CSV directory defaults to `data/crypto` and can be overridden with th
 
 ### Architecture Overview
 
-![Currency conversion architecture](/images/architecture.png)
+![Currency conversion architecture](images/architecture.png)
 
 ## License
 Copyright (c) 2026 Simon D. All rights reserved.
