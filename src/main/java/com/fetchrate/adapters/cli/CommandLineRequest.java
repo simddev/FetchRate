@@ -208,9 +208,10 @@ public class CommandLineRequest implements CommandLineRunner {
         System.out.println("    -c, --input-currency <s>   Currency or crypto symbol (e.g. USD, BTC)");
         System.out.println("    -d, --date <YYYY-MM-DD>    Date of the exchange rate");
         System.out.println();
-        System.out.println("  start_http_server     Start the HTTP server on port 8000");
-        System.out.println("                        Web UI available at http://localhost:8000");
-        System.out.println("                        API endpoint: GET /convert?amount=N&input_currency=X&date=YYYY-MM-DD");
+        System.out.println("  start_http_server     Start the HTTP server (default port: 8000)");
+        System.out.println("    --port <n>           Listen on a custom port instead of 8000");
+        System.out.println("                        Web UI: http://localhost:<port>/");
+        System.out.println("                        API:    GET /convert?amount=N&input_currency=X&date=YYYY-MM-DD");
         System.out.println();
         System.out.println("  config                Manage runtime configuration");
         System.out.println("    --set-key <key>      Save your crypto data provider API key");
@@ -226,6 +227,7 @@ public class CommandLineRequest implements CommandLineRunner {
         System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency USD --date 2024-01-15");
         System.out.println("  java -jar fetchrate.jar convert -a 0.5 -c BTC -d 2024-01-15");
         System.out.println("  java -jar fetchrate.jar start_http_server");
+        System.out.println("  java -jar fetchrate.jar start_http_server --port 9090");
         System.out.println("  java -jar fetchrate.jar config --set-key YOUR_API_KEY");
     }
 

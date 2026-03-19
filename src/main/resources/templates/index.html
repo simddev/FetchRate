@@ -12,6 +12,8 @@
             --accent-color: #9d50bb;
             --input-bg: #242424;
             --input-border: #333;
+            --muted: #666;
+            --muted-light: #888;
         }
         body {
             background-color: var(--bg-color);
@@ -22,6 +24,8 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            padding: 1.5rem 0;
+            box-sizing: border-box;
         }
         .container {
             background-color: var(--container-bg);
@@ -29,146 +33,163 @@
             border-radius: 16px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             width: 100%;
-            max-width: 550px;
-            text-align: center;
+            max-width: 520px;
             border: 1px solid rgba(255,255,255,0.05);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
         }
         h1 {
             color: var(--accent-color);
-            font-size: 3.5rem;
-            margin-bottom: 2rem;
+            font-size: 3rem;
+            margin: 0 0 0.4rem 0;
             letter-spacing: -1px;
             font-weight: 800;
             text-shadow: 0 0 20px rgba(157, 80, 187, 0.3);
-            margin-top: 0;
         }
-        .form-group {
+        .tagline {
+            color: var(--muted-light);
+            font-size: 0.9rem;
+            margin: 0;
+            letter-spacing: 0.02em;
+        }
+        .field-group {
+            margin-bottom: 1.2rem;
+        }
+        .field-label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--muted-light);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 6px;
+        }
+        .currency-row {
             display: flex;
             gap: 10px;
-            margin-bottom: 1.5rem;
-            justify-content: center;
-            flex-wrap: wrap;
+            align-items: center;
         }
         input, select {
             background-color: var(--input-bg);
             color: var(--text-color);
             border: 1px solid var(--input-border);
-            padding: 10px 15px;
-            border-radius: 6px;
+            padding: 10px 14px;
+            border-radius: 8px;
             font-size: 1rem;
             outline: none;
-            transition: border-color 0.3s;
+            transition: border-color 0.2s;
+            width: 100%;
+            box-sizing: border-box;
         }
         input:focus, select:focus {
             border-color: var(--accent-color);
         }
         #amount {
             flex: 2;
-            min-width: 120px;
+            min-width: 0;
+            width: auto;
         }
-        select {
+        .currency-row select {
             flex: 1;
-            min-width: 100px;
+            min-width: 0;
+            width: auto;
         }
-        input[type="date"] {
-            width: 100%;
-            margin-bottom: 1.5rem;
-            box-sizing: border-box;
+        .or-divider {
+            color: var(--muted);
+            font-size: 0.85rem;
+            flex-shrink: 0;
         }
-        button {
-            background-color: var(--accent-color);
-            color: #000;
+        #convert-btn {
+            background: linear-gradient(135deg, var(--accent-color), #7b2fa0);
+            color: #fff;
             border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-size: 1.1rem;
+            padding: 13px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
-            transition: opacity 0.3s, transform 0.1s;
+            margin-top: 0.5rem;
+            transition: opacity 0.2s, transform 0.1s;
+            letter-spacing: 0.02em;
         }
-        button:hover {
-            opacity: 0.9;
+        #convert-btn:hover {
+            opacity: 0.88;
         }
-        button:active {
+        #convert-btn:active {
             transform: scale(0.98);
         }
+        #convert-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
         #result {
-            margin-top: 2rem;
-            padding: 15px;
-            border-radius: 6px;
-            background-color: rgba(187, 134, 252, 0.1);
-            font-size: 1.2rem;
+            margin-top: 1.8rem;
+            padding: 1.2rem 1.4rem;
+            border-radius: 10px;
+            background-color: rgba(157, 80, 187, 0.08);
+            border: 1px solid rgba(157, 80, 187, 0.15);
             display: none;
-            animation: fadeIn 0.5s;
+            animation: fadeIn 0.4s ease;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-        .error {
-            color: #cf6679;
-        }
-        .instructions {
-            color: #a0a0a0;
-            font-size: 0.9rem;
-            margin-bottom: 2rem;
-            line-height: 1.4;
-        }
-        .human-readable {
-            margin-top: 1rem;
-            font-size: 1rem;
-            color: #b0b0b0;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 1rem;
-        }
-        .or-divider {
-            display: flex;
-            align-items: center;
-            color: #555;
-            font-size: 0.85rem;
-            flex-shrink: 0;
-            padding: 0 2px;
-        }
-        .footer {
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.8rem;
-            color: #555;
-        }
-        .footer a {
-            color: #7a7a7a;
-            text-decoration: none;
-        }
-        .footer a:hover {
+        .result-amount {
+            font-size: 2rem;
+            font-weight: 700;
             color: var(--accent-color);
+            margin-bottom: 0.4rem;
+            letter-spacing: -0.5px;
+        }
+        .result-summary {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            line-height: 1.5;
+        }
+        .result-raw {
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin-top: 0.6rem;
+            font-family: 'Courier New', monospace;
+        }
+        .error-text {
+            color: #cf6679;
+            font-size: 0.95rem;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            margin: 1.8rem 0 0 0;
         }
         .settings-toggle {
             background: none;
             border: none;
-            color: #444;
+            color: var(--muted);
             font-size: 0.8rem;
             cursor: pointer;
-            padding: 4px 0;
-            width: auto;
-            margin-top: 1.2rem;
-            display: block;
+            padding: 0.8rem 0 0 0;
+            width: 100%;
+            text-align: left;
             transition: color 0.2s;
+            display: block;
         }
         .settings-toggle:hover {
-            color: #777;
-            opacity: 1;
-            transform: none;
+            color: var(--muted-light);
         }
         #settings-panel {
             margin-top: 0.75rem;
-            text-align: left;
         }
         .settings-label {
-            font-size: 0.8rem;
-            color: #777;
-            margin: 10px 0 4px 0;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--muted-light);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin: 12px 0 5px 0;
         }
         .settings-status {
             font-size: 0.85rem;
@@ -183,88 +204,133 @@
             font-size: 0.9rem;
         }
         .settings-row button {
-            width: auto;
+            background-color: #2a2a2a;
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
             padding: 8px 16px;
+            border-radius: 8px;
             font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: border-color 0.2s;
+            width: auto;
+        }
+        .settings-row button:hover {
+            border-color: var(--accent-color);
         }
         #settings-msg {
             font-size: 0.8rem;
-            margin-top: 6px;
+            margin-top: 8px;
             min-height: 1.2em;
         }
         .settings-divider {
             border: none;
             border-top: 1px solid rgba(255,255,255,0.05);
-            margin: 10px 0;
+            margin: 12px 0;
+        }
+        .footer {
+            margin-top: 1.8rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .footer-sources {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+        .contact-btn {
+            font-size: 0.78rem;
+            color: var(--muted-light);
+            text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 5px 12px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .contact-btn:hover {
+            color: var(--accent-color);
+            border-color: var(--accent-color);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>FetchRate</h1>
-        <div class="instructions">
-            Enter the amount and currency on a given date to learn how much it was worth in Euro on that day.<br>
-            Exchange rates used are from the European Central Bank and LiveCoinWatch.
+        <div class="header">
+            <h1>FetchRate</h1>
+            <p class="tagline">Historical exchange rates &mdash; converted to EUR</p>
         </div>
-        <div class="form-group">
-            <input type="text" id="amount" placeholder="Amount" aria-label="Amount">
-            <select id="fiat-currency" aria-label="Fiat currency" onchange="clearOther(this, 'crypto-currency')">
-                <option value="" disabled selected>Fiat</option>
-                <option value="EUR">EUR - Euro</option>
-                <option th:each="curr : ${fiats}" th:value="${curr}" th:text="${curr} + ' - ' + ${currencyNames.get(curr)}"></option>
-            </select>
-            <span class="or-divider">or</span>
-            <select id="crypto-currency" aria-label="Cryptocurrency" onchange="clearOther(this, 'fiat-currency')">
-                <option value="" disabled selected>Crypto</option>
-                <option th:each="curr : ${cryptos}" th:value="${curr}" th:text="${curr} + ' - ' + ${currencyNames.get(curr)}"></option>
-            </select>
+
+        <div class="field-group">
+            <label class="field-label" for="amount">Amount</label>
+            <input type="text" id="amount" placeholder="e.g. 100" aria-label="Amount">
         </div>
-        <input type="date" id="date" aria-label="Date">
-        <button id="fetch-btn" onclick="fetchRate()">Fetch Rate</button>
+
+        <div class="field-group">
+            <label class="field-label">Currency</label>
+            <div class="currency-row">
+                <select id="fiat-currency" aria-label="Fiat currency" onchange="clearOther(this, 'crypto-currency')">
+                    <option value="" disabled selected>Fiat</option>
+                    <option value="EUR">EUR — Euro</option>
+                    <option th:each="curr : ${fiats}" th:value="${curr}" th:text="${curr} + ' — ' + ${currencyNames.get(curr)}"></option>
+                </select>
+                <span class="or-divider">or</span>
+                <select id="crypto-currency" aria-label="Cryptocurrency" onchange="clearOther(this, 'fiat-currency')">
+                    <option value="" disabled selected>Crypto</option>
+                    <option th:each="curr : ${cryptos}" th:value="${curr}" th:text="${curr} + ' — ' + ${currencyNames.get(curr)}"></option>
+                </select>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <label class="field-label" for="date">Date</label>
+            <input type="date" id="date" aria-label="Date">
+        </div>
+
+        <button id="convert-btn" onclick="fetchRate()">Convert to EUR</button>
+
         <div id="result"></div>
+
+        <hr class="divider">
         <button class="settings-toggle" onclick="toggleSettings()" aria-label="Toggle API settings">⚙ API Settings</button>
         <div id="settings-panel" style="display:none">
             <div class="settings-label">API Key</div>
             <div id="api-key-status" class="settings-status"></div>
             <div class="settings-row">
-                <input type="password" id="api-key-input" placeholder="LiveCoinWatch API key" aria-label="API key">
+                <input type="password" id="api-key-input" placeholder="Crypto data provider API key" aria-label="API key">
                 <button onclick="saveApiKey()">Save</button>
             </div>
             <hr class="settings-divider">
             <div class="settings-label">Provider URL</div>
             <div id="provider-url-status" class="settings-status"></div>
             <div class="settings-row">
-                <input type="text" id="provider-url-input" placeholder="https://api.livecoinwatch.com/coins/single/history" aria-label="Provider URL">
+                <input type="text" id="provider-url-input" placeholder="https://your-provider/endpoint" aria-label="Provider URL">
                 <button onclick="saveProviderUrl()">Save</button>
             </div>
             <div id="settings-msg"></div>
         </div>
+
         <div class="footer">
-            For commercial use: <a href="mailto:simon.d.dev@proton.me">simon.d.dev@proton.me</a>
+            <span class="footer-sources">Fiat: ECB &nbsp;·&nbsp; Crypto: configurable</span>
+            <a class="contact-btn" href="mailto:simon.d.dev@proton.me">Contact</a>
         </div>
     </div>
 
     <script th:inline="javascript">
         const currencyNames = /*[[${currencyNames}]]*/ {};
 
-        // Set today as default date and block future dates
         const dateInput = document.getElementById('date');
         const today = new Date().toISOString().split('T')[0];
         dateInput.value = today;
         dateInput.max = today;
 
-        // Add Enter key listener to amount field
         document.getElementById('amount').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                fetchRate();
-            }
+            if (e.key === 'Enter') fetchRate();
         });
-
-        // Add Enter key listener to date field
         document.getElementById('date').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                fetchRate();
-            }
+            if (e.key === 'Enter') fetchRate();
         });
 
         function formatNumber(num) {
@@ -272,7 +338,7 @@
         }
 
         function getOrdinal(n) {
-            const s = ["th", "st", "nd", "rd"];
+            const s = ['th', 'st', 'nd', 'rd'];
             const v = n % 100;
             return n + (s[(v - 20) % 10] || s[v] || s[0]);
         }
@@ -284,9 +350,7 @@
         }
 
         function clearOther(current, otherId) {
-            if (current.value) {
-                document.getElementById(otherId).selectedIndex = 0;
-            }
+            if (current.value) document.getElementById(otherId).selectedIndex = 0;
         }
 
         async function fetchRate() {
@@ -296,12 +360,10 @@
             const currency = fiatSelect.value || cryptoSelect.value;
             const date = document.getElementById('date').value;
             const resultDiv = document.getElementById('result');
-            const btn = document.getElementById('fetch-btn');
-
-            resultDiv.classList.remove('error');
+            const btn = document.getElementById('convert-btn');
 
             if (!amountInput || !currency || !date) {
-                resultDiv.innerHTML = '<span class="error">Please fill all fields</span>';
+                resultDiv.innerHTML = '<span class="error-text">Please fill in all fields.</span>';
                 resultDiv.style.display = 'block';
                 return;
             }
@@ -312,7 +374,7 @@
             resultDiv.style.animation = '';
 
             btn.disabled = true;
-            btn.textContent = 'Fetching...';
+            btn.textContent = 'Fetching…';
 
             try {
                 const url = `/convert?amount=${encodeURIComponent(amountInput)}&input_currency=${currency}&date=${date}`;
@@ -320,30 +382,28 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    const amountFormatted = formatNumber(data.input.amount);
                     const euroFormatted = formatNumber(data.output.inEuro);
+                    const amountFormatted = formatNumber(data.input.amount);
                     const currencyName = currencyNames[data.input.currencySymbol] || data.input.currencySymbol;
                     const humanDate = formatDate(data.input.date);
                     const dateISO = data.input.date.replace(/-/g, '/');
 
-                    const rawOutput = `${amountFormatted} ${data.input.currencySymbol} on ${dateISO} was ${euroFormatted} EUR.`;
-                    const humanOutput = `<div class="human-readable">${amountFormatted} ${currencyName} (${data.input.currencySymbol}) on the ${humanDate} was equivalent to ${euroFormatted} Euro (EUR).</div>`;
-
-                    resultDiv.innerHTML = `<div>${rawOutput}</div>${humanOutput}`;
-                    resultDiv.classList.remove('error');
+                    resultDiv.innerHTML =
+                        `<div class="result-amount">${euroFormatted} EUR</div>` +
+                        `<div class="result-summary">${amountFormatted} ${currencyName} (${data.input.currencySymbol})<br>on the ${humanDate}</div>` +
+                        `<div class="result-raw">${amountFormatted} ${data.input.currencySymbol} on ${dateISO} = ${euroFormatted} EUR</div>`;
                 } else {
-                    resultDiv.innerText = data.error || 'An error occurred';
-                    resultDiv.classList.add('error');
+                    resultDiv.innerHTML = `<span class="error-text">${data.error || 'An error occurred.'}</span>`;
                 }
             } catch (error) {
-                resultDiv.innerText = 'Failed to connect to server';
-                resultDiv.classList.add('error');
+                resultDiv.innerHTML = '<span class="error-text">Failed to connect to server.</span>';
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Fetch Rate';
+                btn.textContent = 'Convert to EUR';
             }
             resultDiv.style.display = 'block';
         }
+
         async function loadSettings() {
             try {
                 const res = await fetch('/settings');
@@ -352,7 +412,7 @@
                 const keyEl = document.getElementById('api-key-status');
                 keyEl.innerHTML = data.apiKeyConfigured
                     ? '<span style="color:#6abf69">✓ Configured</span>'
-                    : '<span class="error">✗ Not set — crypto rates will not update</span>';
+                    : '<span class="error-text">✗ Not set — crypto rates will not update</span>';
 
                 const urlEl = document.getElementById('provider-url-status');
                 if (data.providerUrl) {
@@ -362,7 +422,7 @@
                     safe.textContent = data.providerUrl;
                     urlEl.appendChild(safe);
                 } else {
-                    urlEl.innerHTML = '<span style="color:#555">Using default (LiveCoinWatch)</span>';
+                    urlEl.innerHTML = '<span style="color:#555">Using default provider</span>';
                 }
             } catch (e) {}
         }
@@ -389,17 +449,18 @@
                     msg.innerHTML = '<span style="color:#6abf69">Saved</span>';
                     loadSettings();
                 } else {
-                    msg.innerHTML = '<span class="error">Failed to save</span>';
+                    const data = await res.json();
+                    msg.innerHTML = `<span class="error-text">${data.error || 'Failed to save'}</span>`;
                 }
             } catch (e) {
-                msg.innerHTML = '<span class="error">Failed to connect</span>';
+                msg.innerHTML = '<span class="error-text">Failed to connect</span>';
             }
         }
 
         function saveApiKey() {
             const key = document.getElementById('api-key-input').value.trim();
             const msg = document.getElementById('settings-msg');
-            if (!key) { msg.innerHTML = '<span class="error">Please enter an API key</span>'; return; }
+            if (!key) { msg.innerHTML = '<span class="error-text">Please enter an API key</span>'; return; }
             document.getElementById('api-key-input').value = '';
             postSetting({apiKey: key});
         }
@@ -407,7 +468,7 @@
         function saveProviderUrl() {
             const url = document.getElementById('provider-url-input').value.trim();
             const msg = document.getElementById('settings-msg');
-            if (!url) { msg.innerHTML = '<span class="error">Please enter a URL</span>'; return; }
+            if (!url) { msg.innerHTML = '<span class="error-text">Please enter a URL</span>'; return; }
             document.getElementById('provider-url-input').value = '';
             postSetting({providerUrl: url});
         }
