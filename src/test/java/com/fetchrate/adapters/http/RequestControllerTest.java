@@ -114,6 +114,46 @@ class RequestControllerTest {
     }
 
     @Test
+    void convert_amountWithUnderscores_parsesAndReturns200() {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convert(any(QueryRecord.class))).thenReturn(new BigDecimal("91500.00"));
+
+        ResponseEntity<?> response = controller.convert("100_000", "USD", "2024-01-15");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void convert_lowercaseCurrency_isNormalized() {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convert(any(QueryRecord.class))).thenReturn(new BigDecimal("92.50"));
+
+        ResponseEntity<?> response = controller.convert("100", "usd", "2024-01-15");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void convert_today_returns200() {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convert(any(QueryRecord.class))).thenReturn(new BigDecimal("92.50"));
+
+        ResponseEntity<?> response = controller.convert("100", "USD", LocalDate.now().toString());
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void convert_updatesRatesIfNotUpdatedToday() {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(false);
+        when(convertor.convert(any(QueryRecord.class))).thenReturn(new BigDecimal("92.50"));
+
+        controller.convert("100", "USD", "2024-01-15");
+
+        verify(rateUpdater).updateRates();
+    }
+
+    @Test
     void health_returnsOk() {
         var result = controller.health();
         assertEquals("ok", result.get("status"));

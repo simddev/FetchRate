@@ -122,6 +122,28 @@
             border-top: 1px solid rgba(255,255,255,0.1);
             padding-top: 1rem;
         }
+        .or-divider {
+            display: flex;
+            align-items: center;
+            color: #555;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            padding: 0 2px;
+        }
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.8rem;
+            color: #555;
+        }
+        .footer a {
+            color: #7a7a7a;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            color: var(--accent-color);
+        }
     </style>
 </head>
 <body>
@@ -138,6 +160,7 @@
                 <option value="EUR">EUR - Euro</option>
                 <option th:each="curr : ${fiats}" th:value="${curr}" th:text="${curr} + ' - ' + ${currencyNames.get(curr)}"></option>
             </select>
+            <span class="or-divider">or</span>
             <select id="crypto-currency" aria-label="Cryptocurrency" onchange="clearOther(this, 'fiat-currency')">
                 <option value="" disabled selected>Crypto</option>
                 <option th:each="curr : ${cryptos}" th:value="${curr}" th:text="${curr} + ' - ' + ${currencyNames.get(curr)}"></option>
@@ -146,6 +169,9 @@
         <input type="date" id="date" aria-label="Date">
         <button id="fetch-btn" onclick="fetchRate()">Fetch Rate</button>
         <div id="result"></div>
+        <div class="footer">
+            For commercial use: <a href="mailto:simon.d.dev@proton.me">simon.d.dev@proton.me</a>
+        </div>
     </div>
 
     <script th:inline="javascript">
@@ -201,6 +227,8 @@
             const date = document.getElementById('date').value;
             const resultDiv = document.getElementById('result');
             const btn = document.getElementById('fetch-btn');
+
+            resultDiv.classList.remove('error');
 
             if (!amountInput || !currency || !date) {
                 resultDiv.innerHTML = '<span class="error">Please fill all fields</span>';
