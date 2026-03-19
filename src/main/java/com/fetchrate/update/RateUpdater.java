@@ -55,9 +55,13 @@ public class RateUpdater {
 
         log.info("Updating database, please wait...");
 
+        boolean fiatOk = false;
+        boolean cryptoOk = false;
+
         try {
             List<FiatRateRecord> fiatRecord = fiatUpdate.fetchAndParseFiat();
             database.updateFiatRates(fiatRecord);
+            fiatOk = true;
         } catch (Exception e) {
             log.error("Failed to update fiat rates: {}", e.getMessage());
         }
@@ -67,12 +71,16 @@ public class RateUpdater {
             if (cryptoRecord != null && !cryptoRecord.isEmpty()) {
                 database.updateCryptoRates(cryptoRecord);
             }
+            cryptoOk = true;
         } catch (Exception e) {
             log.error("Failed to update crypto rates: {}", e.getMessage());
         }
 
-        // Updates last update date after both tables are attempted to be updated.
-        database.setMeta("last_update", LocalDate.now().toString());
+        // Only mark as updated today if at least one data source succeeded,
+        // so a full network failure does not suppress a retry for the rest of the day.
+        if (fiatOk || cryptoOk) {
+            database.setMeta("last_update", LocalDate.now().toString());
+        }
     }
 
 }
