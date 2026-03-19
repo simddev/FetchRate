@@ -11,7 +11,7 @@ import java.util.Map;
 
 /**
  * Provides endpoints for reading and writing runtime settings,
- * such as the LiveCoinWatch API key and provider URL stored in the local database.
+ * such as the crypto data provider API key and URL stored in the local database.
  */
 @Profile("http")
 @RestController
@@ -33,8 +33,8 @@ public class SettingsController {
      */
     @GetMapping
     public Map<String, Object> getSettings() {
-        String key = database.getMeta("livecoinwatch_api_key");
-        String url = database.getMeta("livecoinwatch_history_url");
+        String key = database.getMeta("crypto_api_key");
+        String url = database.getMeta("crypto_provider_url");
         Map<String, Object> result = new HashMap<>();
         result.put("apiKeyConfigured", key != null && !key.isBlank());
         result.put("providerUrl", (url != null && !url.isBlank()) ? url : null);
@@ -62,7 +62,7 @@ public class SettingsController {
         }
 
         if (hasKey) {
-            database.setMeta("livecoinwatch_api_key", apiKey.trim());
+            database.setMeta("crypto_api_key", apiKey.trim());
         }
         if (hasUrl) {
             try {
@@ -74,7 +74,7 @@ public class SettingsController {
             } catch (IllegalArgumentException e) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Invalid provider URL format"));
             }
-            database.setMeta("livecoinwatch_history_url", providerUrl.trim());
+            database.setMeta("crypto_provider_url", providerUrl.trim());
         }
 
         return ResponseEntity.ok(Map.of("status", "saved"));

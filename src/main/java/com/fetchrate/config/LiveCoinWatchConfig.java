@@ -4,11 +4,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties(prefix = "livecoinwatch")
+@ConfigurationProperties(prefix = "fetchrate")
 public class LiveCoinWatchConfig {
 
     private String apiKey;
-    private String historyUrl = "https://api.livecoinwatch.com/coins/single/history";
+    private String providerUrl = "https://api.livecoinwatch.com/coins/single/history";
 
     public String getApiKey() {
         return apiKey;
@@ -18,11 +18,11 @@ public class LiveCoinWatchConfig {
         this.apiKey = apiKey;
     }
 
-    public String getHistoryUrl() {
-        return historyUrl;
+    public String getProviderUrl() {
+        return providerUrl;
     }
 
-    public void setHistoryUrl(String historyUrl) {
-        this.historyUrl = historyUrl;
+    public void setProviderUrl(String providerUrl) {
+        this.providerUrl = providerUrl;
     }
 }
