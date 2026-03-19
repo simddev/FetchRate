@@ -157,6 +157,19 @@ class CommandLineRequestTest {
     }
 
     @Test
+    void run_configSetUrl_writesFileAndOutputsSaved() throws Exception {
+        java.nio.file.Path propsFile = java.nio.file.Path.of("fetchrate.properties");
+        try {
+            cli.run("config", "--set-url", "https://custom.example.com/api");
+            assertTrue(output().contains("saved"));
+            String content = java.nio.file.Files.readString(propsFile);
+            assertTrue(content.contains("livecoinwatch.history-url=https://custom.example.com/api"));
+        } finally {
+            java.nio.file.Files.deleteIfExists(propsFile);
+        }
+    }
+
+    @Test
     void run_configSetKey_updatesExistingEntry() throws Exception {
         java.nio.file.Path propsFile = java.nio.file.Path.of("fetchrate.properties");
         try {

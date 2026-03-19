@@ -165,19 +165,24 @@
             margin-top: 0.75rem;
             text-align: left;
         }
-        .api-key-status {
-            font-size: 0.85rem;
-            margin-bottom: 8px;
+        .settings-label {
+            font-size: 0.8rem;
+            color: #777;
+            margin: 10px 0 4px 0;
         }
-        .api-key-row {
+        .settings-status {
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+        .settings-row {
             display: flex;
             gap: 8px;
         }
-        .api-key-row input {
+        .settings-row input {
             flex: 1;
             font-size: 0.9rem;
         }
-        .api-key-row button {
+        .settings-row button {
             width: auto;
             padding: 8px 16px;
             font-size: 0.9rem;
@@ -186,6 +191,11 @@
             font-size: 0.8rem;
             margin-top: 6px;
             min-height: 1.2em;
+        }
+        .settings-divider {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -214,10 +224,18 @@
         <div id="result"></div>
         <button class="settings-toggle" onclick="toggleSettings()" aria-label="Toggle API settings">⚙ API Settings</button>
         <div id="settings-panel" style="display:none">
-            <div id="api-key-status" class="api-key-status"></div>
-            <div class="api-key-row">
+            <div class="settings-label">API Key</div>
+            <div id="api-key-status" class="settings-status"></div>
+            <div class="settings-row">
                 <input type="password" id="api-key-input" placeholder="LiveCoinWatch API key" aria-label="API key">
                 <button onclick="saveApiKey()">Save</button>
+            </div>
+            <hr class="settings-divider">
+            <div class="settings-label">Provider URL</div>
+            <div id="provider-url-status" class="settings-status"></div>
+            <div class="settings-row">
+                <input type="text" id="provider-url-input" placeholder="https://api.livecoinwatch.com/coins/single/history" aria-label="Provider URL">
+                <button onclick="saveProviderUrl()">Save</button>
             </div>
             <div id="settings-msg"></div>
         </div>
@@ -326,16 +344,20 @@
             }
             resultDiv.style.display = 'block';
         }
-        async function loadApiKeyStatus() {
+        async function loadSettings() {
             try {
                 const res = await fetch('/settings');
                 const data = await res.json();
-                const el = document.getElementById('api-key-status');
-                if (data.apiKeyConfigured) {
-                    el.innerHTML = '<span style="color:#6abf69">✓ API key is configured</span>';
-                } else {
-                    el.innerHTML = '<span class="error">✗ No API key set — crypto rates will not update</span>';
-                }
+
+                const keyEl = document.getElementById('api-key-status');
+                keyEl.innerHTML = data.apiKeyConfigured
+                    ? '<span style="color:#6abf69">✓ Configured</span>'
+                    : '<span class="error">✗ Not set — crypto rates will not update</span>';
+
+                const urlEl = document.getElementById('provider-url-status');
+                urlEl.innerHTML = data.providerUrl
+                    ? '<span style="color:#6abf69">✓ Custom: ' + data.providerUrl + '</span>'
+                    : '<span style="color:#555">Using default (LiveCoinWatch)</span>';
             } catch (e) {}
         }
 
@@ -343,35 +365,45 @@
             const panel = document.getElementById('settings-panel');
             if (panel.style.display === 'none') {
                 panel.style.display = 'block';
-                loadApiKeyStatus();
+                loadSettings();
             } else {
                 panel.style.display = 'none';
             }
         }
 
-        async function saveApiKey() {
-            const key = document.getElementById('api-key-input').value.trim();
+        async function postSetting(payload) {
             const msg = document.getElementById('settings-msg');
-            if (!key) {
-                msg.innerHTML = '<span class="error">Please enter an API key</span>';
-                return;
-            }
             try {
                 const res = await fetch('/settings', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({apiKey: key})
+                    body: JSON.stringify(payload)
                 });
                 if (res.ok) {
                     msg.innerHTML = '<span style="color:#6abf69">Saved</span>';
-                    document.getElementById('api-key-input').value = '';
-                    loadApiKeyStatus();
+                    loadSettings();
                 } else {
                     msg.innerHTML = '<span class="error">Failed to save</span>';
                 }
             } catch (e) {
                 msg.innerHTML = '<span class="error">Failed to connect</span>';
             }
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            const msg = document.getElementById('settings-msg');
+            if (!key) { msg.innerHTML = '<span class="error">Please enter an API key</span>'; return; }
+            document.getElementById('api-key-input').value = '';
+            postSetting({apiKey: key});
+        }
+
+        function saveProviderUrl() {
+            const url = document.getElementById('provider-url-input').value.trim();
+            const msg = document.getElementById('settings-msg');
+            if (!url) { msg.innerHTML = '<span class="error">Please enter a URL</span>'; return; }
+            document.getElementById('provider-url-input').value = '';
+            postSetting({providerUrl: url});
         }
     </script>
 </body>

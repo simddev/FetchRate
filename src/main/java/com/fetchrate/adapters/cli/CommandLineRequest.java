@@ -128,34 +128,43 @@ public class CommandLineRequest implements CommandLineRunner {
     private void handleConfig(String[] args) {
         for (int i = 1; i < args.length; i++) {
             if ("--set-key".equals(args[i]) && i + 1 < args.length) {
-                String key = args[++i].trim();
-                if (key.isBlank()) {
-                    System.out.println("{\"error\":\"API key must not be empty.\"}");
-                    return;
-                }
-                try {
-                    Path config = Path.of("fetchrate.properties");
-                    String entry = "livecoinwatch.api-key=" + key + System.lineSeparator();
-                    if (Files.exists(config)) {
-                        String content = Files.readString(config);
-                        if (content.contains("livecoinwatch.api-key=")) {
-                            content = content.replaceAll("(?m)^livecoinwatch\\.api-key=.*$", entry.trim());
-                            Files.writeString(config, content);
-                        } else {
-                            Files.writeString(config, content + entry, StandardOpenOption.APPEND);
-                        }
-                    } else {
-                        Files.writeString(config, entry);
-                    }
-                    System.out.println("{\"status\":\"API key saved to fetchrate.properties\"}");
-                } catch (IOException e) {
-                    System.out.println("{\"error\":\"Could not write fetchrate.properties: " + e.getMessage() + "\"}");
-                }
+                writeProperty("livecoinwatch.api-key", args[++i].trim(), "API key");
+                return;
+            }
+            if ("--set-url".equals(args[i]) && i + 1 < args.length) {
+                writeProperty("livecoinwatch.history-url", args[++i].trim(), "Provider URL");
                 return;
             }
         }
         System.out.println("Usage:");
         System.out.println("  java -jar fetchrate.jar config --set-key YOUR_API_KEY");
+        System.out.println("  java -jar fetchrate.jar config --set-url https://your-provider/endpoint");
+    }
+
+    private void writeProperty(String propertyKey, String value, String label) {
+        if (value.isBlank()) {
+            System.out.println("{\"error\":\"" + label + " must not be empty.\"}");
+            return;
+        }
+        try {
+            Path config = Path.of("fetchrate.properties");
+            String entry = propertyKey + "=" + value + System.lineSeparator();
+            if (Files.exists(config)) {
+                String content = Files.readString(config);
+                String escapedKey = propertyKey.replace(".", "\\.");
+                if (content.matches("(?s).*(?m)^" + escapedKey + "=.*$.*")) {
+                    content = content.replaceAll("(?m)^" + escapedKey + "=.*$", entry.trim());
+                    Files.writeString(config, content);
+                } else {
+                    Files.writeString(config, content + entry, StandardOpenOption.APPEND);
+                }
+            } else {
+                Files.writeString(config, entry);
+            }
+            System.out.println("{\"status\":\"" + label + " saved to fetchrate.properties\"}");
+        } catch (IOException e) {
+            System.out.println("{\"error\":\"Could not write fetchrate.properties: " + e.getMessage() + "\"}");
+        }
     }
 
     /**
@@ -165,6 +174,7 @@ public class CommandLineRequest implements CommandLineRunner {
         System.out.println("Usage:");
         System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency CZK --date YYYY-MM-DD");
         System.out.println("  java -jar fetchrate.jar config --set-key YOUR_API_KEY");
+        System.out.println("  java -jar fetchrate.jar config --set-url https://your-provider/endpoint");
     }
 
 }
