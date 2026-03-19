@@ -11,10 +11,11 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * This class serves to combine both Fiat and Crypto updates into one process and consequentially store their end results,
- * their data in a database via the RateDatabase classes from the persistence package.
- * <p>
- * It only runs if the last update is older than a day. Once it updates, it overwrites the latest update date.
+ * Top-level orchestrator for refreshing the local rate database.
+ * Runs fiat and crypto updates independently so that a failure in one source
+ * does not prevent the other from completing. The {@code last_update} timestamp
+ * is only written when at least one source succeeds, so a total network outage
+ * will not suppress a retry for the rest of the day.
  */
 @Service
 public class RateUpdater {
@@ -42,8 +43,10 @@ public class RateUpdater {
 
 
     /**
-     * This method is the end point of the Fiat and Crypto update branches and stores their result in a database,
-     * located at /FetchRate/data via the RateDatabase methods.
+     * Fetches and persists the latest fiat and crypto exchange rates.
+     * If the database was already updated today this method returns immediately.
+     * Synchronized to prevent concurrent update runs when the HTTP server handles
+     * multiple requests simultaneously.
      */
     public synchronized void updateRates() {
 

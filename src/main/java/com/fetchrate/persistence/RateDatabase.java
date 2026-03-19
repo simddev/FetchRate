@@ -16,7 +16,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * This class serves to create, update and query the database in /data.
+ * Data-access layer for the local SQLite database stored in {@code data/}.
+ * Manages three tables: {@code fiat_rates}, {@code crypto_rates}, and {@code meta}.
+ * The schema is created automatically on startup via {@link #initSchema()}.
+ * All bulk writes use UPSERT ({@code ON CONFLICT DO UPDATE}) to stay idempotent.
  */
 @Repository
 public class RateDatabase {
@@ -66,9 +69,10 @@ public class RateDatabase {
     }
 
     /**
-     * This method updates the fiat rate table.
+     * Bulk-upserts fiat exchange rates into the database.
+     * Existing rows for the same date/currency pair are overwritten.
      *
-     * @param records Takes the List of FiatRateRecords.
+     * @param records The records to persist.
      */
     @Transactional
     public void updateFiatRates(List<FiatRateRecord> records) {
@@ -92,12 +96,12 @@ public class RateDatabase {
     }
 
     /**
-     * This method queries for the given date and currencySymbol.
+     * Looks up the fiat exchange rate for the currency and date in the given query.
      *
-     * @param query The Query Record holding the desired date and currencySymbol.
-     * @return Returns a ExchangeRateRecord single instance.
+     * @param query The query containing the currency symbol and date.
+     * @return The matching {@link FiatRateRecord}.
+     * @throws IllegalArgumentException if no rate is found for the given currency and date.
      */
-
     public FiatRateRecord findFiatRate(QueryRecord query) {
         String sql = """
                 SELECT currency, date, rate
@@ -123,9 +127,8 @@ public class RateDatabase {
 
 
     /**
-     * This method just finds the latest update date in the database.
-     *
-     * @return A LocalDate, which is the most up-to-date one.
+     * Returns the date of the last successful rate update, or {@code null} if the database
+     * has never been updated.
      */
     public LocalDate getLastUpdate() {
         String v = getMeta("last_update");
@@ -133,10 +136,11 @@ public class RateDatabase {
     }
 
     /**
-     * Getter for the meta.
+     * Returns the value stored in the {@code meta} table for the given key,
+     * or {@code null} if the key does not exist.
      *
-     * @param key Last update key.
-     * @return Actual Date at key.
+     * @param key The meta key (e.g., {@code "last_update"}, {@code "livecoinwatch_api_key"}).
+     * @return The stored value, or {@code null}.
      */
     public String getMeta(String key) {
         try {
@@ -151,10 +155,10 @@ public class RateDatabase {
     }
 
     /**
-     * Setter for the meta.
+     * Inserts or updates a key/value pair in the {@code meta} table.
      *
-     * @param key   The key.
-     * @param value The date.
+     * @param key   The meta key.
+     * @param value The value to store.
      */
     public void setMeta(String key, String value) {
         jdbc.update("""
@@ -165,8 +169,12 @@ public class RateDatabase {
     }
 
 
-    //Crypto Table and methods below
-
+    /**
+     * Bulk-upserts cryptocurrency rates into the database.
+     * Existing rows for the same date/symbol pair are overwritten.
+     *
+     * @param records The records to persist.
+     */
     @Transactional
     public void updateCryptoRates(List<CryptoRateRecord> records) {
 
@@ -190,6 +198,13 @@ public class RateDatabase {
 
     }
 
+    /**
+     * Looks up the cryptocurrency rate for the symbol and date in the given query.
+     *
+     * @param query The query containing the coin symbol and date.
+     * @return The matching {@link CryptoRateRecord}.
+     * @throws IllegalArgumentException if no rate is found for the given symbol and date.
+     */
     public CryptoRateRecord findCryptoRate(QueryRecord query) {
         String sql = """
                     SELECT symbol, date, rate

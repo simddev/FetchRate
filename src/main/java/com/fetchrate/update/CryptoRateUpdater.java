@@ -11,7 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class serves to combine the fetcher and parser class and produce the final result.
+ * Coordinates fetching and parsing of cryptocurrency exchange rates from all available sources.
+ * On a full update, loads rates from local CSV files and, if an API key is configured,
+ * also fetches the last 30 days from the LiveCoinWatch API. Supports lazy single-date
+ * fetching for on-demand lookups when a rate is missing from the database.
  */
 @Service
 public class CryptoRateUpdater {
@@ -27,8 +30,13 @@ public class CryptoRateUpdater {
     }
 
     /**
-     * Fetches and parses crypto rates for a specific symbol and date range.
-     * Useful for lazy-loading historical data.
+     * Fetches and parses rates for a specific coin around a single date via the LiveCoinWatch API.
+     * Requests a 3-day window centred on the target date to handle timezone edge cases.
+     * Returns an empty list if no API key is available or if the fetch fails.
+     *
+     * @param symbol The coin symbol (e.g., {@code BTC}).
+     * @param date   The date for which a rate is needed.
+     * @return Parsed records for the requested window, or an empty list on failure.
      */
     public List<CryptoRateRecord> fetchAndParseSpecific(String symbol, LocalDate date) {
         if (!fetcher.isApiKeyAvailable()) {
@@ -48,9 +56,11 @@ public class CryptoRateUpdater {
     }
 
     /**
-     * This method creates the final List by providing the raw data from the fetcher
-     * to the parser.
-     * @return List of CryptoRateRecord ready for database entry.
+     * Loads all available crypto rates from CSV files and, if an API key is configured,
+     * fetches the last 30 days from LiveCoinWatch for a standard set of coins
+     * (BTC, ETH, LTC, DOGE, SOL, USDT). API errors per symbol are logged and skipped.
+     *
+     * @return Combined list of {@link CryptoRateRecord} ready for database insertion.
      */
     public List<CryptoRateRecord> fetchAndParseCrypto() {
         List<CryptoRateRecord> allRecords = new ArrayList<>();

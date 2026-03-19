@@ -10,7 +10,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
- * This class serves to combine the fetcher and the parser in order to return a List of FiatRateRecords.
+ * Coordinates fetching and parsing of ECB fiat exchange rate data.
+ * Selects the appropriate ECB feed URL based on how long ago the database was last updated:
+ * daily, 90-day, or full historical.
  */
 @Service
 public class FiatRateUpdater {
@@ -28,7 +30,9 @@ public class FiatRateUpdater {
     }
 
     /**
-     * This method chooses the appropriate URL depending on the latest update in the database.
+     * Selects the ECB feed URL based on how far behind the database is.
+     * Returns the full historical URL if the database has never been updated or is 90+ days behind,
+     * the 90-day URL if 2–89 days behind, or the daily URL if only 1 day behind.
      */
     private String chooseECBURL() {
 
@@ -46,9 +50,9 @@ public class FiatRateUpdater {
     }
 
     /**
-     * This method combines the fetching and the parsing and returns a finalized List of the Records.
+     * Fetches the ECB XML feed for the appropriate date range and parses it into records.
      *
-     * @return List of FiatRateRecord type.
+     * @return List of {@link com.fetchrate.core.FiatRateRecord} ready to be stored in the database.
      */
     public List<FiatRateRecord> fetchAndParseFiat() {
         String urlToBeUsed = chooseECBURL();

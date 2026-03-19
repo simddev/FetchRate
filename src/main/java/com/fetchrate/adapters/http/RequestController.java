@@ -16,9 +16,9 @@ import java.time.LocalDate;
 import java.util.Map;
 
 /**
- * This is an adapter for the http server version of the application.
- * <p>
- * It hosts a server and responds to GET requests.
+ * REST controller for the HTTP server profile.
+ * Exposes a {@code /convert} endpoint for currency-to-EUR conversions
+ * and a {@code /health} endpoint for status checks.
  */
 @Profile("http")
 @RestController
@@ -36,11 +36,14 @@ public class RequestController {
 
 
     /**
-     * This is the response entity.
-     * @param amountStr The amount as String.
-     * @param inputCurrency The input currencySymbol.
-     * @param dateStr The date as String.
-     * @return Returns a JSON including inEuro.
+     * Converts an amount in the given currency to EUR on the specified date.
+     * Triggers a database update if rates have not yet been fetched today.
+     *
+     * @param amountStr     The amount to convert. Accepts commas and underscores as thousand separators.
+     * @param inputCurrency The source currency symbol (e.g., {@code USD}, {@code BTC}).
+     * @param dateStr       The date in {@code YYYY-MM-DD} format. Must not be in the future.
+     * @return 200 with a {@link com.fetchrate.core.ConvertResponse} JSON body on success,
+     *         400 for invalid input, 404 if no rate is found, or 500 on an unexpected error.
      */
     @GetMapping("/convert")
     public ResponseEntity<?> convert(
