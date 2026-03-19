@@ -16,11 +16,11 @@ The format in which the application returns the results of its service is a JSON
 {
      "input": {
          "amount": <str>,
-         "currency": <str>,
+         "currencySymbol": <str>,
          "date": <str>
      },
      "output": {
-         "EUR": <str>
+         "inEuro": <str>
      }
 }
 
