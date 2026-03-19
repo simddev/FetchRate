@@ -99,6 +99,7 @@ livecoinwatch.api-key=your_api_key_here
 **Option 2 — CLI command:**
 ```bash
 java -jar FetchRate-0.3.jar config --set-key your_api_key_here
+java -jar FetchRate-0.3.jar config --set-url https://your-provider/endpoint
 ```
 
 **Option 3 — Environment variable:**
@@ -106,7 +107,7 @@ java -jar FetchRate-0.3.jar config --set-key your_api_key_here
 export LIVECOINWATCH_API_KEY=your_api_key_here
 ```
 
-When running in HTTP mode, the API key can also be set through the web UI under **⚙ API Settings**.
+When running in HTTP mode, both the API key and provider URL can be set through the web UI under **⚙ API Settings**.
 
 The crypto CSV directory defaults to `data/crypto` and can be overridden with the `fetchrate.crypto-dir` property.
 

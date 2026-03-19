@@ -88,4 +88,41 @@ class CryptoRateFetcherTest {
         assertFalse(ex instanceof IllegalStateException);
         verify(config).getApiKey();
     }
+
+    // --- URL resolution ---
+
+    @Test
+    void fetchFromLiveCoinWatch_dbUrlPresent_usedWithoutCallingConfigUrl() {
+        when(database.getMeta("livecoinwatch_api_key")).thenReturn("key");
+        when(database.getMeta("livecoinwatch_history_url")).thenReturn("http://localhost:1/custom");
+
+        assertThrows(RuntimeException.class, () ->
+                fetcher.fetchFromLiveCoinWatch("BTC", start, end));
+
+        verify(config, never()).getHistoryUrl();
+    }
+
+    @Test
+    void fetchFromLiveCoinWatch_dbUrlBlankFallsBackToConfigUrl() {
+        when(database.getMeta("livecoinwatch_api_key")).thenReturn("key");
+        when(database.getMeta("livecoinwatch_history_url")).thenReturn("  ");
+        when(config.getHistoryUrl()).thenReturn("http://localhost:1");
+
+        assertThrows(RuntimeException.class, () ->
+                fetcher.fetchFromLiveCoinWatch("BTC", start, end));
+
+        verify(config).getHistoryUrl();
+    }
+
+    @Test
+    void fetchFromLiveCoinWatch_dbUrlNullFallsBackToConfigUrl() {
+        when(database.getMeta("livecoinwatch_api_key")).thenReturn("key");
+        when(database.getMeta("livecoinwatch_history_url")).thenReturn(null);
+        when(config.getHistoryUrl()).thenReturn("http://localhost:1");
+
+        assertThrows(RuntimeException.class, () ->
+                fetcher.fetchFromLiveCoinWatch("BTC", start, end));
+
+        verify(config).getHistoryUrl();
+    }
 }

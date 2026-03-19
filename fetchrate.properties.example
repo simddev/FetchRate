@@ -3,3 +3,6 @@
 # Values here override environment variables and defaults.
 
 livecoinwatch.api-key=YOUR_API_KEY_HERE
+
+# Optional: replace with a compatible API endpoint if you want to use a different provider
+# livecoinwatch.history-url=https://api.livecoinwatch.com/coins/single/history

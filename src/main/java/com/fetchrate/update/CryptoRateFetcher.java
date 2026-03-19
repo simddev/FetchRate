@@ -45,6 +45,14 @@ public class CryptoRateFetcher {
         return config.getApiKey();
     }
 
+    private String resolveHistoryUrl() {
+        String dbUrl = database.getMeta("livecoinwatch_history_url");
+        if (dbUrl != null && !dbUrl.isBlank()) {
+            return dbUrl;
+        }
+        return config.getHistoryUrl();
+    }
+
     /**
      * Reads all *.csv files in data/crypto and returns:
      *   symbol -> csv text
@@ -95,7 +103,7 @@ public class CryptoRateFetcher {
         );
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(config.getHistoryUrl()))
+                .uri(URI.create(resolveHistoryUrl()))
                 .header("content-type", "application/json")
                 .header("x-api-key", apiKey)
                 .POST(HttpRequest.BodyPublishers.ofString(body))
