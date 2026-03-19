@@ -70,7 +70,7 @@ public class CommandLineRequest implements CommandLineRunner {
             for (int i = 1; i < args.length; i++) {
                 String a = args[i];
 
-                if ("--amount".equals(a) && i + 1 < args.length) {
+                if (("--amount".equals(a) || "-a".equals(a)) && i + 1 < args.length) {
                     String amountStr = args[++i];
                     try {
                         amount = new BigDecimal(amountStr.replace(",", "").replace("_", ""));
@@ -78,9 +78,9 @@ public class CommandLineRequest implements CommandLineRunner {
                         printError("Invalid amount format: " + amountStr);
                         return;
                     }
-                } else if ("--input-currency".equals(a) && i + 1 < args.length) {
+                } else if (("--input-currency".equals(a) || "-c".equals(a)) && i + 1 < args.length) {
                     currency = args[++i].toUpperCase();
-                } else if ("--date".equals(a) && i + 1 < args.length) {
+                } else if (("--date".equals(a) || "-d".equals(a)) && i + 1 < args.length) {
                     try {
                         date = LocalDate.parse(args[++i]);
                     } catch (Exception e) {
@@ -203,10 +203,10 @@ public class CommandLineRequest implements CommandLineRunner {
         System.out.println("  java -jar fetchrate.jar <command> [options]");
         System.out.println();
         System.out.println("COMMANDS");
-        System.out.println("  convert               Convert an amount to EUR");
-        System.out.println("    --amount <n>         Amount to convert (commas and underscores allowed as separators)");
-        System.out.println("    --input-currency <s> Currency or crypto symbol (e.g. USD, BTC)");
-        System.out.println("    --date <YYYY-MM-DD>  Date of the exchange rate");
+        System.out.println("  convert                    Convert an amount to EUR");
+        System.out.println("    -a, --amount <n>           Amount to convert (commas and underscores allowed as separators)");
+        System.out.println("    -c, --input-currency <s>   Currency or crypto symbol (e.g. USD, BTC)");
+        System.out.println("    -d, --date <YYYY-MM-DD>    Date of the exchange rate");
         System.out.println();
         System.out.println("  start_http_server     Start the HTTP server on port 8000");
         System.out.println("                        Web UI available at http://localhost:8000");
@@ -224,7 +224,7 @@ public class CommandLineRequest implements CommandLineRunner {
         System.out.println();
         System.out.println("EXAMPLES");
         System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency USD --date 2024-01-15");
-        System.out.println("  java -jar fetchrate.jar convert --amount 0.5 --input-currency BTC --date 2024-01-15");
+        System.out.println("  java -jar fetchrate.jar convert -a 0.5 -c BTC -d 2024-01-15");
         System.out.println("  java -jar fetchrate.jar start_http_server");
         System.out.println("  java -jar fetchrate.jar config --set-key YOUR_API_KEY");
     }
