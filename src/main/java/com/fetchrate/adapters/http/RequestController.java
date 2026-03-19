@@ -61,6 +61,14 @@ public class RequestController {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid amount format."));
         }
 
+        if (date.isAfter(LocalDate.now())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Date cannot be in the future."));
+        }
+
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Amount must be greater than zero."));
+        }
+
         // Same behavior like the CLI version.
         if (!rateUpdater.alreadyUpdatedToday()) {
             rateUpdater.updateRates();
