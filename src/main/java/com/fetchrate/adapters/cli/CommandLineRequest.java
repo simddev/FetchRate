@@ -3,6 +3,7 @@ package com.fetchrate.adapters.cli;
 import com.fetchrate.core.ConvertResponse;
 import com.fetchrate.core.Convertor;
 import com.fetchrate.core.QueryRecord;
+import com.fetchrate.update.CryptoRateUpdater;
 import com.fetchrate.update.RateUpdater;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -30,11 +31,13 @@ public class CommandLineRequest implements CommandLineRunner {
     private final RateUpdater rateUpdater;
     private final Convertor convertor;
     private final ObjectMapper objectMapper;
+    private final CryptoRateUpdater cryptoUpdater;
 
-    public CommandLineRequest(RateUpdater rateUpdater, Convertor convertor, ObjectMapper objectMapper) {
+    public CommandLineRequest(RateUpdater rateUpdater, Convertor convertor, ObjectMapper objectMapper, CryptoRateUpdater cryptoUpdater) {
         this.rateUpdater = rateUpdater;
         this.convertor = convertor;
         this.objectMapper = objectMapper;
+        this.cryptoUpdater = cryptoUpdater;
     }
 
     /**
@@ -135,9 +138,12 @@ public class CommandLineRequest implements CommandLineRunner {
     private void handleConfig(String[] args) {
         for (int i = 1; i < args.length; i++) {
             if ("-h".equals(args[i]) || "--help".equals(args[i])) {
-                System.out.println("Configure the crypto data provider:");
+                System.out.println("Configure the crypto data provider and tracked symbol list:");
                 System.out.println("  java -jar fetchrate.jar config --set-key YOUR_API_KEY   Save your crypto data provider API key");
                 System.out.println("  java -jar fetchrate.jar config --set-url URL            Override the default data provider URL");
+                System.out.println("  java -jar fetchrate.jar config --add-symbol XRP         Add a symbol to the daily update list");
+                System.out.println("  java -jar fetchrate.jar config --remove-symbol DOGE     Remove a symbol from the daily update list");
+                System.out.println("  java -jar fetchrate.jar config --list-symbols           Show the current tracked symbol list");
                 return;
             }
             if ("--set-key".equals(args[i]) && i + 1 < args.length) {
@@ -148,10 +154,40 @@ public class CommandLineRequest implements CommandLineRunner {
                 writeProperty("fetchrate.provider-url", args[++i].trim(), "Provider URL");
                 return;
             }
+            if ("--add-symbol".equals(args[i]) && i + 1 < args.length) {
+                String sym = args[++i].trim().toUpperCase();
+                if (!sym.matches("^[A-Z0-9]{2,10}$")) {
+                    printError("Invalid symbol. Use 2–10 alphanumeric characters (e.g. BTC, XRP).");
+                    return;
+                }
+                cryptoUpdater.addTrackedSymbol(sym);
+                System.out.println("{\"status\":\"" + sym + " added to tracked symbols\"}");
+                return;
+            }
+            if ("--remove-symbol".equals(args[i]) && i + 1 < args.length) {
+                String sym = args[++i].trim().toUpperCase();
+                cryptoUpdater.removeTrackedSymbol(sym);
+                System.out.println("{\"status\":\"" + sym + " removed from tracked symbols\"}");
+                return;
+            }
+            if ("--list-symbols".equals(args[i])) {
+                try {
+                    java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
+                    out.put("symbols", cryptoUpdater.getEffectiveSymbols());
+                    out.put("customized", cryptoUpdater.isCustomized());
+                    System.out.println(objectMapper.writeValueAsString(out));
+                } catch (Exception e) {
+                    printError("Failed to list symbols");
+                }
+                return;
+            }
         }
         System.out.println("Usage:");
         System.out.println("  java -jar fetchrate.jar config --set-key YOUR_API_KEY");
         System.out.println("  java -jar fetchrate.jar config --set-url https://your-provider/endpoint");
+        System.out.println("  java -jar fetchrate.jar config --add-symbol XRP");
+        System.out.println("  java -jar fetchrate.jar config --remove-symbol DOGE");
+        System.out.println("  java -jar fetchrate.jar config --list-symbols");
     }
 
     private void writeProperty(String propertyKey, String value, String label) {
@@ -213,9 +249,12 @@ public class CommandLineRequest implements CommandLineRunner {
         System.out.println("                        Web UI: http://localhost:<port>/");
         System.out.println("                        API:    GET /convert?amount=N&input_currency=X&date=YYYY-MM-DD");
         System.out.println();
-        System.out.println("  config                Manage runtime configuration");
-        System.out.println("    --set-key <key>      Save your crypto data provider API key");
-        System.out.println("    --set-url <url>      Override the default crypto data provider URL");
+        System.out.println("  config                      Manage runtime configuration");
+        System.out.println("    --set-key <key>            Save your crypto data provider API key");
+        System.out.println("    --set-url <url>            Override the default crypto data provider URL");
+        System.out.println("    --add-symbol <sym>         Add a symbol to the daily update list (e.g. XRP)");
+        System.out.println("    --remove-symbol <sym>      Remove a symbol from the daily update list");
+        System.out.println("    --list-symbols             Show current tracked symbols");
         System.out.println();
         System.out.println("  -h, --help            Show this help message");
         System.out.println();

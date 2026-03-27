@@ -1,6 +1,7 @@
 package com.fetchrate.update;
 
 import com.fetchrate.core.CryptoRateRecord;
+import com.fetchrate.persistence.RateDatabase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -21,12 +22,65 @@ public class CryptoRateUpdater {
 
     private static final Logger log = LoggerFactory.getLogger(CryptoRateUpdater.class);
 
+    /** The default set of symbols fetched on each daily update when no custom list is configured. */
+    public static final List<String> DEFAULT_SYMBOLS = List.of("BTC", "ETH", "LTC", "DOGE", "SOL", "USDT");
+
     private final CryptoRateFetcher fetcher;
     private final CryptoRateParser parser;
+    private final RateDatabase database;
 
-    public CryptoRateUpdater(CryptoRateFetcher fetcher, CryptoRateParser parser) {
+    public CryptoRateUpdater(CryptoRateFetcher fetcher, CryptoRateParser parser, RateDatabase database) {
         this.fetcher = fetcher;
         this.parser = parser;
+        this.database = database;
+    }
+
+    /**
+     * Returns the effective list of tracked symbols: the custom list from the database if one has been
+     * configured, or {@link #DEFAULT_SYMBOLS} if the database table is empty.
+     */
+    public List<String> getEffectiveSymbols() {
+        List<String> db = database.getTrackedSymbols();
+        return db.isEmpty() ? DEFAULT_SYMBOLS : db;
+    }
+
+    /**
+     * Returns {@code true} if the user has configured a custom tracked-symbol list.
+     */
+    public boolean isCustomized() {
+        return !database.getTrackedSymbols().isEmpty();
+    }
+
+    /**
+     * Adds a symbol to the tracked list.
+     * If no custom list exists yet, the default list is seeded first so that
+     * the existing symbols are preserved alongside the new one.
+     *
+     * @param symbol The coin symbol to add (e.g., {@code "XRP"}).
+     */
+    public void addTrackedSymbol(String symbol) {
+        if (database.getTrackedSymbols().isEmpty()) {
+            for (String def : DEFAULT_SYMBOLS) {
+                database.addTrackedSymbol(def);
+            }
+        }
+        database.addTrackedSymbol(symbol);
+    }
+
+    /**
+     * Removes a symbol from the tracked list.
+     * If no custom list exists yet, the default list is seeded first so that
+     * only the specified symbol is removed while all others are retained.
+     *
+     * @param symbol The coin symbol to remove.
+     */
+    public void removeTrackedSymbol(String symbol) {
+        if (database.getTrackedSymbols().isEmpty()) {
+            for (String def : DEFAULT_SYMBOLS) {
+                database.addTrackedSymbol(def);
+            }
+        }
+        database.removeTrackedSymbol(symbol);
     }
 
     /**
@@ -76,8 +130,7 @@ public class CryptoRateUpdater {
         // 2) If API key is present, fetch the last 30 days via API
         if (fetcher.isApiKeyAvailable()) {
             log.info("Using crypto data provider API for recent crypto rates...");
-            // We fetch for a fixed set of popular cryptos
-            List<String> symbolsToUpdate = List.of("BTC", "ETH", "LTC", "DOGE", "SOL", "USDT");
+            List<String> symbolsToUpdate = getEffectiveSymbols();
             LocalDate end = LocalDate.now();
             LocalDate start = end.minusDays(30);
 

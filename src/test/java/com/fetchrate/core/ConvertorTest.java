@@ -11,10 +11,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -112,5 +115,36 @@ class ConvertorTest {
         BigDecimal result = convertor.convert(new QueryRecord(new BigDecimal("2.00"), "BTC", testDate));
 
         assertEquals(new BigDecimal("80000.00"), result);
+    }
+
+    @Test
+    void convert_cryptoNotInDb_lazyFetchSucceeds_returnsResult() {
+        when(classifier.isSupported("XRP")).thenReturn(true);
+        when(classifier.isFiat("XRP")).thenReturn(false);
+        // First DB lookup misses, lazy fetch stores it, second lookup hits
+        when(database.findCryptoRate(any()))
+                .thenThrow(new IllegalArgumentException("No crypto rate found"))
+                .thenReturn(new CryptoRateRecord("XRP", testDate, new BigDecimal("0.50")));
+        when(cryptoUpdater.fetchAndParseSpecific(eq("XRP"), eq(testDate)))
+                .thenReturn(List.of(new CryptoRateRecord("XRP", testDate, new BigDecimal("0.50"))));
+
+        BigDecimal result = convertor.convert(new QueryRecord(new BigDecimal("100"), "XRP", testDate));
+
+        assertEquals(new BigDecimal("50.00"), result);
+    }
+
+    @Test
+    void convert_cryptoNotInDb_lazyFetchReturnsNothing_rethrowsOriginalError() {
+        when(classifier.isSupported("XRP")).thenReturn(true);
+        when(classifier.isFiat("XRP")).thenReturn(false);
+        when(database.findCryptoRate(any()))
+                .thenThrow(new IllegalArgumentException("No crypto rate found for XRP"));
+        when(cryptoUpdater.fetchAndParseSpecific(eq("XRP"), eq(testDate)))
+                .thenReturn(List.of());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                convertor.convert(new QueryRecord(new BigDecimal("100"), "XRP", testDate)));
+
+        assertTrue(ex.getMessage().contains("XRP"));
     }
 }

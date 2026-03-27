@@ -1,6 +1,7 @@
 package com.fetchrate.adapters.http;
 
 import com.fetchrate.persistence.RateDatabase;
+import com.fetchrate.update.CryptoRateUpdater;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,9 +20,11 @@ import java.util.Map;
 public class SettingsController {
 
     private final RateDatabase database;
+    private final CryptoRateUpdater cryptoUpdater;
 
-    public SettingsController(RateDatabase database) {
+    public SettingsController(RateDatabase database, CryptoRateUpdater cryptoUpdater) {
         this.database = database;
+        this.cryptoUpdater = cryptoUpdater;
     }
 
     /**
@@ -38,6 +41,8 @@ public class SettingsController {
         Map<String, Object> result = new HashMap<>();
         result.put("apiKeyConfigured", key != null && !key.isBlank());
         result.put("providerUrl", (url != null && !url.isBlank()) ? url : null);
+        result.put("trackedSymbols", cryptoUpdater.getEffectiveSymbols());
+        result.put("trackedSymbolsCustomized", cryptoUpdater.isCustomized());
         return result;
     }
 
@@ -53,11 +58,15 @@ public class SettingsController {
     public ResponseEntity<?> saveSettings(@RequestBody Map<String, String> body) {
         String apiKey = body.get("apiKey");
         String providerUrl = body.get("providerUrl");
+        String addSymbol = body.get("addSymbol");
+        String removeSymbol = body.get("removeSymbol");
 
         boolean hasKey = apiKey != null && !apiKey.isBlank();
         boolean hasUrl = providerUrl != null && !providerUrl.isBlank();
+        boolean hasAddSymbol = addSymbol != null && !addSymbol.isBlank();
+        boolean hasRemoveSymbol = removeSymbol != null && !removeSymbol.isBlank();
 
-        if (!hasKey && !hasUrl) {
+        if (!hasKey && !hasUrl && !hasAddSymbol && !hasRemoveSymbol) {
             return ResponseEntity.badRequest().body(Map.of("error", "At least one setting must be provided"));
         }
 
@@ -75,6 +84,16 @@ public class SettingsController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Invalid provider URL format"));
             }
             database.setMeta("crypto_provider_url", providerUrl.trim());
+        }
+        if (hasAddSymbol) {
+            String sym = addSymbol.trim().toUpperCase();
+            if (!sym.matches("^[A-Z0-9]{2,10}$")) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Symbol must be 2–10 alphanumeric characters"));
+            }
+            cryptoUpdater.addTrackedSymbol(sym);
+        }
+        if (hasRemoveSymbol) {
+            cryptoUpdater.removeTrackedSymbol(removeSymbol.trim().toUpperCase());
         }
 
         return ResponseEntity.ok(Map.of("status", "saved"));

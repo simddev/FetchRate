@@ -1,6 +1,7 @@
 package com.fetchrate.adapters.cli;
 
 import com.fetchrate.core.Convertor;
+import com.fetchrate.update.CryptoRateUpdater;
 import com.fetchrate.update.RateUpdater;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,8 @@ class CommandLineRequestTest {
     private RateUpdater rateUpdater;
     @Mock
     private Convertor convertor;
+    @Mock
+    private CryptoRateUpdater cryptoUpdater;
 
     private CommandLineRequest cli;
 
@@ -36,7 +39,7 @@ class CommandLineRequestTest {
 
     @BeforeEach
     void setUp() {
-        cli = new CommandLineRequest(rateUpdater, convertor, new ObjectMapper());
+        cli = new CommandLineRequest(rateUpdater, convertor, new ObjectMapper(), cryptoUpdater);
         System.setOut(new PrintStream(outContent));
     }
 
@@ -252,5 +255,52 @@ class CommandLineRequestTest {
 
         assertTrue(output().contains("error"));
         assertTrue(output().contains("FAKE"));
+    }
+
+    @Test
+    void run_configAddSymbol_outputsAdded() throws Exception {
+        cli.run("config", "--add-symbol", "XRP");
+
+        assertTrue(output().contains("added"));
+        assertTrue(output().contains("XRP"));
+        verify(cryptoUpdater).addTrackedSymbol("XRP");
+    }
+
+    @Test
+    void run_configAddSymbol_lowercaseIsNormalized() throws Exception {
+        cli.run("config", "--add-symbol", "xrp");
+
+        verify(cryptoUpdater).addTrackedSymbol("XRP");
+    }
+
+    @Test
+    void run_configAddSymbol_invalidFormat_outputsError() throws Exception {
+        cli.run("config", "--add-symbol", "invalid symbol!");
+
+        assertTrue(output().contains("error"));
+        verify(cryptoUpdater, never()).addTrackedSymbol(any());
+    }
+
+    @Test
+    void run_configRemoveSymbol_outputsRemoved() throws Exception {
+        cli.run("config", "--remove-symbol", "DOGE");
+
+        assertTrue(output().contains("removed"));
+        assertTrue(output().contains("DOGE"));
+        verify(cryptoUpdater).removeTrackedSymbol("DOGE");
+    }
+
+    @Test
+    void run_configListSymbols_outputsJson() throws Exception {
+        when(cryptoUpdater.getEffectiveSymbols()).thenReturn(java.util.List.of("BTC", "ETH", "XRP"));
+        when(cryptoUpdater.isCustomized()).thenReturn(true);
+
+        cli.run("config", "--list-symbols");
+
+        String out = output();
+        assertTrue(out.contains("symbols"));
+        assertTrue(out.contains("BTC"));
+        assertTrue(out.contains("XRP"));
+        assertTrue(out.contains("\"customized\":true"));
     }
 }
