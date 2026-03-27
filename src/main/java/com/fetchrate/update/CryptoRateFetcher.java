@@ -19,7 +19,7 @@ import java.util.Map;
 
 /**
  * Acquires cryptocurrency exchange rate data from two sources:
- * local CSV files placed in {@code data/crypto/}, and the LiveCoinWatch REST API
+ * local CSV files placed in {@code data/crypto/}, and the configured crypto data provider API
  * when an API key is available. The API key is resolved from the database first,
  * then falls back to the application properties file.
  */
@@ -42,7 +42,7 @@ public class CryptoRateFetcher {
     }
 
     /**
-     * Resolves the LiveCoinWatch API key, preferring the value stored in the database
+     * Resolves the crypto data provider API key, preferring the value stored in the database
      * (set via the settings UI or CLI) over the application properties file.
      */
     private String resolveApiKey() {
@@ -54,7 +54,7 @@ public class CryptoRateFetcher {
     }
 
     /**
-     * Returns {@code true} if a non-blank LiveCoinWatch API key is available from either
+     * Returns {@code true} if a non-blank crypto data provider API key is available from either
      * the database or application properties.
      */
     public boolean isApiKeyAvailable() {
@@ -63,7 +63,7 @@ public class CryptoRateFetcher {
     }
 
     /**
-     * Resolves the LiveCoinWatch history endpoint URL, preferring the value stored in the database
+     * Resolves the crypto data provider endpoint URL, preferring the value stored in the database
      * over the default from application properties.
      */
     private String resolveHistoryUrl() {
@@ -105,7 +105,7 @@ public class CryptoRateFetcher {
     }
 
     /**
-     * Fetches historical EUR rates for a given coin from the LiveCoinWatch API.
+     * Fetches historical EUR rates for a given coin from the configured crypto data provider API.
      *
      * @param symbol The crypto symbol (e.g., {@code BTC}).
      * @param start  Start date (inclusive).

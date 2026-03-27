@@ -11,20 +11,14 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * The starting point for Spring Boot.
- * <p>
- * This will run first, check if the first argument is start_http_server.
- * <p>
- * If yes, it will run the server profile, if not, it will run a minimalist version,
- * <p>
- * to speed up the CLI responses.
+ * Application entry point. Selects the Spring profile and web type based on the first argument:
+ * {@code start_http_server} activates the {@code http} profile with an embedded servlet container;
+ * all other invocations activate the {@code cli} profile with no web server for fast startup.
  */
 @SpringBootApplication
 public class FetchRateApplication {
 
-    /**
-     * Checks if a local data folder exists, if not, creates it
-     */
+    /** Creates the {@code data/} directory if it does not already exist. */
     private static void bootstrapDataFiles() {
         try {
             Path dataDir = Path.of("data");
