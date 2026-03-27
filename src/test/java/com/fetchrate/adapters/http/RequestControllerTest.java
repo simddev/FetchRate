@@ -162,6 +162,14 @@ class RequestControllerTest {
     }
 
     @Test
+    void convert_nullCurrency_returns400() {
+        ResponseEntity<?> response = controller.convert("100", null, "2024-01-15");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verifyNoInteractions(convertor);
+    }
+
+    @Test
     void health_returnsOk() {
         var result = controller.health();
         assertEquals("ok", result.get("status"));

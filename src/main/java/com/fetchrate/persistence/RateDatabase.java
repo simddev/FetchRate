@@ -63,6 +63,12 @@ public class RateDatabase {
                     )
                 """);
 
+        jdbc.execute("""
+                    CREATE TABLE IF NOT EXISTS tracked_symbols (
+                        symbol TEXT PRIMARY KEY
+                    )
+                """);
+
         jdbc.execute("CREATE INDEX IF NOT EXISTS idx_fiat_rates_date_currency ON fiat_rates(date, currency)");
         jdbc.execute("CREATE INDEX IF NOT EXISTS idx_crypto_rates_date_symbol ON crypto_rates(date, symbol)");
 
@@ -228,5 +234,30 @@ public class RateDatabase {
         }
     }
 
+    /**
+     * Returns all symbols currently in the {@code tracked_symbols} table, in insertion order.
+     * Returns an empty list when no custom list has been configured (defaults are in effect).
+     */
+    public List<String> getTrackedSymbols() {
+        return jdbc.queryForList("SELECT symbol FROM tracked_symbols", String.class);
+    }
+
+    /**
+     * Adds a symbol to the tracked list. Does nothing if the symbol is already present.
+     *
+     * @param symbol The coin symbol to track (e.g., {@code "XRP"}).
+     */
+    public void addTrackedSymbol(String symbol) {
+        jdbc.update("INSERT OR IGNORE INTO tracked_symbols(symbol) VALUES (?)", symbol);
+    }
+
+    /**
+     * Removes a symbol from the tracked list. Does nothing if the symbol is not present.
+     *
+     * @param symbol The coin symbol to remove.
+     */
+    public void removeTrackedSymbol(String symbol) {
+        jdbc.update("DELETE FROM tracked_symbols WHERE symbol = ?", symbol);
+    }
 
 }

@@ -1,6 +1,7 @@
 package com.fetchrate.adapters.http;
 
 import com.fetchrate.persistence.RateDatabase;
+import com.fetchrate.update.CryptoRateUpdater;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -9,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,6 +21,9 @@ class SettingsControllerTest {
 
     @Mock
     private RateDatabase database;
+
+    @Mock
+    private CryptoRateUpdater cryptoUpdater;
 
     @InjectMocks
     private SettingsController controller;
@@ -135,5 +140,56 @@ class SettingsControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(database).setMeta("crypto_provider_url", "http://localhost:8080/api");
+    }
+
+    // --- Tracked symbols via GET /settings ---
+
+    @Test
+    void getSettings_returnsTrackedSymbols() {
+        when(database.getMeta("crypto_api_key")).thenReturn(null);
+        when(database.getMeta("crypto_provider_url")).thenReturn(null);
+        when(cryptoUpdater.getEffectiveSymbols()).thenReturn(CryptoRateUpdater.DEFAULT_SYMBOLS);
+        when(cryptoUpdater.isCustomized()).thenReturn(false);
+
+        var result = controller.getSettings();
+
+        assertEquals(CryptoRateUpdater.DEFAULT_SYMBOLS, result.get("trackedSymbols"));
+        assertEquals(false, result.get("trackedSymbolsCustomized"));
+    }
+
+    // --- POST /settings symbol management ---
+
+    @Test
+    void saveSettings_addSymbol_callsAddTrackedSymbol() {
+        ResponseEntity<?> response = controller.saveSettings(Map.of("addSymbol", "XRP"));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(cryptoUpdater).addTrackedSymbol("XRP");
+        verifyNoInteractions(database);
+    }
+
+    @Test
+    void saveSettings_addSymbol_lowercaseNormalized() {
+        ResponseEntity<?> response = controller.saveSettings(Map.of("addSymbol", "xrp"));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(cryptoUpdater).addTrackedSymbol("XRP");
+    }
+
+    @Test
+    void saveSettings_addSymbol_invalidFormat_returns400() {
+        ResponseEntity<?> response = controller.saveSettings(Map.of("addSymbol", "invalid!"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(cryptoUpdater, never()).addTrackedSymbol(any());
+    }
+
+    @Test
+    void saveSettings_removeSymbol_callsRemoveTrackedSymbol() {
+        ResponseEntity<?> response = controller.saveSettings(Map.of("removeSymbol", "DOGE"));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(cryptoUpdater).removeTrackedSymbol("DOGE");
+        verifyNoInteractions(database);
     }
 }
