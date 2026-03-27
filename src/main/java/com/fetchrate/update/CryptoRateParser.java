@@ -18,7 +18,7 @@ import java.util.Map;
 
 /**
  * Parses cryptocurrency rate data from two formats into {@link com.fetchrate.core.CryptoRateRecord} lists:
- * CSV files (for historical bulk imports) and LiveCoinWatch JSON API responses.
+ * CSV files (for historical bulk imports) and crypto data provider JSON API responses.
  * Malformed lines and entries are skipped individually so that one bad record does not
  * abort the entire parse.
  */
@@ -85,14 +85,14 @@ public class CryptoRateParser {
     }
 
     /**
-     * Parses a LiveCoinWatch API JSON response into a list of records.
+     * Parses a crypto data provider API JSON response into a list of records.
      * <p>
      * Attempts standard Jackson deserialization first; if that fails (e.g., truncated response),
      * falls back to regex-based manual extraction. The coin symbol is read from the {@code code}
      * field in the JSON when present, otherwise the provided {@code symbol} parameter is used.
      *
      * @param symbol Fallback coin symbol if none is found in the JSON.
-     * @param json   The raw JSON string from the LiveCoinWatch API.
+     * @param json   The raw JSON string from the crypto data provider API.
      * @return List of parsed {@link com.fetchrate.core.CryptoRateRecord} objects.
      */
     public List<CryptoRateRecord> parseLiveCoinWatch(String symbol, String json) {
@@ -131,7 +131,7 @@ public class CryptoRateParser {
             }
             
         } catch (Exception e) {
-            log.warn("Failed to parse LiveCoinWatch JSON for {}: {}", symbol, e.getMessage());
+            log.warn("Failed to parse crypto provider JSON for {}: {}", symbol, e.getMessage());
         }
         return cryptoRecord;
     }

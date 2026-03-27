@@ -33,8 +33,7 @@ public class RateUpdater {
     }
 
     /**
-     * Checks the small meta table in the database to see if the database is up to date.
-     * @return True if updated, False if not
+     * @return {@code true} if rates were already fetched today, {@code false} otherwise.
      */
     public boolean alreadyUpdatedToday() {
         LocalDate last = database.getLastUpdate();

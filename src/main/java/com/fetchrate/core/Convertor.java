@@ -15,7 +15,7 @@ import java.util.List;
  * Converts a given amount in a foreign currency to EUR using rates stored in the database.
  * <p>
  * Fiat conversions use ECB daily exchange rates (EUR base). Crypto conversions use rates
- * fetched from CSV files or the LiveCoinWatch API. If a crypto rate is missing for the
+ * fetched from CSV files or the configured crypto data provider API. If a crypto rate is missing for the
  * requested date, a lazy fetch is attempted before throwing.
  */
 @Service
@@ -98,7 +98,7 @@ public class Convertor {
             }
         }
 
-        // Crypto CSV give rate of Amount EUR per 1 coin, so we multiply here.
+        // Crypto rate is stored as EUR per 1 coin, so we multiply here.
         return amount.multiply(cryptoRecord.rate()).setScale(2, RoundingMode.HALF_UP);
     }
 
