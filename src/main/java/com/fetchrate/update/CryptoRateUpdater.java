@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * Coordinates fetching and parsing of cryptocurrency exchange rates from all available sources.
  * On a full update, loads rates from local CSV files and, if an API key is configured,
- * also fetches the last 30 days from the LiveCoinWatch API. Supports lazy single-date
+ * also fetches the last 30 days from the configured crypto data provider API. Supports lazy single-date
  * fetching for on-demand lookups when a rate is missing from the database.
  */
 @Service
@@ -30,7 +30,7 @@ public class CryptoRateUpdater {
     }
 
     /**
-     * Fetches and parses rates for a specific coin around a single date via the LiveCoinWatch API.
+     * Fetches and parses rates for a specific coin around a single date via the crypto data provider API.
      * Requests a 3-day window centred on the target date to handle timezone edge cases.
      * Returns an empty list if no API key is available or if the fetch fails.
      *
@@ -57,7 +57,7 @@ public class CryptoRateUpdater {
 
     /**
      * Loads all available crypto rates from CSV files and, if an API key is configured,
-     * fetches the last 30 days from LiveCoinWatch for a standard set of coins
+     * fetches the last 30 days from the crypto data provider for a standard set of coins
      * (BTC, ETH, LTC, DOGE, SOL, USDT). API errors per symbol are logged and skipped.
      *
      * @return Combined list of {@link CryptoRateRecord} ready for database insertion.
