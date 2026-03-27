@@ -139,6 +139,18 @@ java -jar FetchRate-0.3.jar config --set-key your_api_key_here
 java -jar FetchRate-0.3.jar config --set-url https://your-provider/endpoint
 ```
 
+#### Tracked Symbols
+
+The daily update fetches rates for a fixed default set: `BTC, ETH, LTC, DOGE, SOL, USDT`. You can customise this list:
+
+```bash
+java -jar FetchRate-0.3.jar config --list-symbols         # show current list
+java -jar FetchRate-0.3.jar config --add-symbol XRP       # add a symbol
+java -jar FetchRate-0.3.jar config --remove-symbol DOGE   # remove a symbol
+```
+
+The first add or remove seeds the default list first, so existing symbols are preserved. Any symbol supported by the configured data provider can be added. In HTTP mode the symbol list is also manageable from the web UI under **⚙ API Settings**.
+
 **Option 3 — Environment variable:**
 ```bash
 export FETCHRATE_API_KEY=your_api_key_here
