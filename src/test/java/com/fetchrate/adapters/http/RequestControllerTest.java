@@ -2,6 +2,7 @@ package com.fetchrate.adapters.http;
 
 import com.fetchrate.core.Convertor;
 import com.fetchrate.core.QueryRecord;
+import com.fetchrate.core.RateNotFoundException;
 import com.fetchrate.update.RateUpdater;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -100,12 +101,23 @@ class RequestControllerTest {
     }
 
     @Test
-    void convert_unsupportedCurrency_returns404() {
+    void convert_unsupportedCurrency_returns400() {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
         when(convertor.convert(any(QueryRecord.class)))
                 .thenThrow(new IllegalArgumentException("Unsupported currency: FAKE"));
 
         ResponseEntity<?> response = controller.convert("100", "FAKE", "2024-01-15");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void convert_rateNotFound_returns404() {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convert(any(QueryRecord.class)))
+                .thenThrow(new RateNotFoundException("No rate found for USD on 2024-01-15"));
+
+        ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15");
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }

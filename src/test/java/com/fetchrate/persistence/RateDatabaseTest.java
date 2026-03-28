@@ -3,6 +3,7 @@ package com.fetchrate.persistence;
 import com.fetchrate.core.CryptoRateRecord;
 import com.fetchrate.core.FiatRateRecord;
 import com.fetchrate.core.QueryRecord;
+import com.fetchrate.core.RateNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -84,7 +85,7 @@ class RateDatabaseTest {
     @Test
     void findFiatRate_missing_throwsIllegalArgumentException() {
         var query = new QueryRecord(BigDecimal.ONE, "GBP", LocalDate.of(2024, 1, 15));
-        assertThrows(IllegalArgumentException.class, () -> db.findFiatRate(query));
+        assertThrows(RateNotFoundException.class, () -> db.findFiatRate(query));
     }
 
     @Test
@@ -129,7 +130,7 @@ class RateDatabaseTest {
     @Test
     void findCryptoRate_missing_throwsIllegalArgumentException() {
         var query = new QueryRecord(BigDecimal.ONE, "XRP", LocalDate.of(2024, 1, 15));
-        assertThrows(IllegalArgumentException.class, () -> db.findCryptoRate(query));
+        assertThrows(RateNotFoundException.class, () -> db.findCryptoRate(query));
     }
 
     @Test

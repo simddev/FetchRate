@@ -58,11 +58,11 @@ class CryptoRateParserTest {
     }
 
     @Test
-    void parseLiveCoinWatch_returnsCorrectRecordsFromValidJson() {
+    void parseProviderResponse_returnsCorrectRecordsFromValidJson() {
         // 1705276800000 = 2024-01-15 00:00:00 UTC
         String json = "{\"code\":\"BTC\",\"history\":[{\"date\":1705276800000,\"rate\":42000.50}]}";
 
-        List<CryptoRateRecord> records = parser.parseLiveCoinWatch("BTC", json);
+        List<CryptoRateRecord> records = parser.parseProviderResponse("BTC", json);
 
         assertEquals(1, records.size());
         assertEquals("BTC", records.get(0).symbol());
@@ -70,8 +70,8 @@ class CryptoRateParserTest {
     }
 
     @Test
-    void parseLiveCoinWatch_returnsEmptyListForBlankInput() {
-        List<CryptoRateRecord> records = parser.parseLiveCoinWatch("BTC", "");
+    void parseProviderResponse_returnsEmptyListForBlankInput() {
+        List<CryptoRateRecord> records = parser.parseProviderResponse("BTC", "");
         assertTrue(records.isEmpty());
     }
 

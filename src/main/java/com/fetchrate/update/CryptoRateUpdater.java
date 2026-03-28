@@ -101,8 +101,8 @@ public class CryptoRateUpdater {
             // Fetch a 3-day window to be safe and potentially provide adjacent dates
             LocalDate start = date.minusDays(1);
             LocalDate end = date.plusDays(1);
-            String json = fetcher.fetchFromLiveCoinWatch(symbol, start, end);
-            return parser.parseLiveCoinWatch(symbol, json);
+            String json = fetcher.fetchFromProvider(symbol, start, end);
+            return parser.parseProviderResponse(symbol, json);
         } catch (Exception e) {
             log.error("Failed to lazy-fetch crypto data for {} on {}: {}", symbol, date, e.getMessage());
             return List.of();
@@ -136,8 +136,8 @@ public class CryptoRateUpdater {
 
             for (String symbol : symbolsToUpdate) {
                 try {
-                    String json = fetcher.fetchFromLiveCoinWatch(symbol, start, end);
-                    List<CryptoRateRecord> records = parser.parseLiveCoinWatch(symbol, json);
+                    String json = fetcher.fetchFromProvider(symbol, start, end);
+                    List<CryptoRateRecord> records = parser.parseProviderResponse(symbol, json);
                     if (records.isEmpty()) {
                         log.warn("No records returned from API for {}", symbol);
                     } else {

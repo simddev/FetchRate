@@ -3,6 +3,7 @@ package com.fetchrate.adapters.http;
 import com.fetchrate.core.ConvertResponse;
 import com.fetchrate.core.Convertor;
 import com.fetchrate.core.QueryRecord;
+import com.fetchrate.core.RateNotFoundException;
 import com.fetchrate.update.RateUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +98,7 @@ public class RequestController {
             return ResponseEntity.ok(
                     ConvertResponse.of(amount, currency, date, inEuros)
             );
-        } catch (IllegalArgumentException e) {
+        } catch (RateNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "error", e.getMessage(),
                     "input", Map.of(
@@ -106,6 +107,8 @@ public class RequestController {
                             "date", date.toString()
                     )
             ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Unexpected error during conversion", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
