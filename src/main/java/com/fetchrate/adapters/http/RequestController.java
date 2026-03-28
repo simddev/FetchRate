@@ -47,12 +47,18 @@ public class RequestController {
      */
     @GetMapping("/convert")
     public ResponseEntity<?> convert(
-            @RequestParam("amount") String amountStr,
-            @RequestParam("input_currency") String inputCurrency,
-            @RequestParam("date") String dateStr
+            @RequestParam(value = "amount", required = false) String amountStr,
+            @RequestParam(value = "input_currency", required = false) String inputCurrency,
+            @RequestParam(value = "date", required = false) String dateStr
     ) {
+        if (amountStr == null || amountStr.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "amount parameter is required."));
+        }
         if (inputCurrency == null || inputCurrency.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Currency symbol must not be blank."));
+        }
+        if (dateStr == null || dateStr.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "date parameter is required."));
         }
         String currency = inputCurrency.strip().toUpperCase();
 
