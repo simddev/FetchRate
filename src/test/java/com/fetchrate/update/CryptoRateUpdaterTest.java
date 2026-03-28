@@ -131,8 +131,8 @@ class CryptoRateUpdaterTest {
         LocalDate date = LocalDate.of(2024, 1, 15);
         CryptoRateRecord record = new CryptoRateRecord("BTC", date, new BigDecimal("42000"));
         when(fetcher.isApiKeyAvailable()).thenReturn(true);
-        when(fetcher.fetchFromLiveCoinWatch(eq("BTC"), any(), any())).thenReturn("{json}");
-        when(parser.parseLiveCoinWatch("BTC", "{json}")).thenReturn(List.of(record));
+        when(fetcher.fetchFromProvider(eq("BTC"), any(), any())).thenReturn("{json}");
+        when(parser.parseProviderResponse("BTC", "{json}")).thenReturn(List.of(record));
 
         List<CryptoRateRecord> result = updater.fetchAndParseSpecific("BTC", date);
 
@@ -143,7 +143,7 @@ class CryptoRateUpdaterTest {
     @Test
     void fetchAndParseSpecific_fetchThrows_returnsEmptyList() {
         when(fetcher.isApiKeyAvailable()).thenReturn(true);
-        when(fetcher.fetchFromLiveCoinWatch(any(), any(), any())).thenThrow(new RuntimeException("API down"));
+        when(fetcher.fetchFromProvider(any(), any(), any())).thenThrow(new RuntimeException("API down"));
 
         List<CryptoRateRecord> result = updater.fetchAndParseSpecific("BTC", LocalDate.of(2024, 1, 15));
 
@@ -165,14 +165,14 @@ class CryptoRateUpdaterTest {
         when(fetcher.fetchAllCsv()).thenReturn(java.util.Map.of());
         when(fetcher.isApiKeyAvailable()).thenReturn(true);
         when(database.getTrackedSymbols()).thenReturn(List.of("XRP", "ADA"));
-        when(fetcher.fetchFromLiveCoinWatch(any(), any(), any())).thenReturn("{json}");
-        when(parser.parseLiveCoinWatch(any(), any())).thenReturn(List.of());
+        when(fetcher.fetchFromProvider(any(), any(), any())).thenReturn("{json}");
+        when(parser.parseProviderResponse(any(), any())).thenReturn(List.of());
 
         updater.fetchAndParseCrypto();
 
-        verify(fetcher).fetchFromLiveCoinWatch(eq("XRP"), any(), any());
-        verify(fetcher).fetchFromLiveCoinWatch(eq("ADA"), any(), any());
-        verify(fetcher, never()).fetchFromLiveCoinWatch(eq("BTC"), any(), any());
+        verify(fetcher).fetchFromProvider(eq("XRP"), any(), any());
+        verify(fetcher).fetchFromProvider(eq("ADA"), any(), any());
+        verify(fetcher, never()).fetchFromProvider(eq("BTC"), any(), any());
     }
 
     @Test
@@ -181,9 +181,9 @@ class CryptoRateUpdaterTest {
         when(fetcher.isApiKeyAvailable()).thenReturn(true);
         when(database.getTrackedSymbols()).thenReturn(List.of());
         // BTC throws, ETH succeeds
-        when(fetcher.fetchFromLiveCoinWatch(eq("BTC"), any(), any())).thenThrow(new RuntimeException("fail"));
-        when(fetcher.fetchFromLiveCoinWatch(eq("ETH"), any(), any())).thenReturn("{json}");
-        when(parser.parseLiveCoinWatch(eq("ETH"), any())).thenReturn(List.of(
+        when(fetcher.fetchFromProvider(eq("BTC"), any(), any())).thenThrow(new RuntimeException("fail"));
+        when(fetcher.fetchFromProvider(eq("ETH"), any(), any())).thenReturn("{json}");
+        when(parser.parseProviderResponse(eq("ETH"), any())).thenReturn(List.of(
                 new CryptoRateRecord("ETH", LocalDate.now(), new BigDecimal("2000"))
         ));
 

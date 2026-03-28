@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties(prefix = "fetchrate")
-public class LiveCoinWatchConfig {
+public class CryptoProviderConfig {
 
     private String apiKey;
     private String providerUrl = "https://api.livecoinwatch.com/coins/single/history";

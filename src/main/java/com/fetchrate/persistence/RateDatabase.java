@@ -3,6 +3,7 @@ package com.fetchrate.persistence;
 import com.fetchrate.core.CryptoRateRecord;
 import com.fetchrate.core.FiatRateRecord;
 import com.fetchrate.core.QueryRecord;
+import com.fetchrate.core.RateNotFoundException;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,7 @@ import java.util.List;
 
 /**
  * Data-access layer for the local SQLite database stored in {@code data/}.
- * Manages three tables: {@code fiat_rates}, {@code crypto_rates}, and {@code meta}.
+ * Manages four tables: {@code fiat_rates}, {@code crypto_rates}, {@code meta}, and {@code tracked_symbols}.
  * The schema is created automatically on startup via {@link #initSchema()}.
  * All bulk writes use UPSERT ({@code ON CONFLICT DO UPDATE}) to stay idempotent.
  */
@@ -106,7 +107,7 @@ public class RateDatabase {
      *
      * @param query The query containing the currency symbol and date.
      * @return The matching {@link FiatRateRecord}.
-     * @throws IllegalArgumentException if no rate is found for the given currency and date.
+     * @throws RateNotFoundException if no rate is found for the given currency and date.
      */
     public FiatRateRecord findFiatRate(QueryRecord query) {
         String sql = """
@@ -127,7 +128,7 @@ public class RateDatabase {
                     query.currencySymbol()
             );
         } catch (EmptyResultDataAccessException e) {
-            throw new IllegalArgumentException("No rate found for " + query.currencySymbol() + " on " + query.date());
+            throw new RateNotFoundException("No rate found for " + query.currencySymbol() + " on " + query.date());
         }
     }
 
@@ -209,7 +210,7 @@ public class RateDatabase {
      *
      * @param query The query containing the coin symbol and date.
      * @return The matching {@link CryptoRateRecord}.
-     * @throws IllegalArgumentException if no rate is found for the given symbol and date.
+     * @throws RateNotFoundException if no rate is found for the given symbol and date.
      */
     public CryptoRateRecord findCryptoRate(QueryRecord query) {
         String sql = """
@@ -230,7 +231,7 @@ public class RateDatabase {
                     query.currencySymbol()
             );
         } catch (EmptyResultDataAccessException e) {
-            throw new IllegalArgumentException("No crypto rate found for " + query.currencySymbol() + " on " + query.date());
+            throw new RateNotFoundException("No crypto rate found for " + query.currencySymbol() + " on " + query.date());
         }
     }
 

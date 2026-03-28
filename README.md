@@ -57,6 +57,8 @@ java -jar target/FetchRate-0.3.jar start_http_server
 java -jar target/FetchRate-0.3.jar start_http_server --port 9090
 ```
 
+> The HTTP server binds to `127.0.0.1` (loopback only) by default. To expose it on the network — for example behind a reverse proxy — set `server.address=0.0.0.0` in `fetchrate.properties`.
+
 For a full list of commands and options:
 ```bash
 java -jar target/FetchRate-0.3.jar --help
@@ -107,7 +109,7 @@ The application maintains a local SQLite database in the `data/` directory for f
 Rates are refreshed once per day on the first request of the day:
 
 - **Fiat currencies** — fetched from the [European Central Bank](https://www.ecb.europa.eu). The appropriate feed is selected automatically: full history, 90-day, or daily, based on how long ago the database was last updated.
-- **Cryptocurrencies** — if an API key is configured, the last 30 days of rates are fetched for BTC, ETH, LTC, DOGE, SOL, and USDT. Fiat and crypto updates are independent; a failure in one does not prevent the other from completing.
+- **Cryptocurrencies** — if an API key is configured, the last 30 days of rates are fetched for the tracked symbol list (default: BTC, ETH, LTC, DOGE, SOL, USDT — see [Tracked Symbols](#tracked-symbols) below). Fiat and crypto updates are independent; a failure in one does not prevent the other from completing.
 
 If both sources fail (e.g. no network), the daily timestamp is not updated so that the next request retries.
 
@@ -157,6 +159,8 @@ export FETCHRATE_API_KEY=your_api_key_here
 ```
 
 When running in HTTP mode, the API key and provider URL can also be set via the web UI under **⚙ API Settings**.
+
+> **CLI vs HTTP settings:** The `config` command (Options 1 and 2) writes values to `fetchrate.properties` and they take effect on the next startup. The web UI (HTTP mode) stores values in the local database and they take effect immediately without a restart. If both are configured, the database value takes priority. Avoid mixing the two for the same setting.
 
 The crypto CSV directory defaults to `data/crypto` and can be overridden with the `fetchrate.crypto-dir` property.
 
