@@ -95,7 +95,7 @@ public class CryptoRateParser {
      * @param json   The raw JSON string from the crypto data provider API.
      * @return List of parsed {@link com.fetchrate.core.CryptoRateRecord} objects.
      */
-    public List<CryptoRateRecord> parseLiveCoinWatch(String symbol, String json) {
+    public List<CryptoRateRecord> parseProviderResponse(String symbol, String json) {
         List<CryptoRateRecord> cryptoRecord = new ArrayList<>();
         try {
             if (json == null || json.isBlank()) return cryptoRecord;

@@ -1,6 +1,6 @@
 package com.fetchrate.update;
 
-import com.fetchrate.config.LiveCoinWatchConfig;
+import com.fetchrate.config.CryptoProviderConfig;
 import com.fetchrate.persistence.RateDatabase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,14 +27,14 @@ import java.util.Map;
 public class CryptoRateFetcher {
 
     private final Path cryptoDir;
-    private final LiveCoinWatchConfig config;
+    private final CryptoProviderConfig config;
     private final RateDatabase database;
     private final HttpClient client = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
     public CryptoRateFetcher(@Value("${fetchrate.crypto-dir:data/crypto}") String cryptoDir,
-                             LiveCoinWatchConfig config,
+                             CryptoProviderConfig config,
                              RateDatabase database) {
         this.cryptoDir = Path.of(cryptoDir);
         this.config = config;
@@ -114,7 +114,7 @@ public class CryptoRateFetcher {
      * @throws IllegalStateException if no API key is configured.
      * @throws RuntimeException      if the API returns a non-200 status or the request fails.
      */
-    public String fetchFromLiveCoinWatch(String symbol, LocalDate start, LocalDate end) {
+    public String fetchFromProvider(String symbol, LocalDate start, LocalDate end) {
         String apiKey = resolveApiKey();
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("Crypto data provider API key is not configured.");

@@ -32,6 +32,9 @@ build/
 ### VS Code ###
 .vscode/
 
+### Build artifacts ###
+BOOT-INF/
+
 ### DB ###
 data/*.db
 
