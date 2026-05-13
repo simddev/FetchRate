@@ -46,7 +46,6 @@ public class CurrencyClassifier {
 
     private static final Map<String, String> CRYPTO_NAMES = Map.of(
             "BTC", "Bitcoin",
-            "ETH", "Ethereum",
             "LTC", "Litecoin",
             "DOGE", "Dogecoin",
             "SOL", "Solana",

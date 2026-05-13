@@ -23,7 +23,7 @@ public class CryptoRateUpdater {
     private static final Logger log = LoggerFactory.getLogger(CryptoRateUpdater.class);
 
     /** The default set of symbols fetched on each daily update when no custom list is configured. */
-    public static final List<String> DEFAULT_SYMBOLS = List.of("BTC", "ETH", "LTC", "DOGE", "SOL", "USDT");
+    public static final List<String> DEFAULT_SYMBOLS = List.of("BTC", "LTC", "DOGE", "SOL", "USDT");
 
     private final CryptoRateFetcher fetcher;
     private final CryptoRateParser parser;
