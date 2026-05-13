@@ -87,7 +87,7 @@ public class CommandLineRequest implements CommandLineRunner {
                     try {
                         date = LocalDate.parse(args[++i]);
                     } catch (Exception e) {
-                        System.out.println("{\"error\":\"Invalid date format. Use YYYY-MM-DD.\"}");
+                        printError("Invalid date format. Use YYYY-MM-DD.");
                         return;
                     }
                 }

@@ -53,7 +53,7 @@ class RateDatabaseTest {
 
     @Test
     void getLastUpdate_afterSetMeta_returnsDate() {
-        db.setMeta("last_update", "2024-06-01");
+        db.setMeta("last_fiat_update", "2024-06-01");
         assertEquals(LocalDate.of(2024, 6, 1), db.getLastUpdate());
     }
 

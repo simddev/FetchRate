@@ -70,9 +70,7 @@ public class SettingsController {
             return ResponseEntity.badRequest().body(Map.of("error", "At least one setting must be provided"));
         }
 
-        if (hasKey) {
-            database.setMeta("crypto_api_key", apiKey.trim());
-        }
+        // Validate all fields before writing anything
         if (hasUrl) {
             try {
                 URI uri = URI.create(providerUrl.trim());
@@ -83,14 +81,23 @@ public class SettingsController {
             } catch (IllegalArgumentException e) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Invalid provider URL format"));
             }
-            database.setMeta("crypto_provider_url", providerUrl.trim());
         }
         if (hasAddSymbol) {
             String sym = addSymbol.trim().toUpperCase();
             if (!sym.matches("^[A-Z0-9]{2,10}$")) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Symbol must be 2–10 alphanumeric characters"));
             }
-            cryptoUpdater.addTrackedSymbol(sym);
+        }
+
+        // Execute only after all validations pass
+        if (hasKey) {
+            database.setMeta("crypto_api_key", apiKey.trim());
+        }
+        if (hasUrl) {
+            database.setMeta("crypto_provider_url", providerUrl.trim());
+        }
+        if (hasAddSymbol) {
+            cryptoUpdater.addTrackedSymbol(addSymbol.trim().toUpperCase());
         }
         if (hasRemoveSymbol) {
             cryptoUpdater.removeTrackedSymbol(removeSymbol.trim().toUpperCase());

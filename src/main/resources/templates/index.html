@@ -497,7 +497,9 @@
                     urlEl.innerHTML = '<span style="color:#555">Using default provider</span>';
                     footerCryptoEl.textContent = 'Default provider';
                 }
-            } catch (e) {}
+            } catch (e) {
+            console.error('Failed to load settings:', e);
+        }
         }
 
         loadSettings();
