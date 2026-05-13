@@ -24,14 +24,19 @@ class CurrencyClassifierTest {
     @Test
     void isFiat_returnsFalseForCrypto() {
         assertFalse(classifier.isFiat("BTC"));
-        assertFalse(classifier.isFiat("ETH"));
+        assertFalse(classifier.isFiat("DOGE"));
     }
 
     @Test
     void isCrypto_returnsTrueForKnownCryptoCurrencies() {
         assertTrue(classifier.isCrypto("BTC"));
-        assertTrue(classifier.isCrypto("ETH"));
+        assertTrue(classifier.isCrypto("LTC"));
         assertTrue(classifier.isCrypto("DOGE"));
+    }
+
+    @Test
+    void isCrypto_returnsFalseForEth_noLocalData() {
+        assertFalse(classifier.isCrypto("ETH"));
     }
 
     @Test

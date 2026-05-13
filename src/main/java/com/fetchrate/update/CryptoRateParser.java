@@ -122,7 +122,7 @@ public class CryptoRateParser {
                     }
                 }
             } catch (Exception e) {
-                // Fall through to manual extraction
+                log.debug("Jackson parse failed for {}, falling back to manual extraction: {}", symbol, e.getMessage());
             }
 
             // Manual extraction for truncated or slightly malformed JSON

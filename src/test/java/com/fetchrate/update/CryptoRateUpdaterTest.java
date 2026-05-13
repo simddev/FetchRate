@@ -180,17 +180,17 @@ class CryptoRateUpdaterTest {
         when(fetcher.fetchAllCsv()).thenReturn(java.util.Map.of());
         when(fetcher.isApiKeyAvailable()).thenReturn(true);
         when(database.getTrackedSymbols()).thenReturn(List.of());
-        // BTC throws, ETH succeeds
+        // BTC throws, LTC succeeds
         when(fetcher.fetchFromProvider(eq("BTC"), any(), any())).thenThrow(new RuntimeException("fail"));
-        when(fetcher.fetchFromProvider(eq("ETH"), any(), any())).thenReturn("{json}");
-        when(parser.parseProviderResponse(eq("ETH"), any())).thenReturn(List.of(
-                new CryptoRateRecord("ETH", LocalDate.now(), new BigDecimal("2000"))
+        when(fetcher.fetchFromProvider(eq("LTC"), any(), any())).thenReturn("{json}");
+        when(parser.parseProviderResponse(eq("LTC"), any())).thenReturn(List.of(
+                new CryptoRateRecord("LTC", LocalDate.now(), new BigDecimal("80"))
         ));
 
         List<CryptoRateRecord> result = updater.fetchAndParseCrypto();
 
-        // ETH record still present despite BTC failure
+        // LTC record still present despite BTC failure
         assertEquals(1, result.size());
-        assertEquals("ETH", result.get(0).symbol());
+        assertEquals("LTC", result.get(0).symbol());
     }
 }

@@ -29,54 +29,92 @@ class RateUpdaterTest {
     private RateUpdater rateUpdater;
 
     @Test
-    void testUpdateRatesWithMissingCryptoFiles() {
-        // Arrange
-        when(database.getLastUpdate()).thenReturn(null);
+    void updateRates_bothSucceed_setsBothKeys() {
+        when(database.getMeta("last_fiat_update")).thenReturn(null);
+        when(database.getMeta("last_crypto_update")).thenReturn(null);
         when(fiatUpdate.fetchAndParseFiat()).thenReturn(Collections.emptyList());
         when(cryptoUpdate.fetchAndParseCrypto()).thenReturn(Collections.emptyList());
 
-        // Act
         rateUpdater.updateRates();
 
-        // Assert
-        verify(database, never()).updateCryptoRates(anyList());
-        verify(database).setMeta(eq("last_update"), anyString());
+        verify(database).setMeta(eq("last_fiat_update"), anyString());
+        verify(database).setMeta(eq("last_crypto_update"), anyString());
     }
 
     @Test
-    void updateRates_bothFail_doesNotSetLastUpdate() {
-        when(database.getLastUpdate()).thenReturn(null);
+    void updateRates_bothFail_setsNeitherKey() {
+        when(database.getMeta("last_fiat_update")).thenReturn(null);
+        when(database.getMeta("last_crypto_update")).thenReturn(null);
         when(fiatUpdate.fetchAndParseFiat()).thenThrow(new RuntimeException("ECB down"));
         when(cryptoUpdate.fetchAndParseCrypto()).thenThrow(new RuntimeException("API down"));
 
         rateUpdater.updateRates();
 
-        verify(database, never()).setMeta(eq("last_update"), anyString());
+        verify(database, never()).setMeta(eq("last_fiat_update"), anyString());
+        verify(database, never()).setMeta(eq("last_crypto_update"), anyString());
     }
 
     @Test
-    void updateRates_onlyFiatSucceeds_setsLastUpdate() {
-        when(database.getLastUpdate()).thenReturn(null);
+    void updateRates_onlyFiatSucceeds_setsFiatKeyOnly() {
+        when(database.getMeta("last_fiat_update")).thenReturn(null);
+        when(database.getMeta("last_crypto_update")).thenReturn(null);
         when(fiatUpdate.fetchAndParseFiat()).thenReturn(Collections.emptyList());
         when(cryptoUpdate.fetchAndParseCrypto()).thenThrow(new RuntimeException("API down"));
 
         rateUpdater.updateRates();
 
-        verify(database).setMeta(eq("last_update"), anyString());
+        verify(database).setMeta(eq("last_fiat_update"), anyString());
+        verify(database, never()).setMeta(eq("last_crypto_update"), anyString());
     }
 
     @Test
-    void testUpdateRatesSkipsIfAlreadyUpdated() {
-        // Arrange
-        when(database.getLastUpdate()).thenReturn(LocalDate.now());
+    void updateRates_onlyCryptoSucceeds_setsCryptoKeyOnly() {
+        when(database.getMeta("last_fiat_update")).thenReturn(null);
+        when(database.getMeta("last_crypto_update")).thenReturn(null);
+        when(fiatUpdate.fetchAndParseFiat()).thenThrow(new RuntimeException("ECB down"));
+        when(cryptoUpdate.fetchAndParseCrypto()).thenReturn(Collections.emptyList());
 
-        // Act
         rateUpdater.updateRates();
 
-        // Assert
+        verify(database, never()).setMeta(eq("last_fiat_update"), anyString());
+        verify(database).setMeta(eq("last_crypto_update"), anyString());
+    }
+
+    @Test
+    void updateRates_skipsIfBothAlreadyDoneToday() {
+        String today = LocalDate.now().toString();
+        when(database.getMeta("last_fiat_update")).thenReturn(today);
+        when(database.getMeta("last_crypto_update")).thenReturn(today);
+
+        rateUpdater.updateRates();
+
         verify(fiatUpdate, never()).fetchAndParseFiat();
         verify(cryptoUpdate, never()).fetchAndParseCrypto();
         verify(database, never()).updateFiatRates(anyList());
         verify(database, never()).setMeta(anyString(), anyString());
+    }
+
+    @Test
+    void updateRates_fiatDoneButCryptoNot_onlyRunsCrypto() {
+        String today = LocalDate.now().toString();
+        when(database.getMeta("last_fiat_update")).thenReturn(today);
+        when(database.getMeta("last_crypto_update")).thenReturn(null);
+        when(cryptoUpdate.fetchAndParseCrypto()).thenReturn(Collections.emptyList());
+
+        rateUpdater.updateRates();
+
+        verify(fiatUpdate, never()).fetchAndParseFiat();
+        verify(cryptoUpdate).fetchAndParseCrypto();
+        verify(database, never()).setMeta(eq("last_fiat_update"), anyString());
+        verify(database).setMeta(eq("last_crypto_update"), anyString());
+    }
+
+    @Test
+    void alreadyUpdatedToday_bothDone_returnsTrue() {
+        String today = LocalDate.now().toString();
+        when(database.getMeta("last_fiat_update")).thenReturn(today);
+        when(database.getMeta("last_crypto_update")).thenReturn(today);
+
+        assertTrue(rateUpdater.alreadyUpdatedToday());
     }
 }

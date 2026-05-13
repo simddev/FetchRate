@@ -134,11 +134,12 @@ public class RateDatabase {
 
 
     /**
-     * Returns the date of the last successful rate update, or {@code null} if the database
-     * has never been updated.
+     * Returns the date of the last successful fiat rate update, or {@code null} if fiat
+     * rates have never been fetched. Used by {@link com.fetchrate.update.FiatRateUpdater}
+     * to select the appropriate ECB feed URL.
      */
     public LocalDate getLastUpdate() {
-        String v = getMeta("last_update");
+        String v = getMeta("last_fiat_update");
         return (v == null) ? null : LocalDate.parse(v);
     }
 
