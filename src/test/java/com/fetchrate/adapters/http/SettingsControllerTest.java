@@ -192,4 +192,20 @@ class SettingsControllerTest {
         verify(cryptoUpdater).removeTrackedSymbol("DOGE");
         verifyNoInteractions(database);
     }
+
+    @Test
+    void saveSettings_removeSymbol_invalidFormat_returns400() {
+        ResponseEntity<?> response = controller.saveSettings(Map.of("removeSymbol", "not-valid!"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(cryptoUpdater, never()).removeTrackedSymbol(any());
+    }
+
+    @Test
+    void saveSettings_removeSymbol_lowercaseNormalized() {
+        ResponseEntity<?> response = controller.saveSettings(Map.of("removeSymbol", "doge"));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(cryptoUpdater).removeTrackedSymbol("DOGE");
+    }
 }

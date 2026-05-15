@@ -12,6 +12,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -151,7 +152,19 @@ public class CommandLineRequest implements CommandLineRunner {
                 return;
             }
             if ("--set-url".equals(args[i]) && i + 1 < args.length) {
-                writeProperty("fetchrate.provider-url", args[++i].trim(), "Provider URL");
+                String url = args[++i].trim();
+                try {
+                    URI uri = URI.create(url);
+                    String scheme = uri.getScheme();
+                    if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+                        printError("Provider URL must use http or https.");
+                        return;
+                    }
+                } catch (IllegalArgumentException e) {
+                    printError("Invalid provider URL format.");
+                    return;
+                }
+                writeProperty("fetchrate.provider-url", url, "Provider URL");
                 return;
             }
             if ("--add-symbol".equals(args[i]) && i + 1 < args.length) {
@@ -166,6 +179,10 @@ public class CommandLineRequest implements CommandLineRunner {
             }
             if ("--remove-symbol".equals(args[i]) && i + 1 < args.length) {
                 String sym = args[++i].trim().toUpperCase();
+                if (!sym.matches("^[A-Z0-9]{2,10}$")) {
+                    printError("Invalid symbol. Use 2–10 alphanumeric characters (e.g. BTC, XRP).");
+                    return;
+                }
                 cryptoUpdater.removeTrackedSymbol(sym);
                 System.out.println("{\"status\":\"" + sym + " removed from tracked symbols\"}");
                 return;
@@ -260,7 +277,7 @@ public class CommandLineRequest implements CommandLineRunner {
         System.out.println();
         System.out.println("SUPPORTED CURRENCIES");
         System.out.println("  Fiat (ECB): USD, GBP, CHF, JPY, PLN, CZK, SEK, NOK, DKK, and more");
-        System.out.println("  Crypto:     BTC, ETH, LTC, DOGE, SOL, USDT (and any symbol via configured provider)");
+        System.out.println("  Crypto:     BTC, LTC, DOGE, SOL, USDT (and any symbol via configured provider)");
         System.out.println();
         System.out.println("EXAMPLES");
         System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency USD --date 2024-01-15");
