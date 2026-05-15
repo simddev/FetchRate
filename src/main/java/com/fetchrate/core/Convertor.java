@@ -1,6 +1,7 @@
 package com.fetchrate.core;
 
 import com.fetchrate.persistence.RateDatabase;
+import com.fetchrate.update.CryptoRateUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,9 +26,9 @@ public class Convertor {
 
     private final RateDatabase database;
     private final CurrencyClassifier classifier;
-    private final com.fetchrate.update.CryptoRateUpdater cryptoUpdater;
+    private final CryptoRateUpdater cryptoUpdater;
 
-    public Convertor(RateDatabase database, CurrencyClassifier classifier, com.fetchrate.update.CryptoRateUpdater cryptoUpdater) {
+    public Convertor(RateDatabase database, CurrencyClassifier classifier, CryptoRateUpdater cryptoUpdater) {
         this.database = database;
         this.classifier = classifier;
         this.cryptoUpdater = cryptoUpdater;
@@ -59,7 +60,6 @@ public class Convertor {
 
         BigDecimal amount = query.amount();
 
-        // Checking if the user entered a currency or a symbol.
         if (classifier.isFiat(currencySymbol)) {
             DayOfWeek dow = query.date().getDayOfWeek();
             if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {

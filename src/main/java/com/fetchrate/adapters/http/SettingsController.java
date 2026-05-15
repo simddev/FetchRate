@@ -88,6 +88,12 @@ public class SettingsController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Symbol must be 2–10 alphanumeric characters"));
             }
         }
+        if (hasRemoveSymbol) {
+            String sym = removeSymbol.trim().toUpperCase();
+            if (!sym.matches("^[A-Z0-9]{2,10}$")) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Symbol must be 2–10 alphanumeric characters"));
+            }
+        }
 
         // Execute only after all validations pass
         if (hasKey) {

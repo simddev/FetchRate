@@ -291,6 +291,29 @@ class CommandLineRequestTest {
     }
 
     @Test
+    void run_configRemoveSymbol_invalidFormat_outputsError() throws Exception {
+        cli.run("config", "--remove-symbol", "invalid!");
+
+        assertTrue(output().contains("error"));
+        verify(cryptoUpdater, never()).removeTrackedSymbol(any());
+    }
+
+    @Test
+    void run_configSetUrl_invalidScheme_outputsError() throws Exception {
+        cli.run("config", "--set-url", "ftp://example.com");
+
+        assertTrue(output().contains("error"));
+        assertTrue(output().contains("http"));
+    }
+
+    @Test
+    void run_configSetUrl_invalidFormat_outputsError() throws Exception {
+        cli.run("config", "--set-url", "not a url");
+
+        assertTrue(output().contains("error"));
+    }
+
+    @Test
     void run_configListSymbols_outputsJson() throws Exception {
         when(cryptoUpdater.getEffectiveSymbols()).thenReturn(java.util.List.of("BTC", "ETH", "XRP"));
         when(cryptoUpdater.isCustomized()).thenReturn(true);
