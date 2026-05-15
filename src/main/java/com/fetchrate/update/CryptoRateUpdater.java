@@ -111,8 +111,8 @@ public class CryptoRateUpdater {
 
     /**
      * Loads all available crypto rates from CSV files and, if an API key is configured,
-     * fetches the last 30 days from the crypto data provider for a standard set of coins
-     * (BTC, ETH, LTC, DOGE, SOL, USDT). API errors per symbol are logged and skipped.
+     * fetches the last 30 days from the crypto data provider for the effective tracked symbol list.
+     * API errors per symbol are logged and skipped.
      *
      * @return Combined list of {@link CryptoRateRecord} ready for database insertion.
      */

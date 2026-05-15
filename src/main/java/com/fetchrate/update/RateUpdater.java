@@ -13,9 +13,9 @@ import java.util.List;
 /**
  * Top-level orchestrator for refreshing the local rate database.
  * Runs fiat and crypto updates independently so that a failure in one source
- * does not prevent the other from completing. The {@code last_update} timestamp
- * is only written when at least one source succeeds, so a total network outage
- * will not suppress a retry for the rest of the day.
+ * does not prevent the other from completing. Each source tracks its own
+ * timestamp ({@code last_fiat_update} / {@code last_crypto_update}), written only
+ * when that source succeeds, so a network outage will not suppress a retry for the rest of the day.
  */
 @Service
 public class RateUpdater {
@@ -77,7 +77,7 @@ public class RateUpdater {
         if (!cryptoDone) {
             try {
                 List<CryptoRateRecord> cryptoRecord = cryptoUpdate.fetchAndParseCrypto();
-                if (cryptoRecord != null && !cryptoRecord.isEmpty()) {
+                if (!cryptoRecord.isEmpty()) {
                     database.updateCryptoRates(cryptoRecord);
                 }
                 database.setMeta("last_crypto_update", today.toString());

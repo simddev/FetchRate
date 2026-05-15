@@ -109,7 +109,7 @@ The application maintains a local SQLite database in the `data/` directory for f
 Rates are refreshed once per day on the first request of the day:
 
 - **Fiat currencies** — fetched from the [European Central Bank](https://www.ecb.europa.eu). The appropriate feed is selected automatically: full history, 90-day, or daily, based on how long ago the database was last updated.
-- **Cryptocurrencies** — if an API key is configured, the last 30 days of rates are fetched for the tracked symbol list (default: BTC, ETH, LTC, DOGE, SOL, USDT — see [Tracked Symbols](#tracked-symbols) below). Fiat and crypto updates are independent; a failure in one does not prevent the other from completing.
+- **Cryptocurrencies** — if an API key is configured, the last 30 days of rates are fetched for the tracked symbol list (default: BTC, LTC, DOGE, SOL, USDT — see [Tracked Symbols](#tracked-symbols) below). Fiat and crypto updates are independent; a failure in one does not prevent the other from completing.
 
 If both sources fail (e.g. no network), the daily timestamp is not updated so that the next request retries.
 
@@ -141,18 +141,6 @@ java -jar FetchRate-0.3.jar config --set-key your_api_key_here
 java -jar FetchRate-0.3.jar config --set-url https://your-provider/endpoint
 ```
 
-#### Tracked Symbols
-
-The daily update fetches rates for a fixed default set: `BTC, ETH, LTC, DOGE, SOL, USDT`. You can customise this list:
-
-```bash
-java -jar FetchRate-0.3.jar config --list-symbols         # show current list
-java -jar FetchRate-0.3.jar config --add-symbol XRP       # add a symbol
-java -jar FetchRate-0.3.jar config --remove-symbol DOGE   # remove a symbol
-```
-
-The first add or remove seeds the default list first, so existing symbols are preserved. Any symbol supported by the configured data provider can be added. In HTTP mode the symbol list is also manageable from the web UI under **⚙ API Settings**.
-
 **Option 3 — Environment variable:**
 ```bash
 export FETCHRATE_API_KEY=your_api_key_here
@@ -161,6 +149,18 @@ export FETCHRATE_API_KEY=your_api_key_here
 When running in HTTP mode, the API key and provider URL can also be set via the web UI under **⚙ API Settings**.
 
 > **CLI vs HTTP settings:** The `config` command (Options 1 and 2) writes values to `fetchrate.properties` and they take effect on the next startup. The web UI (HTTP mode) stores values in the local database and they take effect immediately without a restart. If both are configured, the database value takes priority. Avoid mixing the two for the same setting.
+
+#### Tracked Symbols
+
+The daily update fetches rates for a fixed default set: `BTC, LTC, DOGE, SOL, USDT`. You can customise this list:
+
+```bash
+java -jar FetchRate-0.3.jar config --list-symbols         # show current list
+java -jar FetchRate-0.3.jar config --add-symbol XRP       # add a symbol
+java -jar FetchRate-0.3.jar config --remove-symbol DOGE   # remove a symbol
+```
+
+The first add or remove seeds the default list first, so existing symbols are preserved. Any symbol supported by the configured data provider can be added. In HTTP mode the symbol list is also manageable from the web UI under **⚙ API Settings**.
 
 The crypto CSV directory defaults to `data/crypto` and can be overridden with the `fetchrate.crypto-dir` property.
 

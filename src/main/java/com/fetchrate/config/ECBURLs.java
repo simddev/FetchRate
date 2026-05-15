@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 /**
  * This class serves to provide getter methods which return the URLs for the Fiat data.
  * <p>
- * They can be found and adjusted in com.fetchrate/resources/application-cli/http.properties.
+ * They can be found and adjusted in application-http.properties and application-cli.properties.
  */
 @Component
 @ConfigurationProperties(prefix = "ecb.fiat")

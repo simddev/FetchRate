@@ -83,7 +83,7 @@ class RateDatabaseTest {
     }
 
     @Test
-    void findFiatRate_missing_throwsIllegalArgumentException() {
+    void findFiatRate_missing_throwsRateNotFoundException() {
         var query = new QueryRecord(BigDecimal.ONE, "GBP", LocalDate.of(2024, 1, 15));
         assertThrows(RateNotFoundException.class, () -> db.findFiatRate(query));
     }
@@ -128,7 +128,7 @@ class RateDatabaseTest {
     }
 
     @Test
-    void findCryptoRate_missing_throwsIllegalArgumentException() {
+    void findCryptoRate_missing_throwsRateNotFoundException() {
         var query = new QueryRecord(BigDecimal.ONE, "XRP", LocalDate.of(2024, 1, 15));
         assertThrows(RateNotFoundException.class, () -> db.findCryptoRate(query));
     }
