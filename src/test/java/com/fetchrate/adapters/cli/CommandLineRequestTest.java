@@ -126,42 +126,43 @@ class CommandLineRequestTest {
     @Test
     void run_validRequest_outputsJson() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
-        when(convertor.convert(any())).thenReturn(new BigDecimal("92.50"));
+        when(convertor.convertTo(any(), any())).thenReturn(new BigDecimal("92.50"));
 
         cli.run("convert", "--amount", "100", "--input-currency", "USD", "--date", "2024-01-15");
 
         String out = output();
         assertTrue(out.contains("currencySymbol"));
-        assertTrue(out.contains("inEuro"));
+        assertTrue(out.contains("\"currency\""));
+        assertTrue(out.contains("EUR"));
         assertTrue(out.contains("92.50"));
     }
 
     @Test
     void run_shortFlags_outputsJson() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
-        when(convertor.convert(any())).thenReturn(new BigDecimal("92.50"));
+        when(convertor.convertTo(any(), any())).thenReturn(new BigDecimal("92.50"));
 
         cli.run("convert", "-a", "100", "-c", "USD", "-d", "2024-01-15");
 
         String out = output();
-        assertTrue(out.contains("inEuro"));
+        assertTrue(out.contains("\"currency\""));
         assertTrue(out.contains("92.50"));
     }
 
     @Test
     void run_amountWithUnderscores_outputsJson() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
-        when(convertor.convert(any())).thenReturn(new BigDecimal("91500.00"));
+        when(convertor.convertTo(any(), any())).thenReturn(new BigDecimal("91500.00"));
 
         cli.run("convert", "--amount", "100_000", "--input-currency", "USD", "--date", "2024-01-15");
 
-        assertTrue(output().contains("inEuro"));
+        assertTrue(output().contains("\"currency\""));
     }
 
     @Test
     void run_lowercaseCurrency_isNormalized() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
-        when(convertor.convert(any())).thenReturn(new BigDecimal("92.50"));
+        when(convertor.convertTo(any(), any())).thenReturn(new BigDecimal("92.50"));
 
         cli.run("convert", "--amount", "100", "--input-currency", "usd", "--date", "2024-01-15");
 
@@ -249,7 +250,7 @@ class CommandLineRequestTest {
     @Test
     void run_currencyNotFound_outputsError() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
-        when(convertor.convert(any())).thenThrow(new IllegalArgumentException("No rate found for FAKE"));
+        when(convertor.convertTo(any(), any())).thenThrow(new IllegalArgumentException("No rate found for FAKE"));
 
         cli.run("convert", "--amount", "100", "--input-currency", "FAKE", "--date", "2024-01-15");
 
@@ -325,5 +326,51 @@ class CommandLineRequestTest {
         assertTrue(out.contains("BTC"));
         assertTrue(out.contains("XRP"));
         assertTrue(out.contains("\"customized\":true"));
+    }
+
+    @Test
+    void run_toFlag_passesOutputCurrencyToConvertor() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertTo(any(), eq("GBP"))).thenReturn(new BigDecimal("78.40"));
+
+        cli.run("convert", "--amount", "100", "--input-currency", "USD", "--date", "2024-01-15", "--to", "GBP");
+
+        String out = output();
+        assertTrue(out.contains("GBP"));
+        assertTrue(out.contains("78.40"));
+        verify(convertor).convertTo(any(), eq("GBP"));
+    }
+
+    @Test
+    void run_shortToFlag_passesOutputCurrencyToConvertor() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertTo(any(), eq("JPY"))).thenReturn(new BigDecimal("13450.00"));
+
+        cli.run("convert", "-a", "100", "-c", "USD", "-d", "2024-01-15", "-t", "JPY");
+
+        verify(convertor).convertTo(any(), eq("JPY"));
+    }
+
+    @Test
+    void run_toFlag_lowercaseIsNormalized() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertTo(any(), eq("GBP"))).thenReturn(new BigDecimal("78.40"));
+
+        cli.run("convert", "--amount", "100", "--input-currency", "USD", "--date", "2024-01-15", "--to", "gbp");
+
+        verify(convertor).convertTo(any(), eq("GBP"));
+    }
+
+    @Test
+    void run_unsupportedOutputCurrency_outputsError() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertTo(any(), eq("FAKE")))
+                .thenThrow(new IllegalArgumentException("Unsupported output currency: FAKE"));
+
+        cli.run("convert", "--amount", "100", "--input-currency", "USD", "--date", "2024-01-15", "--to", "FAKE");
+
+        String out = output();
+        assertTrue(out.contains("error"));
+        assertTrue(out.contains("FAKE"));
     }
 }

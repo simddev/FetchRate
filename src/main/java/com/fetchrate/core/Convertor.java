@@ -102,4 +102,33 @@ public class Convertor {
         return amount.multiply(cryptoRecord.rate()).setScale(2, RoundingMode.HALF_UP);
     }
 
+    /**
+     * Converts the amount in the given currency to {@code outputCurrency} for the requested date.
+     * Uses EUR as an intermediate pivot: the amount is first converted to EUR via {@link #convert},
+     * then multiplied by the ECB rate for the output currency on that date (or the closest preceding
+     * business day if no rate is published for that exact date).
+     *
+     * @param query          The query containing the amount, source currency symbol, and date.
+     * @param outputCurrency The target currency symbol. Must be an ECB-tracked fiat currency or {@code EUR}.
+     * @return The converted amount in {@code outputCurrency}, rounded to 2 decimal places.
+     * @throws IllegalArgumentException if {@code outputCurrency} is not a supported ECB fiat currency.
+     * @throws RateNotFoundException    if no rate is available for the output currency on or before the query date.
+     */
+    public BigDecimal convertTo(QueryRecord query, String outputCurrency) {
+        if (!classifier.isSupportedOutputCurrency(outputCurrency)) {
+            throw new IllegalArgumentException(
+                    "Unsupported output currency: " + outputCurrency +
+                    ". Supported output currencies are ECB-tracked fiat currencies (e.g. USD, GBP, JPY) or EUR.");
+        }
+
+        BigDecimal inEur = convert(query);
+
+        if ("EUR".equals(outputCurrency)) {
+            return inEur;
+        }
+
+        FiatRateRecord targetRate = database.findFiatRateOnOrBefore(outputCurrency, query.date());
+        return inEur.multiply(targetRate.rate()).setScale(2, RoundingMode.HALF_UP);
+    }
+
 }
