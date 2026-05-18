@@ -132,8 +132,7 @@ class CommandLineRequestTest {
 
         String out = output();
         assertTrue(out.contains("currencySymbol"));
-        assertTrue(out.contains("\"currency\""));
-        assertTrue(out.contains("EUR"));
+        assertTrue(out.contains("inEuro"));
         assertTrue(out.contains("92.50"));
     }
 
@@ -145,7 +144,7 @@ class CommandLineRequestTest {
         cli.run("convert", "-a", "100", "-c", "USD", "-d", "2024-01-15");
 
         String out = output();
-        assertTrue(out.contains("\"currency\""));
+        assertTrue(out.contains("inEuro"));
         assertTrue(out.contains("92.50"));
     }
 
@@ -156,7 +155,7 @@ class CommandLineRequestTest {
 
         cli.run("convert", "--amount", "100_000", "--input-currency", "USD", "--date", "2024-01-15");
 
-        assertTrue(output().contains("\"currency\""));
+        assertTrue(output().contains("inEuro"));
     }
 
     @Test

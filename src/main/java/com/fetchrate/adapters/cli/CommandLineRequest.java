@@ -130,12 +130,15 @@ public class CommandLineRequest implements CommandLineRunner {
                 if (exchangeSymbol != null) {
                     BigDecimal result = convertor.convertToCrypto(query, exchangeSymbol);
                     System.out.println(objectMapper.writeValueAsString(
-                            ConvertResponse.of(amount, currency, date, result, exchangeSymbol)));
-                } else {
-                    String target = outputCurrency != null ? outputCurrency : "EUR";
-                    BigDecimal result = convertor.convertTo(query, target);
+                            buildCrossResponse(amount, currency, date, result, exchangeSymbol)));
+                } else if (outputCurrency != null) {
+                    BigDecimal result = convertor.convertTo(query, outputCurrency);
                     System.out.println(objectMapper.writeValueAsString(
-                            ConvertResponse.of(amount, currency, date, result, target)));
+                            buildCrossResponse(amount, currency, date, result, outputCurrency)));
+                } else {
+                    BigDecimal result = convertor.convertTo(query, "EUR");
+                    System.out.println(objectMapper.writeValueAsString(
+                            ConvertResponse.of(amount, currency, date, result)));
                 }
             } catch (Exception e) {
                 printError(e.getMessage() != null ? e.getMessage() : "Conversion failed");
@@ -243,6 +246,24 @@ public class CommandLineRequest implements CommandLineRunner {
         } catch (IOException e) {
             System.out.println("{\"error\":\"Could not write fetchrate.properties: " + e.getMessage() + "\"}");
         }
+    }
+
+    private java.util.LinkedHashMap<String, Object> buildCrossResponse(
+            BigDecimal amount, String currency, java.time.LocalDate date,
+            BigDecimal result, String outputSymbol) {
+        var input = new java.util.LinkedHashMap<String, String>();
+        input.put("amount", amount.toPlainString());
+        input.put("currencySymbol", currency);
+        input.put("date", date.toString());
+
+        var output = new java.util.LinkedHashMap<String, String>();
+        output.put("amount", result.toPlainString());
+        output.put("currency", outputSymbol);
+
+        var response = new java.util.LinkedHashMap<String, Object>();
+        response.put("input", input);
+        response.put("output", output);
+        return response;
     }
 
     private void printError(String message) {
