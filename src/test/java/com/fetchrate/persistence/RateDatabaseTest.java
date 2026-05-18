@@ -102,6 +102,51 @@ class RateDatabaseTest {
                 db.findFiatRate(new QueryRecord(BigDecimal.ONE, "GBP", date)).rate()));
     }
 
+    @Test
+    void findFiatRateOnOrBefore_exactDateMatch_returnsRecord() {
+        var date = LocalDate.of(2024, 1, 15);
+        db.updateFiatRates(List.of(new FiatRateRecord("GBP", date, new BigDecimal("0.85"))));
+
+        var result = db.findFiatRateOnOrBefore("GBP", date);
+
+        assertEquals("GBP", result.currency());
+        assertEquals(0, new BigDecimal("0.85").compareTo(result.rate()));
+    }
+
+    @Test
+    void findFiatRateOnOrBefore_weekendDate_returnsPrecedingBusinessDay() {
+        var friday = LocalDate.of(2024, 1, 12);
+        var saturday = LocalDate.of(2024, 1, 13);
+        db.updateFiatRates(List.of(new FiatRateRecord("GBP", friday, new BigDecimal("0.85"))));
+
+        var result = db.findFiatRateOnOrBefore("GBP", saturday);
+
+        assertEquals(friday, result.date());
+        assertEquals(0, new BigDecimal("0.85").compareTo(result.rate()));
+    }
+
+    @Test
+    void findFiatRateOnOrBefore_multipleRatesBefore_returnsMostRecent() {
+        var date1 = LocalDate.of(2024, 1, 10);
+        var date2 = LocalDate.of(2024, 1, 12);
+        var queryDate = LocalDate.of(2024, 1, 15);
+        db.updateFiatRates(List.of(
+                new FiatRateRecord("USD", date1, new BigDecimal("1.10")),
+                new FiatRateRecord("USD", date2, new BigDecimal("1.08"))
+        ));
+
+        var result = db.findFiatRateOnOrBefore("USD", queryDate);
+
+        assertEquals(date2, result.date());
+        assertEquals(0, new BigDecimal("1.08").compareTo(result.rate()));
+    }
+
+    @Test
+    void findFiatRateOnOrBefore_noRateBefore_throwsRateNotFoundException() {
+        assertThrows(RateNotFoundException.class, () ->
+                db.findFiatRateOnOrBefore("GBP", LocalDate.of(2024, 1, 15)));
+    }
+
     // --- crypto rates ---
 
     @Test
