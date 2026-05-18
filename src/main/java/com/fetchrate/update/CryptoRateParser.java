@@ -114,8 +114,7 @@ public class CryptoRateParser {
                         if (!dateNode.isMissingNode() && !rateNode.isMissingNode()) {
                             long timestamp = dateNode.asLong();
                             BigDecimal rate = new BigDecimal(rateNode.asText());
-                            // API returns history entries for a specific time. 
-                            // We use UTC to ensure consistent date mapping.
+                            // Timestamps are UTC epoch millis — use UTC to avoid date shifting.
                             LocalDate date = Instant.ofEpochMilli(timestamp).atZone(ZoneOffset.UTC).toLocalDate();
                             cryptoRecord.add(new CryptoRateRecord(effectiveSymbol, date, rate));
                         }
@@ -155,9 +154,7 @@ public class CryptoRateParser {
                     long timestamp = Long.parseLong(entryMatcher.group(1));
                     BigDecimal rate = new BigDecimal(entryMatcher.group(2));
                     LocalDate date = Instant.ofEpochMilli(timestamp).atZone(ZoneOffset.UTC).toLocalDate();
-                    if (effectiveSymbol != null) {
-                        cryptoRecord.add(new CryptoRateRecord(effectiveSymbol, date, rate));
-                    }
+                    cryptoRecord.add(new CryptoRateRecord(effectiveSymbol, date, rate));
                 } catch (Exception e) {
                     log.debug("Skipping malformed entry during manual JSON extraction for {}: {}", symbol, e.getMessage());
                 }
