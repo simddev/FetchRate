@@ -373,4 +373,75 @@ class CommandLineRequestTest {
         assertTrue(out.contains("error"));
         assertTrue(out.contains("FAKE"));
     }
+
+    @Test
+    void run_exchangeFlag_callsConvertToCrypto() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertToCrypto(any(), eq("ETH"))).thenReturn(new BigDecimal("12.34567890"));
+
+        cli.run("convert", "--amount", "1", "--input-currency", "BTC", "--date", "2024-01-15", "--exchange", "ETH");
+
+        String out = output();
+        assertTrue(out.contains("ETH"));
+        assertTrue(out.contains("12.34567890"));
+        verify(convertor).convertToCrypto(any(), eq("ETH"));
+        verify(convertor, never()).convertTo(any(), any());
+    }
+
+    @Test
+    void run_shortExchangeFlag_callsConvertToCrypto() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertToCrypto(any(), eq("SOL"))).thenReturn(new BigDecimal("5.00000000"));
+
+        cli.run("convert", "-a", "1", "-c", "BTC", "-d", "2024-01-15", "-e", "SOL");
+
+        verify(convertor).convertToCrypto(any(), eq("SOL"));
+    }
+
+    @Test
+    void run_exchangeFlag_lowercaseIsNormalized() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertToCrypto(any(), eq("ETH"))).thenReturn(new BigDecimal("12.00000000"));
+
+        cli.run("convert", "-a", "1", "-c", "BTC", "-d", "2024-01-15", "--exchange", "eth");
+
+        verify(convertor).convertToCrypto(any(), eq("ETH"));
+    }
+
+    @Test
+    void run_bothToAndExchange_outputsError() throws Exception {
+        cli.run("convert", "-a", "1", "-c", "BTC", "-d", "2024-01-15", "--to", "USD", "--exchange", "ETH");
+
+        String out = output();
+        assertTrue(out.contains("error"));
+        assertTrue(out.contains("--to"));
+        assertTrue(out.contains("--exchange"));
+        verifyNoInteractions(convertor);
+    }
+
+    @Test
+    void run_exchangeFlag_fiatSymbol_outputsError() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertToCrypto(any(), eq("USD")))
+                .thenThrow(new IllegalArgumentException("USD is a fiat currency. Use --to USD for fiat output."));
+
+        cli.run("convert", "-a", "100", "-c", "BTC", "-d", "2024-01-15", "--exchange", "USD");
+
+        String out = output();
+        assertTrue(out.contains("error"));
+        assertTrue(out.contains("--to"));
+    }
+
+    @Test
+    void run_exchangeFlag_cryptoNotFound_outputsError() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertToCrypto(any(), eq("XRP")))
+                .thenThrow(new IllegalArgumentException("No crypto rate found for XRP"));
+
+        cli.run("convert", "-a", "1", "-c", "BTC", "-d", "2024-01-15", "--exchange", "XRP");
+
+        String out = output();
+        assertTrue(out.contains("error"));
+        assertTrue(out.contains("XRP"));
+    }
 }
