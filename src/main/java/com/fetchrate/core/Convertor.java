@@ -13,11 +13,13 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Converts a given amount in a foreign currency to EUR using rates stored in the database.
+ * Converts a given amount in a foreign currency to EUR, a fiat currency, or a cryptocurrency.
  * <p>
  * Fiat conversions use ECB daily exchange rates (EUR base). Crypto conversions use rates
  * fetched from CSV files or the configured crypto data provider API. If a crypto rate is missing for the
  * requested date, a lazy fetch is attempted before throwing.
+ * <p>
+ * Cross-currency and crypto-to-crypto conversions use EUR as an intermediate pivot.
  */
 @Service
 public class Convertor {
@@ -129,6 +131,45 @@ public class Convertor {
 
         FiatRateRecord targetRate = database.findFiatRateOnOrBefore(outputCurrency, query.date());
         return inEur.multiply(targetRate.rate()).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Converts the amount in the given currency to a target cryptocurrency for the requested date.
+     * Uses EUR as an intermediate pivot: the amount is first converted to EUR via {@link #convert},
+     * then divided by the output crypto's EUR rate on that date.
+     * If the output crypto rate is missing, a lazy fetch is attempted before throwing.
+     *
+     * @param query        The query containing the amount, source currency symbol, and date.
+     * @param outputSymbol The target cryptocurrency symbol (e.g. {@code "ETH"}, {@code "SOL"}).
+     *                     Must not be a fiat currency or EUR — use {@link #convertTo} for those.
+     * @return The converted amount in {@code outputSymbol}, rounded to 8 decimal places.
+     * @throws IllegalArgumentException if {@code outputSymbol} is a fiat currency or EUR.
+     * @throws RateNotFoundException    if no rate is available for {@code outputSymbol} on the query date.
+     */
+    public BigDecimal convertToCrypto(QueryRecord query, String outputSymbol) {
+        if (classifier.isFiat(outputSymbol) || "EUR".equals(outputSymbol)) {
+            throw new IllegalArgumentException(
+                    outputSymbol + " is a fiat currency. Use --to " + outputSymbol + " for fiat output.");
+        }
+
+        BigDecimal inEur = convert(query);
+
+        CryptoRateRecord outputRate;
+        try {
+            outputRate = database.findCryptoRate(new QueryRecord(BigDecimal.ZERO, outputSymbol, query.date()));
+        } catch (IllegalArgumentException e) {
+            log.info("Output crypto rate not in database. Attempting to fetch {} for {}...", outputSymbol, query.date());
+            List<CryptoRateRecord> fetched = cryptoUpdater.fetchAndParseSpecific(outputSymbol, query.date());
+            if (!fetched.isEmpty()) {
+                database.updateCryptoRates(fetched);
+                outputRate = database.findCryptoRate(new QueryRecord(BigDecimal.ZERO, outputSymbol, query.date()));
+            } else {
+                throw e;
+            }
+        }
+
+        // Crypto rate is EUR per 1 coin, so divide to get coin count.
+        return inEur.divide(outputRate.rate(), 8, RoundingMode.HALF_UP);
     }
 
 }
