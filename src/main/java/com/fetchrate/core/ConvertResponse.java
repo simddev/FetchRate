@@ -22,19 +22,19 @@ public record ConvertResponse(Input input, Output output) {
     ) {
     }
 
-    public record Output(String amount, String currency) {
+    public record Output(@JsonProperty("inEuro") String inEuro) {
 
-        public static Output of(BigDecimal result, String currency) {
-            return new Output(result.toPlainString(), currency);
+        public static Output of(BigDecimal eur) {
+            return new Output(eur.toPlainString());
         }
 
     }
 
-    public static ConvertResponse of(BigDecimal amount, String currency, LocalDate date, BigDecimal result, String outputCurrency) {
+    public static ConvertResponse of(BigDecimal amount, String currency, LocalDate date, BigDecimal eur) {
 
         return new ConvertResponse(
                 new Input(amount.toPlainString(), currency, date.toString()),
-                Output.of(result, outputCurrency)
+                Output.of(eur)
         );
 
     }

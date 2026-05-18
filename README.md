@@ -77,7 +77,7 @@ java -jar FetchRate-0.3.jar convert -a 100 -c USD -d 2024-01-15 --exchange SOL
 
 All results are printed to stdout as JSON. Errors are also returned as JSON.
 
-**Output format:**
+**Default output (EUR):**
 ```json
 {
     "input": {
@@ -86,13 +86,27 @@ All results are printed to stdout as JSON. Errors are also returned as JSON.
         "date": "2024-01-15"
     },
     "output": {
-        "amount": "91.37",
-        "currency": "EUR"
+        "inEuro": "91.37"
     }
 }
 ```
 
-Fiat output is rounded to **2 decimal places**. Cryptocurrency output is rounded to **8 decimal places**.
+**With `--to` or `--exchange`:**
+```json
+{
+    "input": {
+        "amount": "100",
+        "currencySymbol": "USD",
+        "date": "2024-01-15"
+    },
+    "output": {
+        "amount": "78.65",
+        "currency": "GBP"
+    }
+}
+```
+
+Fiat output is rounded to **2 decimal places**. Cryptocurrency output (`--exchange`) is rounded to **8 decimal places**.
 
 #### `config`
 
