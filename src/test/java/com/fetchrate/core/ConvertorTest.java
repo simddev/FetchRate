@@ -134,6 +134,48 @@ class ConvertorTest {
     }
 
     @Test
+    void convertTo_eurOutput_returnsSameAsConvert() {
+        when(classifier.isSupported("USD")).thenReturn(true);
+        when(classifier.isFiat("USD")).thenReturn(true);
+        when(classifier.isSupportedOutputCurrency("EUR")).thenReturn(true);
+        when(database.findFiatRate(any())).thenReturn(
+                new FiatRateRecord("USD", testDate, new BigDecimal("2.00"))
+        );
+
+        BigDecimal result = convertor.convertTo(new QueryRecord(new BigDecimal("200.00"), "USD", testDate), "EUR");
+
+        assertEquals(new BigDecimal("100.00"), result);
+    }
+
+    @Test
+    void convertTo_fiatOutput_appliesPivotRate() {
+        when(classifier.isSupported("USD")).thenReturn(true);
+        when(classifier.isFiat("USD")).thenReturn(true);
+        when(classifier.isSupportedOutputCurrency("GBP")).thenReturn(true);
+        when(database.findFiatRate(any())).thenReturn(
+                new FiatRateRecord("USD", testDate, new BigDecimal("2.00"))
+        );
+        when(database.findFiatRateOnOrBefore(eq("GBP"), eq(testDate))).thenReturn(
+                new FiatRateRecord("GBP", testDate, new BigDecimal("0.85"))
+        );
+
+        // 200 USD ÷ 2.00 = 100 EUR × 0.85 = 85 GBP
+        BigDecimal result = convertor.convertTo(new QueryRecord(new BigDecimal("200.00"), "USD", testDate), "GBP");
+
+        assertEquals(new BigDecimal("85.00"), result);
+    }
+
+    @Test
+    void convertTo_unsupportedOutputCurrency_throwsBeforeConversion() {
+        when(classifier.isSupportedOutputCurrency("BTC")).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                convertor.convertTo(new QueryRecord(new BigDecimal("100"), "USD", testDate), "BTC"));
+
+        verifyNoInteractions(database);
+    }
+
+    @Test
     void convert_cryptoNotInDb_lazyFetchReturnsNothing_rethrowsOriginalError() {
         when(classifier.isSupported("XRP")).thenReturn(true);
         when(classifier.isFiat("XRP")).thenReturn(false);

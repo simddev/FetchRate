@@ -92,7 +92,7 @@ public class RequestController {
         try {
             BigDecimal inEuros = convertor.convert(new QueryRecord(amount, currency, date));
             return ResponseEntity.ok(
-                    ConvertResponse.of(amount, currency, date, inEuros)
+                    ConvertResponse.of(amount, currency, date, inEuros, "EUR")
             );
         } catch (RateNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(

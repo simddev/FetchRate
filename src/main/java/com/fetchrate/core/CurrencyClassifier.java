@@ -84,6 +84,15 @@ public class CurrencyClassifier {
         return isFiat(symbol) || isCrypto(symbol) || "EUR".equals(symbol) || looksLikeCrypto(symbol);
     }
 
+    /**
+     * Returns {@code true} if the symbol is a valid output currency.
+     * Only ECB-tracked fiat currencies and EUR are supported as output currencies;
+     * cryptocurrencies cannot be used as an output currency.
+     */
+    public boolean isSupportedOutputCurrency(String symbol) {
+        return isFiat(symbol) || "EUR".equals(symbol);
+    }
+
     private boolean looksLikeCrypto(String symbol) {
         return symbol != null && symbol.matches("^[A-Z0-9]{2,10}$");
     }

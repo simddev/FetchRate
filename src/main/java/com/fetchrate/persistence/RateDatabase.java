@@ -237,6 +237,39 @@ public class RateDatabase {
     }
 
     /**
+     * Looks up the fiat exchange rate for {@code currency} on the given date, or the most recent
+     * available date before it if no rate exists for that exact date (e.g. weekends, public holidays).
+     *
+     * @param currency The currency symbol (e.g., {@code "USD"}).
+     * @param date     The target date.
+     * @return The most recent {@link FiatRateRecord} on or before {@code date}.
+     * @throws RateNotFoundException if no rate exists at all for that currency before {@code date}.
+     */
+    public FiatRateRecord findFiatRateOnOrBefore(String currency, LocalDate date) {
+        String sql = """
+                SELECT currency, date, rate
+                FROM fiat_rates
+                WHERE currency = ? AND date <= ?
+                ORDER BY date DESC
+                LIMIT 1
+                """;
+        try {
+            return jdbc.queryForObject(
+                    sql,
+                    (rs, rowNum) -> new FiatRateRecord(
+                            rs.getString("currency"),
+                            LocalDate.parse(rs.getString("date")),
+                            new BigDecimal(rs.getString("rate"))
+                    ),
+                    currency,
+                    date.toString()
+            );
+        } catch (EmptyResultDataAccessException e) {
+            throw new RateNotFoundException("No rate found for " + currency + " on or before " + date);
+        }
+    }
+
+    /**
      * Returns all symbols currently in the {@code tracked_symbols} table, in insertion order.
      * Returns an empty list when no custom list has been configured (defaults are in effect).
      */
