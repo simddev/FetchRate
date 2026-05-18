@@ -70,7 +70,8 @@ public class CommandLineRequest implements CommandLineRunner {
             BigDecimal amount = null;
             String currency = null;
             LocalDate date = null;
-            String outputCurrency = "EUR";
+            String outputCurrency = null;
+            String exchangeSymbol = null;
 
             for (int i = 1; i < args.length; i++) {
                 String a = args[i];
@@ -94,11 +95,18 @@ public class CommandLineRequest implements CommandLineRunner {
                     }
                 } else if (("--to".equals(a) || "-t".equals(a)) && i + 1 < args.length) {
                     outputCurrency = args[++i].toUpperCase();
+                } else if (("--exchange".equals(a) || "-e".equals(a)) && i + 1 < args.length) {
+                    exchangeSymbol = args[++i].toUpperCase();
                 }
             }
 
             if (amount == null || currency == null || date == null) {
                 printUsage();
+                return;
+            }
+
+            if (outputCurrency != null && exchangeSymbol != null) {
+                printError("Cannot use --to and --exchange together. Use --to for fiat output, --exchange for crypto output.");
                 return;
             }
 
@@ -119,12 +127,16 @@ public class CommandLineRequest implements CommandLineRunner {
             QueryRecord query = new QueryRecord(amount, currency, date);
 
             try {
-                BigDecimal result = convertor.convertTo(query, outputCurrency);
-
-                ConvertResponse response = ConvertResponse.of(amount, currency, date, result, outputCurrency);
-
-                System.out.println(objectMapper.writeValueAsString(response));
-
+                if (exchangeSymbol != null) {
+                    BigDecimal result = convertor.convertToCrypto(query, exchangeSymbol);
+                    System.out.println(objectMapper.writeValueAsString(
+                            ConvertResponse.of(amount, currency, date, result, exchangeSymbol)));
+                } else {
+                    String target = outputCurrency != null ? outputCurrency : "EUR";
+                    BigDecimal result = convertor.convertTo(query, target);
+                    System.out.println(objectMapper.writeValueAsString(
+                            ConvertResponse.of(amount, currency, date, result, target)));
+                }
             } catch (Exception e) {
                 printError(e.getMessage() != null ? e.getMessage() : "Conversion failed");
             }
@@ -250,7 +262,7 @@ public class CommandLineRequest implements CommandLineRunner {
 
     /** Prints the full help text covering all available commands and options. */
     private void printHelp() {
-        System.out.println("FetchRate — currency to EUR converter");
+        System.out.println("FetchRate — historical currency converter");
         System.out.println();
         System.out.println("USAGE");
         System.out.println("  java -jar fetchrate.jar <command> [options]");
@@ -260,7 +272,8 @@ public class CommandLineRequest implements CommandLineRunner {
         System.out.println("    -a, --amount <n>           Amount to convert (commas and underscores allowed as separators)");
         System.out.println("    -c, --input-currency <s>   Currency or crypto symbol (e.g. USD, BTC)");
         System.out.println("    -d, --date <YYYY-MM-DD>    Date of the exchange rate");
-        System.out.println("    -t, --to <s>               Output currency (default: EUR; e.g. USD, GBP, JPY)");
+        System.out.println("    -t, --to <s>               Output fiat currency (default: EUR; e.g. USD, GBP, JPY)");
+        System.out.println("    -e, --exchange <s>         Output cryptocurrency (e.g. ETH, SOL); uses EUR as pivot");
         System.out.println();
         System.out.println("  start_http_server     Start the HTTP server (default port: 8000)");
         System.out.println("    --port <n>           Listen on a custom port instead of 8000");
@@ -284,6 +297,7 @@ public class CommandLineRequest implements CommandLineRunner {
         System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency USD --date 2024-01-15");
         System.out.println("  java -jar fetchrate.jar convert -a 0.5 -c BTC -d 2024-01-15");
         System.out.println("  java -jar fetchrate.jar convert -a 100 -c USD -d 2024-01-15 --to GBP");
+        System.out.println("  java -jar fetchrate.jar convert -a 1 -c BTC -d 2024-01-15 --exchange ETH");
         System.out.println("  java -jar fetchrate.jar start_http_server");
         System.out.println("  java -jar fetchrate.jar start_http_server --port 9090");
         System.out.println("  java -jar fetchrate.jar config --set-key YOUR_API_KEY");
