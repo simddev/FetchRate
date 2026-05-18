@@ -70,7 +70,6 @@ public class RequestController {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid date format. Use YYYY-MM-DD."));
         }
 
-        // Support for 100,000 and 100_000
         BigDecimal amount;
         try {
             amount = new BigDecimal(amountStr.replace(",", "").replace("_", ""));
@@ -86,13 +85,10 @@ public class RequestController {
             return ResponseEntity.badRequest().body(Map.of("error", "Amount must be greater than zero."));
         }
 
-        // Same behavior like the CLI version.
         if (!rateUpdater.alreadyUpdatedToday()) {
             rateUpdater.updateRates();
         }
 
-        // Tries the convertor method, if successful formats it into a ConvertResponse record.
-        // This ensures the client's format wish.
         try {
             BigDecimal inEuros = convertor.convert(new QueryRecord(amount, currency, date));
             return ResponseEntity.ok(
@@ -117,10 +113,7 @@ public class RequestController {
         }
     }
 
-    /**
-     * Simple health endpoint for status check.
-     * @return Status.
-     */
+    /** Returns {@code {"status": "ok"}} for uptime checks. */
     @GetMapping("/health")
     public Map<String, String> health() {
         return Map.of("status", "ok");

@@ -241,7 +241,7 @@ public class RateDatabase {
      * Returns an empty list when no custom list has been configured (defaults are in effect).
      */
     public List<String> getTrackedSymbols() {
-        return jdbc.queryForList("SELECT symbol FROM tracked_symbols", String.class);
+        return jdbc.queryForList("SELECT symbol FROM tracked_symbols ORDER BY rowid", String.class);
     }
 
     /**

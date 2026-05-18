@@ -90,8 +90,8 @@ public class CryptoRateFetcher {
 
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(cryptoDir, "*.csv")) {
                 for (Path path : stream) {
-                    String filename = path.getFileName().toString(); // Gets filename like BTC.csv
-                    String symbol = filename.substring(0, filename.length() - 4).toUpperCase(); // Strips ".csv".
+                    String filename = path.getFileName().toString();
+                    String symbol = filename.substring(0, filename.length() - 4).toUpperCase();
                     String csv = Files.readString(path);
                     collectionCsvData.put(symbol, csv);
                 }
