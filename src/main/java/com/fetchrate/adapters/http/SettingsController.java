@@ -47,12 +47,16 @@ public class SettingsController {
     }
 
     /**
-     * Saves one or both runtime settings to the database.
-     * At least one field ({@code apiKey} or {@code providerUrl}) must be present and non-blank.
+     * Saves runtime settings to the database.
+     * At least one of the following fields must be present and non-blank:
+     * {@code apiKey}, {@code providerUrl}, {@code addSymbol}, or {@code removeSymbol}.
      * The provider URL, if supplied, must use the {@code http} or {@code https} scheme.
+     * Symbols must be 2–10 uppercase alphanumeric characters.
+     * All validation runs before any write is performed.
      *
-     * @param body Request body containing optional {@code apiKey} and/or {@code providerUrl} fields.
-     * @return 200 OK on success, 400 Bad Request if no valid field is provided or the URL is invalid.
+     * @param body Request body with optional fields: {@code apiKey}, {@code providerUrl},
+     *             {@code addSymbol}, {@code removeSymbol}.
+     * @return 200 OK on success, 400 Bad Request if no valid field is provided or any value is invalid.
      */
     @PostMapping
     public ResponseEntity<?> saveSettings(@RequestBody Map<String, String> body) {

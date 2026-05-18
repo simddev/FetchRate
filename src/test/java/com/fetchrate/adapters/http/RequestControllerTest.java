@@ -174,6 +174,14 @@ class RequestControllerTest {
     }
 
     @Test
+    void convert_blankAmount_returns400() {
+        ResponseEntity<?> response = controller.convert("  ", "USD", "2024-01-15");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verifyNoInteractions(convertor);
+    }
+
+    @Test
     void convert_nullAmount_returns400() {
         ResponseEntity<?> response = controller.convert(null, "USD", "2024-01-15");
 
