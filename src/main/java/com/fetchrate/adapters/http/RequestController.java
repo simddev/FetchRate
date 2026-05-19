@@ -2,6 +2,7 @@ package com.fetchrate.adapters.http;
 
 import com.fetchrate.core.ConvertResponse;
 import com.fetchrate.core.Convertor;
+import com.fetchrate.core.CurrencyClassifier;
 import com.fetchrate.core.QueryRecord;
 import com.fetchrate.core.RateNotFoundException;
 import com.fetchrate.update.RateUpdater;
@@ -14,11 +15,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * REST controller for the HTTP server profile.
- * Exposes a {@code /convert} endpoint for currency-to-EUR conversions
+ * Exposes a {@code /convert} endpoint for currency conversions
  * and a {@code /health} endpoint for status checks.
  */
 @Profile("http")
@@ -29,28 +31,31 @@ public class RequestController {
 
     private final RateUpdater rateUpdater;
     private final Convertor convertor;
+    private final CurrencyClassifier classifier;
 
-    public RequestController(RateUpdater rateUpdater, Convertor convertor) {
+    public RequestController(RateUpdater rateUpdater, Convertor convertor, CurrencyClassifier classifier) {
         this.rateUpdater = rateUpdater;
         this.convertor = convertor;
+        this.classifier = classifier;
     }
 
-
     /**
-     * Converts an amount in the given currency to EUR on the specified date.
+     * Converts an amount in the given currency on the specified date.
+     * Defaults to EUR output; pass {@code output_currency} to convert to a different fiat or crypto.
      * Triggers a database update if rates have not yet been fetched today.
      *
-     * @param amountStr     The amount to convert. Accepts commas and underscores as thousand separators.
-     * @param inputCurrency The source currency symbol (e.g., {@code USD}, {@code BTC}).
-     * @param dateStr       The date in {@code YYYY-MM-DD} format. Must not be in the future.
-     * @return 200 with a {@link com.fetchrate.core.ConvertResponse} JSON body on success,
-     *         400 for invalid input, 404 if no rate is found, or 500 on an unexpected error.
+     * @param amountStr            The amount to convert. Accepts commas and underscores as thousand separators.
+     * @param inputCurrency        The source currency symbol (e.g., {@code USD}, {@code BTC}).
+     * @param dateStr              The date in {@code YYYY-MM-DD} format. Must not be in the future.
+     * @param outputCurrencyParam  Optional target currency (e.g., {@code GBP}, {@code ETH}). Defaults to EUR.
+     * @return 200 with a JSON body on success, 400 for invalid input, 404 if no rate is found, or 500 on error.
      */
     @GetMapping("/convert")
     public ResponseEntity<?> convert(
             @RequestParam(value = "amount", required = false) String amountStr,
             @RequestParam(value = "input_currency", required = false) String inputCurrency,
-            @RequestParam(value = "date", required = false) String dateStr
+            @RequestParam(value = "date", required = false) String dateStr,
+            @RequestParam(value = "output_currency", required = false) String outputCurrencyParam
     ) {
         if (amountStr == null || amountStr.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "amount parameter is required."));
@@ -89,11 +94,18 @@ public class RequestController {
             rateUpdater.updateRates();
         }
 
+        String outputCurrency = (outputCurrencyParam != null) ? outputCurrencyParam.strip().toUpperCase() : null;
+        QueryRecord query = new QueryRecord(amount, currency, date);
+
         try {
-            BigDecimal inEuros = convertor.convert(new QueryRecord(amount, currency, date));
-            return ResponseEntity.ok(
-                    ConvertResponse.of(amount, currency, date, inEuros)
-            );
+            if (outputCurrency != null && !"EUR".equals(outputCurrency)) {
+                BigDecimal result = classifier.isSupportedOutputCurrency(outputCurrency)
+                        ? convertor.convertTo(query, outputCurrency)
+                        : convertor.convertToCrypto(query, outputCurrency);
+                return ResponseEntity.ok(buildCrossResponse(amount, currency, date, result, outputCurrency));
+            }
+            BigDecimal inEuros = convertor.convert(query);
+            return ResponseEntity.ok(ConvertResponse.of(amount, currency, date, inEuros));
         } catch (RateNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "error", e.getMessage(),
@@ -117,6 +129,24 @@ public class RequestController {
     @GetMapping("/health")
     public Map<String, String> health() {
         return Map.of("status", "ok");
+    }
+
+    private LinkedHashMap<String, Object> buildCrossResponse(
+            BigDecimal amount, String currency, LocalDate date,
+            BigDecimal result, String outputSymbol) {
+        var input = new LinkedHashMap<String, String>();
+        input.put("amount", amount.toPlainString());
+        input.put("currencySymbol", currency);
+        input.put("date", date.toString());
+
+        var output = new LinkedHashMap<String, String>();
+        output.put("amount", result.toPlainString());
+        output.put("currency", outputSymbol);
+
+        var response = new LinkedHashMap<String, Object>();
+        response.put("input", input);
+        response.put("output", output);
+        return response;
     }
 
 }

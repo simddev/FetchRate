@@ -1,6 +1,7 @@
 package com.fetchrate.adapters.http;
 
 import com.fetchrate.core.Convertor;
+import com.fetchrate.core.CurrencyClassifier;
 import com.fetchrate.core.QueryRecord;
 import com.fetchrate.core.RateNotFoundException;
 import com.fetchrate.update.RateUpdater;
@@ -14,9 +15,11 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,6 +29,8 @@ class RequestControllerTest {
     private RateUpdater rateUpdater;
     @Mock
     private Convertor convertor;
+    @Mock
+    private CurrencyClassifier classifier;
 
     @InjectMocks
     private RequestController controller;
@@ -35,7 +40,7 @@ class RequestControllerTest {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
         when(convertor.convert(any(QueryRecord.class))).thenReturn(new BigDecimal("92.50"));
 
-        ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15");
+        ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15", null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
@@ -44,7 +49,7 @@ class RequestControllerTest {
     void convert_futureDate_returns400() {
         String tomorrow = LocalDate.now().plusDays(1).toString();
 
-        ResponseEntity<?> response = controller.convert("100", "USD", tomorrow);
+        ResponseEntity<?> response = controller.convert("100", "USD", tomorrow, null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         verifyNoInteractions(convertor);
@@ -52,7 +57,7 @@ class RequestControllerTest {
 
     @Test
     void convert_negativeAmount_returns400() {
-        ResponseEntity<?> response = controller.convert("-50", "USD", "2024-01-15");
+        ResponseEntity<?> response = controller.convert("-50", "USD", "2024-01-15", null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         verifyNoInteractions(convertor);
@@ -60,7 +65,7 @@ class RequestControllerTest {
 
     @Test
     void convert_zeroAmount_returns400() {
-        ResponseEntity<?> response = controller.convert("0", "USD", "2024-01-15");
+        ResponseEntity<?> response = controller.convert("0", "USD", "2024-01-15", null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         verifyNoInteractions(convertor);
@@ -68,7 +73,7 @@ class RequestControllerTest {
 
     @Test
     void convert_invalidDateFormat_returns400() {
-        ResponseEntity<?> response = controller.convert("100", "USD", "15-01-2024");
+        ResponseEntity<?> response = controller.convert("100", "USD", "15-01-2024", null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         verifyNoInteractions(convertor);
@@ -76,7 +81,7 @@ class RequestControllerTest {
 
     @Test
     void convert_invalidAmountFormat_returns400() {
-        ResponseEntity<?> response = controller.convert("abc", "USD", "2024-01-15");
+        ResponseEntity<?> response = controller.convert("abc", "USD", "2024-01-15", null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         verifyNoInteractions(convertor);
@@ -84,7 +89,7 @@ class RequestControllerTest {
 
     @Test
     void convert_blankCurrency_returns400() {
-        ResponseEntity<?> response = controller.convert("100", "  ", "2024-01-15");
+        ResponseEntity<?> response = controller.convert("100", "  ", "2024-01-15", null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         verifyNoInteractions(convertor);
@@ -95,7 +100,7 @@ class RequestControllerTest {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
         when(convertor.convert(any(QueryRecord.class))).thenReturn(new BigDecimal("91500.00"));
 
-        ResponseEntity<?> response = controller.convert("100,000", "USD", "2024-01-15");
+        ResponseEntity<?> response = controller.convert("100,000", "USD", "2024-01-15", null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
@@ -106,7 +111,7 @@ class RequestControllerTest {
         when(convertor.convert(any(QueryRecord.class)))
                 .thenThrow(new IllegalArgumentException("Unsupported currency: FAKE"));
 
-        ResponseEntity<?> response = controller.convert("100", "FAKE", "2024-01-15");
+        ResponseEntity<?> response = controller.convert("100", "FAKE", "2024-01-15", null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
@@ -117,7 +122,7 @@ class RequestControllerTest {
         when(convertor.convert(any(QueryRecord.class)))
                 .thenThrow(new RateNotFoundException("No rate found for USD on 2024-01-15"));
 
-        ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15");
+        ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15", null);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
@@ -128,7 +133,7 @@ class RequestControllerTest {
         when(convertor.convert(any(QueryRecord.class)))
                 .thenThrow(new RuntimeException("Unexpected failure"));
 
-        ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15");
+        ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15", null);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
@@ -138,7 +143,7 @@ class RequestControllerTest {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
         when(convertor.convert(any(QueryRecord.class))).thenReturn(new BigDecimal("91500.00"));
 
-        ResponseEntity<?> response = controller.convert("100_000", "USD", "2024-01-15");
+        ResponseEntity<?> response = controller.convert("100_000", "USD", "2024-01-15", null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
@@ -148,7 +153,7 @@ class RequestControllerTest {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
         when(convertor.convert(any(QueryRecord.class))).thenReturn(new BigDecimal("92.50"));
 
-        ResponseEntity<?> response = controller.convert("100", "usd", "2024-01-15");
+        ResponseEntity<?> response = controller.convert("100", "usd", "2024-01-15", null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
@@ -158,7 +163,7 @@ class RequestControllerTest {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
         when(convertor.convert(any(QueryRecord.class))).thenReturn(new BigDecimal("92.50"));
 
-        ResponseEntity<?> response = controller.convert("100", "USD", LocalDate.now().toString());
+        ResponseEntity<?> response = controller.convert("100", "USD", LocalDate.now().toString(), null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
@@ -168,14 +173,14 @@ class RequestControllerTest {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(false);
         when(convertor.convert(any(QueryRecord.class))).thenReturn(new BigDecimal("92.50"));
 
-        controller.convert("100", "USD", "2024-01-15");
+        controller.convert("100", "USD", "2024-01-15", null);
 
         verify(rateUpdater).updateRates();
     }
 
     @Test
     void convert_blankAmount_returns400() {
-        ResponseEntity<?> response = controller.convert("  ", "USD", "2024-01-15");
+        ResponseEntity<?> response = controller.convert("  ", "USD", "2024-01-15", null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         verifyNoInteractions(convertor);
@@ -183,7 +188,7 @@ class RequestControllerTest {
 
     @Test
     void convert_nullAmount_returns400() {
-        ResponseEntity<?> response = controller.convert(null, "USD", "2024-01-15");
+        ResponseEntity<?> response = controller.convert(null, "USD", "2024-01-15", null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         verifyNoInteractions(convertor);
@@ -191,7 +196,7 @@ class RequestControllerTest {
 
     @Test
     void convert_nullCurrency_returns400() {
-        ResponseEntity<?> response = controller.convert("100", null, "2024-01-15");
+        ResponseEntity<?> response = controller.convert("100", null, "2024-01-15", null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         verifyNoInteractions(convertor);
@@ -199,10 +204,86 @@ class RequestControllerTest {
 
     @Test
     void convert_nullDate_returns400() {
-        ResponseEntity<?> response = controller.convert("100", "USD", null);
+        ResponseEntity<?> response = controller.convert("100", "USD", null, null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         verifyNoInteractions(convertor);
+    }
+
+    @Test
+    void convert_outputCurrencyGbp_callsConvertToAndReturnsCrossFormat() {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(classifier.isSupportedOutputCurrency("GBP")).thenReturn(true);
+        when(convertor.convertTo(any(QueryRecord.class), eq("GBP"))).thenReturn(new BigDecimal("78.65"));
+
+        ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15", "GBP");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        @SuppressWarnings("unchecked")
+        var body = (Map<String, Object>) response.getBody();
+        assertNotNull(body);
+        @SuppressWarnings("unchecked")
+        var output = (Map<String, String>) body.get("output");
+        assertEquals("78.65", output.get("amount"));
+        assertEquals("GBP", output.get("currency"));
+        assertNull(output.get("inEuro"));
+        verify(convertor).convertTo(any(), eq("GBP"));
+        verify(convertor, never()).convert(any());
+    }
+
+    @Test
+    void convert_outputCurrencyEth_callsConvertToCrypto() {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(classifier.isSupportedOutputCurrency("ETH")).thenReturn(false);
+        when(convertor.convertToCrypto(any(QueryRecord.class), eq("ETH"))).thenReturn(new BigDecimal("0.02500000"));
+
+        ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15", "ETH");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        @SuppressWarnings("unchecked")
+        var body = (Map<String, Object>) response.getBody();
+        @SuppressWarnings("unchecked")
+        var output = (Map<String, String>) body.get("output");
+        assertEquals("0.02500000", output.get("amount"));
+        assertEquals("ETH", output.get("currency"));
+        verify(convertor).convertToCrypto(any(), eq("ETH"));
+        verify(convertor, never()).convert(any());
+    }
+
+    @Test
+    void convert_outputCurrencyLowercase_isNormalized() {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(classifier.isSupportedOutputCurrency("GBP")).thenReturn(true);
+        when(convertor.convertTo(any(QueryRecord.class), eq("GBP"))).thenReturn(new BigDecimal("78.65"));
+
+        ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15", "gbp");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(convertor).convertTo(any(), eq("GBP"));
+    }
+
+    @Test
+    void convert_outputCurrencyEur_usesDefaultEurPath() {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convert(any(QueryRecord.class))).thenReturn(new BigDecimal("91.37"));
+
+        ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15", "EUR");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(convertor).convert(any());
+        verify(convertor, never()).convertTo(any(), any());
+    }
+
+    @Test
+    void convert_outputCurrencyInvalid_returns400() {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(classifier.isSupportedOutputCurrency("FAKE")).thenReturn(false);
+        when(convertor.convertToCrypto(any(QueryRecord.class), eq("FAKE")))
+                .thenThrow(new IllegalArgumentException("No crypto rate found for FAKE"));
+
+        ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15", "FAKE");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test

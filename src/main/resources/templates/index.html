@@ -309,7 +309,7 @@
     <div class="container">
         <div class="header">
             <h1>FetchRate</h1>
-            <p class="tagline">Any currency or crypto, any date &mdash; in Euro.</p>
+            <p class="tagline">Any currency or crypto &mdash; any date, any output.</p>
         </div>
 
         <div class="field-group">
@@ -331,6 +331,19 @@
                     <option th:each="curr : ${cryptos}" th:value="${curr}" th:text="${curr} + ' — ' + ${currencyNames.get(curr)}"></option>
                 </select>
             </div>
+        </div>
+
+        <div class="field-group">
+            <label class="field-label" for="output-currency">Convert to</label>
+            <select id="output-currency" aria-label="Output currency" onchange="updateButtonText()">
+                <option value="EUR" selected>EUR &mdash; Euro</option>
+                <optgroup label="Fiat">
+                    <option th:each="curr : ${fiats}" th:value="${curr}" th:text="${curr} + ' — ' + ${currencyNames.get(curr)}"></option>
+                </optgroup>
+                <optgroup label="Crypto">
+                    <option th:each="curr : ${cryptos}" th:value="${curr}" th:text="${curr} + ' — ' + ${currencyNames.get(curr)}"></option>
+                </optgroup>
+            </select>
         </div>
 
         <div class="field-group">
@@ -381,6 +394,7 @@
 
     <script th:inline="javascript">
         const currencyNames = /*[[${currencyNames}]]*/ {};
+        const cryptoSymbols = /*[[${cryptos}]]*/ [];
 
         const dateInput = document.getElementById('date');
         const today = new Date().toISOString().split('T')[0];
@@ -396,6 +410,20 @@
 
         function formatNumber(num) {
             return new Intl.NumberFormat('en-US').format(num);
+        }
+
+        function formatResult(amount, currency) {
+            if (cryptoSymbols.includes(currency)) {
+                const dot = amount.indexOf('.');
+                if (dot === -1) return formatNumber(amount);
+                return formatNumber(amount.substring(0, dot)) + amount.substring(dot);
+            }
+            return formatNumber(amount);
+        }
+
+        function updateButtonText() {
+            const sym = document.getElementById('output-currency').value || 'EUR';
+            document.getElementById('convert-btn').textContent = 'Convert to ' + sym;
         }
 
         function getOrdinal(n) {
@@ -420,6 +448,7 @@
             const cryptoSelect = document.getElementById('crypto-currency');
             const currency = fiatSelect.value || cryptoSelect.value;
             const date = document.getElementById('date').value;
+            const outputCurrency = document.getElementById('output-currency').value || 'EUR';
             const resultDiv = document.getElementById('result');
             const btn = document.getElementById('convert-btn');
 
@@ -438,21 +467,27 @@
             btn.textContent = 'Fetching…';
 
             try {
-                const url = `/convert?amount=${encodeURIComponent(amountInput)}&input_currency=${currency}&date=${date}`;
+                let url = `/convert?amount=${encodeURIComponent(amountInput)}&input_currency=${currency}&date=${date}`;
+                if (outputCurrency !== 'EUR') {
+                    url += `&output_currency=${encodeURIComponent(outputCurrency)}`;
+                }
                 const response = await fetch(url);
                 const data = await response.json();
 
                 if (response.ok) {
-                    const euroFormatted = formatNumber(data.output.inEuro);
+                    const isEuro = !data.output.currency;
+                    const rawAmount = isEuro ? data.output.inEuro : data.output.amount;
+                    const resultSymbol = isEuro ? 'EUR' : data.output.currency;
+                    const resultFormatted = formatResult(rawAmount, resultSymbol);
                     const amountFormatted = formatNumber(data.input.amount);
                     const currencyName = currencyNames[data.input.currencySymbol] || data.input.currencySymbol;
                     const humanDate = formatDate(data.input.date);
                     const dateISO = data.input.date.replace(/-/g, '/');
 
                     resultDiv.innerHTML =
-                        `<div class="result-amount">${euroFormatted} EUR</div>` +
+                        `<div class="result-amount">${resultFormatted} ${resultSymbol}</div>` +
                         `<div class="result-summary">${amountFormatted} ${currencyName} (${data.input.currencySymbol})<br>on the ${humanDate}</div>` +
-                        `<div class="result-raw">${amountFormatted} ${data.input.currencySymbol} on ${dateISO} = ${euroFormatted} EUR</div>`;
+                        `<div class="result-raw">${amountFormatted} ${data.input.currencySymbol} on ${dateISO} = ${resultFormatted} ${resultSymbol}</div>`;
                 } else {
                     resultDiv.innerHTML = `<span class="error-text">${data.error || 'An error occurred.'}</span>`;
                 }
@@ -460,7 +495,7 @@
                 resultDiv.innerHTML = '<span class="error-text">Failed to connect to server.</span>';
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Convert to EUR';
+                updateButtonText();
             }
             resultDiv.style.display = 'block';
         }
