@@ -123,11 +123,12 @@ java -jar FetchRate-0.3.jar config --list-symbols                # Show current 
 ### REST API
 
 ```
-GET /convert?amount=<n>&input_currency=<symbol>&date=<YYYY-MM-DD>
+GET /convert?amount=<n>&input_currency=<symbol>&date=<YYYY-MM-DD>[&output_currency=<symbol>]
 ```
 
 Returns a JSON response on success, or an `error` field with an appropriate HTTP status on failure.
-The HTTP API currently returns EUR only. Cross-currency output (`--to`, `--exchange`) is a CLI feature.
+
+The optional `output_currency` parameter accepts any ECB-tracked fiat currency or cryptocurrency symbol. When omitted or set to `EUR`, the response uses the default `inEuro` format. When set to any other currency, the response uses the `amount` + `currency` format (same as the CLI `--to` / `--exchange` output).
 
 ```
 GET /health
@@ -140,6 +141,8 @@ Returns `{"status": "ok"}`.
 ### Web UI
 
 Once the HTTP server is running, a browser interface is available at `/`.
+
+The web UI supports selecting an output currency via a dropdown — any ECB fiat currency or tracked cryptocurrency. The default output is EUR.
 
 <p align="center">
   <img src="images/ui-preview.png" width="380" alt="FetchRate web interface">
