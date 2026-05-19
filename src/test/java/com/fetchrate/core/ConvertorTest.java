@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -131,6 +132,126 @@ class ConvertorTest {
         BigDecimal result = convertor.convert(new QueryRecord(new BigDecimal("100"), "XRP", testDate));
 
         assertEquals(new BigDecimal("50.00"), result);
+    }
+
+    @Test
+    void convertTo_eurOutput_returnsSameAsConvert() {
+        when(classifier.isSupported("USD")).thenReturn(true);
+        when(classifier.isFiat("USD")).thenReturn(true);
+        when(classifier.isSupportedOutputCurrency("EUR")).thenReturn(true);
+        when(database.findFiatRate(any())).thenReturn(
+                new FiatRateRecord("USD", testDate, new BigDecimal("2.00"))
+        );
+
+        BigDecimal result = convertor.convertTo(new QueryRecord(new BigDecimal("200.00"), "USD", testDate), "EUR");
+
+        assertEquals(new BigDecimal("100.00"), result);
+    }
+
+    @Test
+    void convertTo_fiatOutput_appliesPivotRate() {
+        when(classifier.isSupported("USD")).thenReturn(true);
+        when(classifier.isFiat("USD")).thenReturn(true);
+        when(classifier.isSupportedOutputCurrency("GBP")).thenReturn(true);
+        when(database.findFiatRate(any())).thenReturn(
+                new FiatRateRecord("USD", testDate, new BigDecimal("2.00"))
+        );
+        when(database.findFiatRateOnOrBefore(eq("GBP"), eq(testDate))).thenReturn(
+                new FiatRateRecord("GBP", testDate, new BigDecimal("0.85"))
+        );
+
+        // 200 USD ÷ 2.00 = 100 EUR × 0.85 = 85 GBP
+        BigDecimal result = convertor.convertTo(new QueryRecord(new BigDecimal("200.00"), "USD", testDate), "GBP");
+
+        assertEquals(new BigDecimal("85.00"), result);
+    }
+
+    @Test
+    void convertTo_unsupportedOutputCurrency_throwsBeforeConversion() {
+        when(classifier.isSupportedOutputCurrency("BTC")).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                convertor.convertTo(new QueryRecord(new BigDecimal("100"), "USD", testDate), "BTC"));
+
+        verifyNoInteractions(database);
+    }
+
+    @Test
+    void convertToCrypto_dividesByOutputCryptoRate() {
+        when(classifier.isSupported("BTC")).thenReturn(true);
+        when(classifier.isFiat("BTC")).thenReturn(false);
+        when(classifier.isFiat("ETH")).thenReturn(false);
+        when(database.findCryptoRate(argThat(q -> q != null && "BTC".equals(q.currencySymbol())))).thenReturn(
+                new CryptoRateRecord("BTC", testDate, new BigDecimal("40000.00"))
+        );
+        when(database.findCryptoRate(argThat(q -> q != null && "ETH".equals(q.currencySymbol())))).thenReturn(
+                new CryptoRateRecord("ETH", testDate, new BigDecimal("2500.00"))
+        );
+
+        // 2 BTC × 40000 = 80000 EUR ÷ 2500 = 32 ETH
+        BigDecimal result = convertor.convertToCrypto(
+                new QueryRecord(new BigDecimal("2"), "BTC", testDate), "ETH");
+
+        assertEquals(new BigDecimal("32.00000000"), result);
+    }
+
+    @Test
+    void convertToCrypto_fiatOutputSymbol_throwsWithHint() {
+        when(classifier.isFiat("USD")).thenReturn(true);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                convertor.convertToCrypto(new QueryRecord(new BigDecimal("100"), "BTC", testDate), "USD"));
+
+        assertTrue(ex.getMessage().contains("--to"));
+        verifyNoInteractions(database);
+    }
+
+    @Test
+    void convertToCrypto_eurOutputSymbol_throwsWithHint() {
+        when(classifier.isFiat("EUR")).thenReturn(false);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                convertor.convertToCrypto(new QueryRecord(new BigDecimal("100"), "BTC", testDate), "EUR"));
+
+        assertTrue(ex.getMessage().contains("--to"));
+        verifyNoInteractions(database);
+    }
+
+    @Test
+    void convertToCrypto_outputCryptoNotInDb_lazyFetchSucceeds() {
+        when(classifier.isSupported("USD")).thenReturn(true);
+        when(classifier.isFiat("USD")).thenReturn(true);
+        when(classifier.isFiat("SOL")).thenReturn(false);
+        when(database.findFiatRate(any())).thenReturn(
+                new FiatRateRecord("USD", testDate, new BigDecimal("1.00"))
+        );
+        when(database.findCryptoRate(any()))
+                .thenThrow(new IllegalArgumentException("No crypto rate found"))
+                .thenReturn(new CryptoRateRecord("SOL", testDate, new BigDecimal("100.00")));
+        when(cryptoUpdater.fetchAndParseSpecific(eq("SOL"), eq(testDate)))
+                .thenReturn(List.of(new CryptoRateRecord("SOL", testDate, new BigDecimal("100.00"))));
+
+        // 100 USD ÷ 1.00 = 100 EUR ÷ 100 = 1 SOL
+        BigDecimal result = convertor.convertToCrypto(
+                new QueryRecord(new BigDecimal("100"), "USD", testDate), "SOL");
+
+        assertEquals(new BigDecimal("1.00000000"), result);
+    }
+
+    @Test
+    void convertToCrypto_outputCryptoNotInDb_lazyFetchFails_rethrows() {
+        when(classifier.isSupported("BTC")).thenReturn(true);
+        when(classifier.isFiat("BTC")).thenReturn(false);
+        when(classifier.isFiat("XRP")).thenReturn(false);
+        when(database.findCryptoRate(argThat(q -> q != null && "BTC".equals(q.currencySymbol())))).thenReturn(
+                new CryptoRateRecord("BTC", testDate, new BigDecimal("40000.00"))
+        );
+        when(database.findCryptoRate(argThat(q -> q != null && "XRP".equals(q.currencySymbol()))))
+                .thenThrow(new IllegalArgumentException("No crypto rate found for XRP"));
+        when(cryptoUpdater.fetchAndParseSpecific(eq("XRP"), eq(testDate))).thenReturn(List.of());
+
+        assertThrows(IllegalArgumentException.class, () ->
+                convertor.convertToCrypto(new QueryRecord(new BigDecimal("1"), "BTC", testDate), "XRP"));
     }
 
     @Test

@@ -12,6 +12,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -69,6 +70,8 @@ public class CommandLineRequest implements CommandLineRunner {
             BigDecimal amount = null;
             String currency = null;
             LocalDate date = null;
+            String outputCurrency = null;
+            String exchangeSymbol = null;
 
             for (int i = 1; i < args.length; i++) {
                 String a = args[i];
@@ -87,9 +90,13 @@ public class CommandLineRequest implements CommandLineRunner {
                     try {
                         date = LocalDate.parse(args[++i]);
                     } catch (Exception e) {
-                        System.out.println("{\"error\":\"Invalid date format. Use YYYY-MM-DD.\"}");
+                        printError("Invalid date format. Use YYYY-MM-DD.");
                         return;
                     }
+                } else if (("--to".equals(a) || "-t".equals(a)) && i + 1 < args.length) {
+                    outputCurrency = args[++i].toUpperCase();
+                } else if (("--exchange".equals(a) || "-e".equals(a)) && i + 1 < args.length) {
+                    exchangeSymbol = args[++i].toUpperCase();
                 }
             }
 
@@ -98,32 +105,41 @@ public class CommandLineRequest implements CommandLineRunner {
                 return;
             }
 
+            if (outputCurrency != null && exchangeSymbol != null) {
+                printError("Cannot use --to and --exchange together. Use --to for fiat output, --exchange for crypto output.");
+                return;
+            }
+
             if (date.isAfter(LocalDate.now())) {
-                System.out.println("{\"error\":\"Date cannot be in the future.\"}");
+                printError("Date cannot be in the future.");
                 return;
             }
 
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                System.out.println("{\"error\":\"Amount must be greater than zero.\"}");
+                printError("Amount must be greater than zero.");
                 return;
             }
 
-            // Update runs in case it wasn't updated today.
             if (!rateUpdater.alreadyUpdatedToday()) {
                 rateUpdater.updateRates();
             }
 
-
             QueryRecord query = new QueryRecord(amount, currency, date);
 
-
             try {
-                BigDecimal inEuros = convertor.convert(query);
-
-                ConvertResponse response = ConvertResponse.of(amount, currency, date, inEuros);
-
-                System.out.println(objectMapper.writeValueAsString(response));
-
+                if (exchangeSymbol != null) {
+                    BigDecimal result = convertor.convertToCrypto(query, exchangeSymbol);
+                    System.out.println(objectMapper.writeValueAsString(
+                            buildCrossResponse(amount, currency, date, result, exchangeSymbol)));
+                } else if (outputCurrency != null) {
+                    BigDecimal result = convertor.convertTo(query, outputCurrency);
+                    System.out.println(objectMapper.writeValueAsString(
+                            buildCrossResponse(amount, currency, date, result, outputCurrency)));
+                } else {
+                    BigDecimal result = convertor.convertTo(query, "EUR");
+                    System.out.println(objectMapper.writeValueAsString(
+                            ConvertResponse.of(amount, currency, date, result)));
+                }
             } catch (Exception e) {
                 printError(e.getMessage() != null ? e.getMessage() : "Conversion failed");
             }
@@ -151,7 +167,19 @@ public class CommandLineRequest implements CommandLineRunner {
                 return;
             }
             if ("--set-url".equals(args[i]) && i + 1 < args.length) {
-                writeProperty("fetchrate.provider-url", args[++i].trim(), "Provider URL");
+                String url = args[++i].trim();
+                try {
+                    URI uri = URI.create(url);
+                    String scheme = uri.getScheme();
+                    if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+                        printError("Provider URL must use http or https.");
+                        return;
+                    }
+                } catch (IllegalArgumentException e) {
+                    printError("Invalid provider URL format.");
+                    return;
+                }
+                writeProperty("fetchrate.provider-url", url, "Provider URL");
                 return;
             }
             if ("--add-symbol".equals(args[i]) && i + 1 < args.length) {
@@ -166,6 +194,10 @@ public class CommandLineRequest implements CommandLineRunner {
             }
             if ("--remove-symbol".equals(args[i]) && i + 1 < args.length) {
                 String sym = args[++i].trim().toUpperCase();
+                if (!sym.matches("^[A-Z0-9]{2,10}$")) {
+                    printError("Invalid symbol. Use 2–10 alphanumeric characters (e.g. BTC, XRP).");
+                    return;
+                }
                 cryptoUpdater.removeTrackedSymbol(sym);
                 System.out.println("{\"status\":\"" + sym + " removed from tracked symbols\"}");
                 return;
@@ -216,6 +248,24 @@ public class CommandLineRequest implements CommandLineRunner {
         }
     }
 
+    private java.util.LinkedHashMap<String, Object> buildCrossResponse(
+            BigDecimal amount, String currency, java.time.LocalDate date,
+            BigDecimal result, String outputSymbol) {
+        var input = new java.util.LinkedHashMap<String, String>();
+        input.put("amount", amount.toPlainString());
+        input.put("currencySymbol", currency);
+        input.put("date", date.toString());
+
+        var output = new java.util.LinkedHashMap<String, String>();
+        output.put("amount", result.toPlainString());
+        output.put("currency", outputSymbol);
+
+        var response = new java.util.LinkedHashMap<String, Object>();
+        response.put("input", input);
+        response.put("output", output);
+        return response;
+    }
+
     private void printError(String message) {
         try {
             System.out.println(objectMapper.writeValueAsString(Map.of("error", message)));
@@ -233,16 +283,18 @@ public class CommandLineRequest implements CommandLineRunner {
 
     /** Prints the full help text covering all available commands and options. */
     private void printHelp() {
-        System.out.println("FetchRate — currency to EUR converter");
+        System.out.println("FetchRate — historical currency converter");
         System.out.println();
         System.out.println("USAGE");
         System.out.println("  java -jar fetchrate.jar <command> [options]");
         System.out.println();
         System.out.println("COMMANDS");
-        System.out.println("  convert                    Convert an amount to EUR");
+        System.out.println("  convert                    Convert an amount to a target currency (default output: EUR)");
         System.out.println("    -a, --amount <n>           Amount to convert (commas and underscores allowed as separators)");
         System.out.println("    -c, --input-currency <s>   Currency or crypto symbol (e.g. USD, BTC)");
         System.out.println("    -d, --date <YYYY-MM-DD>    Date of the exchange rate");
+        System.out.println("    -t, --to <s>               Output fiat currency (default: EUR; e.g. USD, GBP, JPY)");
+        System.out.println("    -e, --exchange <s>         Output cryptocurrency (e.g. ETH, SOL); uses EUR as pivot");
         System.out.println();
         System.out.println("  start_http_server     Start the HTTP server (default port: 8000)");
         System.out.println("    --port <n>           Listen on a custom port instead of 8000");
@@ -260,11 +312,13 @@ public class CommandLineRequest implements CommandLineRunner {
         System.out.println();
         System.out.println("SUPPORTED CURRENCIES");
         System.out.println("  Fiat (ECB): USD, GBP, CHF, JPY, PLN, CZK, SEK, NOK, DKK, and more");
-        System.out.println("  Crypto:     BTC, ETH, LTC, DOGE, SOL, USDT (and any symbol via configured provider)");
+        System.out.println("  Crypto:     BTC, LTC, DOGE, SOL, USDT (and any symbol via configured provider)");
         System.out.println();
         System.out.println("EXAMPLES");
         System.out.println("  java -jar fetchrate.jar convert --amount 100 --input-currency USD --date 2024-01-15");
         System.out.println("  java -jar fetchrate.jar convert -a 0.5 -c BTC -d 2024-01-15");
+        System.out.println("  java -jar fetchrate.jar convert -a 100 -c USD -d 2024-01-15 --to GBP");
+        System.out.println("  java -jar fetchrate.jar convert -a 1 -c BTC -d 2024-01-15 --exchange ETH");
         System.out.println("  java -jar fetchrate.jar start_http_server");
         System.out.println("  java -jar fetchrate.jar start_http_server --port 9090");
         System.out.println("  java -jar fetchrate.jar config --set-key YOUR_API_KEY");

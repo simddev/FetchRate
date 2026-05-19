@@ -1,6 +1,7 @@
 package com.fetchrate.core;
 
 import com.fetchrate.persistence.RateDatabase;
+import com.fetchrate.update.CryptoRateUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -12,11 +13,13 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Converts a given amount in a foreign currency to EUR using rates stored in the database.
+ * Converts a given amount in a foreign currency to EUR, a fiat currency, or a cryptocurrency.
  * <p>
  * Fiat conversions use ECB daily exchange rates (EUR base). Crypto conversions use rates
  * fetched from CSV files or the configured crypto data provider API. If a crypto rate is missing for the
  * requested date, a lazy fetch is attempted before throwing.
+ * <p>
+ * Cross-currency and crypto-to-crypto conversions use EUR as an intermediate pivot.
  */
 @Service
 public class Convertor {
@@ -25,9 +28,9 @@ public class Convertor {
 
     private final RateDatabase database;
     private final CurrencyClassifier classifier;
-    private final com.fetchrate.update.CryptoRateUpdater cryptoUpdater;
+    private final CryptoRateUpdater cryptoUpdater;
 
-    public Convertor(RateDatabase database, CurrencyClassifier classifier, com.fetchrate.update.CryptoRateUpdater cryptoUpdater) {
+    public Convertor(RateDatabase database, CurrencyClassifier classifier, CryptoRateUpdater cryptoUpdater) {
         this.database = database;
         this.classifier = classifier;
         this.cryptoUpdater = cryptoUpdater;
@@ -59,7 +62,6 @@ public class Convertor {
 
         BigDecimal amount = query.amount();
 
-        // Checking if the user entered a currency or a symbol.
         if (classifier.isFiat(currencySymbol)) {
             DayOfWeek dow = query.date().getDayOfWeek();
             if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
@@ -100,6 +102,74 @@ public class Convertor {
 
         // Crypto rate is stored as EUR per 1 coin, so we multiply here.
         return amount.multiply(cryptoRecord.rate()).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Converts the amount in the given currency to {@code outputCurrency} for the requested date.
+     * Uses EUR as an intermediate pivot: the amount is first converted to EUR via {@link #convert},
+     * then multiplied by the ECB rate for the output currency on that date (or the closest preceding
+     * business day if no rate is published for that exact date).
+     *
+     * @param query          The query containing the amount, source currency symbol, and date.
+     * @param outputCurrency The target currency symbol. Must be an ECB-tracked fiat currency or {@code EUR}.
+     * @return The converted amount in {@code outputCurrency}, rounded to 2 decimal places.
+     * @throws IllegalArgumentException if {@code outputCurrency} is not a supported ECB fiat currency.
+     * @throws RateNotFoundException    if no rate is available for the output currency on or before the query date.
+     */
+    public BigDecimal convertTo(QueryRecord query, String outputCurrency) {
+        if (!classifier.isSupportedOutputCurrency(outputCurrency)) {
+            throw new IllegalArgumentException(
+                    "Unsupported output currency: " + outputCurrency +
+                    ". Supported output currencies are ECB-tracked fiat currencies (e.g. USD, GBP, JPY) or EUR.");
+        }
+
+        BigDecimal inEur = convert(query);
+
+        if ("EUR".equals(outputCurrency)) {
+            return inEur;
+        }
+
+        FiatRateRecord targetRate = database.findFiatRateOnOrBefore(outputCurrency, query.date());
+        return inEur.multiply(targetRate.rate()).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Converts the amount in the given currency to a target cryptocurrency for the requested date.
+     * Uses EUR as an intermediate pivot: the amount is first converted to EUR via {@link #convert},
+     * then divided by the output crypto's EUR rate on that date.
+     * If the output crypto rate is missing, a lazy fetch is attempted before throwing.
+     *
+     * @param query        The query containing the amount, source currency symbol, and date.
+     * @param outputSymbol The target cryptocurrency symbol (e.g. {@code "ETH"}, {@code "SOL"}).
+     *                     Must not be a fiat currency or EUR — use {@link #convertTo} for those.
+     * @return The converted amount in {@code outputSymbol}, rounded to 8 decimal places.
+     * @throws IllegalArgumentException if {@code outputSymbol} is a fiat currency or EUR.
+     * @throws RateNotFoundException    if no rate is available for {@code outputSymbol} on the query date.
+     */
+    public BigDecimal convertToCrypto(QueryRecord query, String outputSymbol) {
+        if (classifier.isFiat(outputSymbol) || "EUR".equals(outputSymbol)) {
+            throw new IllegalArgumentException(
+                    outputSymbol + " is a fiat currency. Use --to " + outputSymbol + " for fiat output.");
+        }
+
+        BigDecimal inEur = convert(query);
+
+        CryptoRateRecord outputRate;
+        try {
+            outputRate = database.findCryptoRate(new QueryRecord(BigDecimal.ZERO, outputSymbol, query.date()));
+        } catch (IllegalArgumentException e) {
+            log.info("Output crypto rate not in database. Attempting to fetch {} for {}...", outputSymbol, query.date());
+            List<CryptoRateRecord> fetched = cryptoUpdater.fetchAndParseSpecific(outputSymbol, query.date());
+            if (!fetched.isEmpty()) {
+                database.updateCryptoRates(fetched);
+                outputRate = database.findCryptoRate(new QueryRecord(BigDecimal.ZERO, outputSymbol, query.date()));
+            } else {
+                throw e;
+            }
+        }
+
+        // Crypto rate is EUR per 1 coin, so divide to get coin count.
+        return inEur.divide(outputRate.rate(), 8, RoundingMode.HALF_UP);
     }
 
 }

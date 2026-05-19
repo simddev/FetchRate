@@ -134,11 +134,12 @@ public class RateDatabase {
 
 
     /**
-     * Returns the date of the last successful rate update, or {@code null} if the database
-     * has never been updated.
+     * Returns the date of the last successful fiat rate update, or {@code null} if fiat
+     * rates have never been fetched. Used by {@link com.fetchrate.update.FiatRateUpdater}
+     * to select the appropriate ECB feed URL.
      */
     public LocalDate getLastUpdate() {
-        String v = getMeta("last_update");
+        String v = getMeta("last_fiat_update");
         return (v == null) ? null : LocalDate.parse(v);
     }
 
@@ -146,7 +147,7 @@ public class RateDatabase {
      * Returns the value stored in the {@code meta} table for the given key,
      * or {@code null} if the key does not exist.
      *
-     * @param key The meta key (e.g., {@code "last_update"}, {@code "crypto_api_key"}).
+     * @param key The meta key (e.g., {@code "last_fiat_update"}, {@code "crypto_api_key"}).
      * @return The stored value, or {@code null}.
      */
     public String getMeta(String key) {
@@ -236,11 +237,44 @@ public class RateDatabase {
     }
 
     /**
+     * Looks up the fiat exchange rate for {@code currency} on the given date, or the most recent
+     * available date before it if no rate exists for that exact date (e.g. weekends, public holidays).
+     *
+     * @param currency The currency symbol (e.g., {@code "USD"}).
+     * @param date     The target date.
+     * @return The most recent {@link FiatRateRecord} on or before {@code date}.
+     * @throws RateNotFoundException if no rate exists at all for that currency before {@code date}.
+     */
+    public FiatRateRecord findFiatRateOnOrBefore(String currency, LocalDate date) {
+        String sql = """
+                SELECT currency, date, rate
+                FROM fiat_rates
+                WHERE currency = ? AND date <= ?
+                ORDER BY date DESC
+                LIMIT 1
+                """;
+        try {
+            return jdbc.queryForObject(
+                    sql,
+                    (rs, rowNum) -> new FiatRateRecord(
+                            rs.getString("currency"),
+                            LocalDate.parse(rs.getString("date")),
+                            new BigDecimal(rs.getString("rate"))
+                    ),
+                    currency,
+                    date.toString()
+            );
+        } catch (EmptyResultDataAccessException e) {
+            throw new RateNotFoundException("No rate found for " + currency + " on or before " + date);
+        }
+    }
+
+    /**
      * Returns all symbols currently in the {@code tracked_symbols} table, in insertion order.
      * Returns an empty list when no custom list has been configured (defaults are in effect).
      */
     public List<String> getTrackedSymbols() {
-        return jdbc.queryForList("SELECT symbol FROM tracked_symbols", String.class);
+        return jdbc.queryForList("SELECT symbol FROM tracked_symbols ORDER BY rowid", String.class);
     }
 
     /**
