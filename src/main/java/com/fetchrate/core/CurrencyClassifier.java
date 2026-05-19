@@ -46,7 +46,6 @@ public class CurrencyClassifier {
 
     private static final Map<String, String> CRYPTO_NAMES = Map.of(
             "BTC", "Bitcoin",
-            "ETH", "Ethereum",
             "LTC", "Litecoin",
             "DOGE", "Dogecoin",
             "SOL", "Solana",
@@ -83,6 +82,15 @@ public class CurrencyClassifier {
      */
     public boolean isSupported(String symbol) {
         return isFiat(symbol) || isCrypto(symbol) || "EUR".equals(symbol) || looksLikeCrypto(symbol);
+    }
+
+    /**
+     * Returns {@code true} if the symbol is a valid output currency.
+     * Only ECB-tracked fiat currencies and EUR are supported as output currencies;
+     * cryptocurrencies cannot be used as an output currency.
+     */
+    public boolean isSupportedOutputCurrency(String symbol) {
+        return isFiat(symbol) || "EUR".equals(symbol);
     }
 
     private boolean looksLikeCrypto(String symbol) {

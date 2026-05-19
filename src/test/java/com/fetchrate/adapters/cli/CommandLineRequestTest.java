@@ -126,7 +126,7 @@ class CommandLineRequestTest {
     @Test
     void run_validRequest_outputsJson() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
-        when(convertor.convert(any())).thenReturn(new BigDecimal("92.50"));
+        when(convertor.convertTo(any(), any())).thenReturn(new BigDecimal("92.50"));
 
         cli.run("convert", "--amount", "100", "--input-currency", "USD", "--date", "2024-01-15");
 
@@ -139,7 +139,7 @@ class CommandLineRequestTest {
     @Test
     void run_shortFlags_outputsJson() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
-        when(convertor.convert(any())).thenReturn(new BigDecimal("92.50"));
+        when(convertor.convertTo(any(), any())).thenReturn(new BigDecimal("92.50"));
 
         cli.run("convert", "-a", "100", "-c", "USD", "-d", "2024-01-15");
 
@@ -151,7 +151,7 @@ class CommandLineRequestTest {
     @Test
     void run_amountWithUnderscores_outputsJson() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
-        when(convertor.convert(any())).thenReturn(new BigDecimal("91500.00"));
+        when(convertor.convertTo(any(), any())).thenReturn(new BigDecimal("91500.00"));
 
         cli.run("convert", "--amount", "100_000", "--input-currency", "USD", "--date", "2024-01-15");
 
@@ -161,7 +161,7 @@ class CommandLineRequestTest {
     @Test
     void run_lowercaseCurrency_isNormalized() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
-        when(convertor.convert(any())).thenReturn(new BigDecimal("92.50"));
+        when(convertor.convertTo(any(), any())).thenReturn(new BigDecimal("92.50"));
 
         cli.run("convert", "--amount", "100", "--input-currency", "usd", "--date", "2024-01-15");
 
@@ -249,7 +249,7 @@ class CommandLineRequestTest {
     @Test
     void run_currencyNotFound_outputsError() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
-        when(convertor.convert(any())).thenThrow(new IllegalArgumentException("No rate found for FAKE"));
+        when(convertor.convertTo(any(), any())).thenThrow(new IllegalArgumentException("No rate found for FAKE"));
 
         cli.run("convert", "--amount", "100", "--input-currency", "FAKE", "--date", "2024-01-15");
 
@@ -291,6 +291,29 @@ class CommandLineRequestTest {
     }
 
     @Test
+    void run_configRemoveSymbol_invalidFormat_outputsError() throws Exception {
+        cli.run("config", "--remove-symbol", "invalid!");
+
+        assertTrue(output().contains("error"));
+        verify(cryptoUpdater, never()).removeTrackedSymbol(any());
+    }
+
+    @Test
+    void run_configSetUrl_invalidScheme_outputsError() throws Exception {
+        cli.run("config", "--set-url", "ftp://example.com");
+
+        assertTrue(output().contains("error"));
+        assertTrue(output().contains("http"));
+    }
+
+    @Test
+    void run_configSetUrl_invalidFormat_outputsError() throws Exception {
+        cli.run("config", "--set-url", "not a url");
+
+        assertTrue(output().contains("error"));
+    }
+
+    @Test
     void run_configListSymbols_outputsJson() throws Exception {
         when(cryptoUpdater.getEffectiveSymbols()).thenReturn(java.util.List.of("BTC", "ETH", "XRP"));
         when(cryptoUpdater.isCustomized()).thenReturn(true);
@@ -302,5 +325,122 @@ class CommandLineRequestTest {
         assertTrue(out.contains("BTC"));
         assertTrue(out.contains("XRP"));
         assertTrue(out.contains("\"customized\":true"));
+    }
+
+    @Test
+    void run_toFlag_passesOutputCurrencyToConvertor() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertTo(any(), eq("GBP"))).thenReturn(new BigDecimal("78.40"));
+
+        cli.run("convert", "--amount", "100", "--input-currency", "USD", "--date", "2024-01-15", "--to", "GBP");
+
+        String out = output();
+        assertTrue(out.contains("GBP"));
+        assertTrue(out.contains("78.40"));
+        verify(convertor).convertTo(any(), eq("GBP"));
+    }
+
+    @Test
+    void run_shortToFlag_passesOutputCurrencyToConvertor() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertTo(any(), eq("JPY"))).thenReturn(new BigDecimal("13450.00"));
+
+        cli.run("convert", "-a", "100", "-c", "USD", "-d", "2024-01-15", "-t", "JPY");
+
+        verify(convertor).convertTo(any(), eq("JPY"));
+    }
+
+    @Test
+    void run_toFlag_lowercaseIsNormalized() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertTo(any(), eq("GBP"))).thenReturn(new BigDecimal("78.40"));
+
+        cli.run("convert", "--amount", "100", "--input-currency", "USD", "--date", "2024-01-15", "--to", "gbp");
+
+        verify(convertor).convertTo(any(), eq("GBP"));
+    }
+
+    @Test
+    void run_unsupportedOutputCurrency_outputsError() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertTo(any(), eq("FAKE")))
+                .thenThrow(new IllegalArgumentException("Unsupported output currency: FAKE"));
+
+        cli.run("convert", "--amount", "100", "--input-currency", "USD", "--date", "2024-01-15", "--to", "FAKE");
+
+        String out = output();
+        assertTrue(out.contains("error"));
+        assertTrue(out.contains("FAKE"));
+    }
+
+    @Test
+    void run_exchangeFlag_callsConvertToCrypto() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertToCrypto(any(), eq("ETH"))).thenReturn(new BigDecimal("12.34567890"));
+
+        cli.run("convert", "--amount", "1", "--input-currency", "BTC", "--date", "2024-01-15", "--exchange", "ETH");
+
+        String out = output();
+        assertTrue(out.contains("ETH"));
+        assertTrue(out.contains("12.34567890"));
+        verify(convertor).convertToCrypto(any(), eq("ETH"));
+        verify(convertor, never()).convertTo(any(), any());
+    }
+
+    @Test
+    void run_shortExchangeFlag_callsConvertToCrypto() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertToCrypto(any(), eq("SOL"))).thenReturn(new BigDecimal("5.00000000"));
+
+        cli.run("convert", "-a", "1", "-c", "BTC", "-d", "2024-01-15", "-e", "SOL");
+
+        verify(convertor).convertToCrypto(any(), eq("SOL"));
+    }
+
+    @Test
+    void run_exchangeFlag_lowercaseIsNormalized() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertToCrypto(any(), eq("ETH"))).thenReturn(new BigDecimal("12.00000000"));
+
+        cli.run("convert", "-a", "1", "-c", "BTC", "-d", "2024-01-15", "--exchange", "eth");
+
+        verify(convertor).convertToCrypto(any(), eq("ETH"));
+    }
+
+    @Test
+    void run_bothToAndExchange_outputsError() throws Exception {
+        cli.run("convert", "-a", "1", "-c", "BTC", "-d", "2024-01-15", "--to", "USD", "--exchange", "ETH");
+
+        String out = output();
+        assertTrue(out.contains("error"));
+        assertTrue(out.contains("--to"));
+        assertTrue(out.contains("--exchange"));
+        verifyNoInteractions(convertor);
+    }
+
+    @Test
+    void run_exchangeFlag_fiatSymbol_outputsError() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertToCrypto(any(), eq("USD")))
+                .thenThrow(new IllegalArgumentException("USD is a fiat currency. Use --to USD for fiat output."));
+
+        cli.run("convert", "-a", "100", "-c", "BTC", "-d", "2024-01-15", "--exchange", "USD");
+
+        String out = output();
+        assertTrue(out.contains("error"));
+        assertTrue(out.contains("--to"));
+    }
+
+    @Test
+    void run_exchangeFlag_cryptoNotFound_outputsError() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertToCrypto(any(), eq("XRP")))
+                .thenThrow(new IllegalArgumentException("No crypto rate found for XRP"));
+
+        cli.run("convert", "-a", "1", "-c", "BTC", "-d", "2024-01-15", "--exchange", "XRP");
+
+        String out = output();
+        assertTrue(out.contains("error"));
+        assertTrue(out.contains("XRP"));
     }
 }

@@ -23,7 +23,7 @@ public class CryptoRateUpdater {
     private static final Logger log = LoggerFactory.getLogger(CryptoRateUpdater.class);
 
     /** The default set of symbols fetched on each daily update when no custom list is configured. */
-    public static final List<String> DEFAULT_SYMBOLS = List.of("BTC", "ETH", "LTC", "DOGE", "SOL", "USDT");
+    public static final List<String> DEFAULT_SYMBOLS = List.of("BTC", "LTC", "DOGE", "SOL", "USDT");
 
     private final CryptoRateFetcher fetcher;
     private final CryptoRateParser parser;
@@ -111,8 +111,8 @@ public class CryptoRateUpdater {
 
     /**
      * Loads all available crypto rates from CSV files and, if an API key is configured,
-     * fetches the last 30 days from the crypto data provider for a standard set of coins
-     * (BTC, ETH, LTC, DOGE, SOL, USDT). API errors per symbol are logged and skipped.
+     * fetches the last 30 days from the crypto data provider for the effective tracked symbol list.
+     * API errors per symbol are logged and skipped.
      *
      * @return Combined list of {@link CryptoRateRecord} ready for database insertion.
      */

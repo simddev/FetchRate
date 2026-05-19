@@ -13,9 +13,9 @@ import java.util.List;
 /**
  * Top-level orchestrator for refreshing the local rate database.
  * Runs fiat and crypto updates independently so that a failure in one source
- * does not prevent the other from completing. The {@code last_update} timestamp
- * is only written when at least one source succeeds, so a total network outage
- * will not suppress a retry for the rest of the day.
+ * does not prevent the other from completing. Each source tracks its own
+ * timestamp ({@code last_fiat_update} / {@code last_crypto_update}), written only
+ * when that source succeeds, so a network outage will not suppress a retry for the rest of the day.
  */
 @Service
 public class RateUpdater {
@@ -33,53 +33,57 @@ public class RateUpdater {
     }
 
     /**
-     * @return {@code true} if rates were already fetched today, {@code false} otherwise.
+     * @return {@code true} if both fiat and crypto rates were already fetched today.
      */
     public boolean alreadyUpdatedToday() {
-        LocalDate last = database.getLastUpdate();
-        return last != null && last.equals(LocalDate.now());
+        LocalDate today = LocalDate.now();
+        return today.equals(getMetaDate("last_fiat_update"))
+                && today.equals(getMetaDate("last_crypto_update"));
     }
 
+    private LocalDate getMetaDate(String key) {
+        String v = database.getMeta(key);
+        return (v == null) ? null : LocalDate.parse(v);
+    }
 
     /**
      * Fetches and persists the latest fiat and crypto exchange rates.
-     * If the database was already updated today this method returns immediately.
+     * Each source is tracked independently — a source that already succeeded today
+     * is skipped, while a source that failed yesterday or earlier will retry.
      * Synchronized to prevent concurrent update runs when the HTTP server handles
      * multiple requests simultaneously.
      */
     public synchronized void updateRates() {
+        LocalDate today = LocalDate.now();
+        boolean fiatDone = today.equals(getMetaDate("last_fiat_update"));
+        boolean cryptoDone = today.equals(getMetaDate("last_crypto_update"));
 
-        if (alreadyUpdatedToday()) {
+        if (fiatDone && cryptoDone) {
             return;
         }
 
         log.info("Updating database, please wait...");
 
-        boolean fiatOk = false;
-        boolean cryptoOk = false;
-
-        try {
-            List<FiatRateRecord> fiatRecord = fiatUpdate.fetchAndParseFiat();
-            database.updateFiatRates(fiatRecord);
-            fiatOk = true;
-        } catch (Exception e) {
-            log.error("Failed to update fiat rates: {}", e.getMessage());
-        }
-
-        try {
-            List<CryptoRateRecord> cryptoRecord = cryptoUpdate.fetchAndParseCrypto();
-            if (cryptoRecord != null && !cryptoRecord.isEmpty()) {
-                database.updateCryptoRates(cryptoRecord);
+        if (!fiatDone) {
+            try {
+                List<FiatRateRecord> fiatRecord = fiatUpdate.fetchAndParseFiat();
+                database.updateFiatRates(fiatRecord);
+                database.setMeta("last_fiat_update", today.toString());
+            } catch (Exception e) {
+                log.error("Failed to update fiat rates: {}", e.getMessage());
             }
-            cryptoOk = true;
-        } catch (Exception e) {
-            log.error("Failed to update crypto rates: {}", e.getMessage());
         }
 
-        // Only mark as updated today if at least one data source succeeded,
-        // so a full network failure does not suppress a retry for the rest of the day.
-        if (fiatOk || cryptoOk) {
-            database.setMeta("last_update", LocalDate.now().toString());
+        if (!cryptoDone) {
+            try {
+                List<CryptoRateRecord> cryptoRecord = cryptoUpdate.fetchAndParseCrypto();
+                if (!cryptoRecord.isEmpty()) {
+                    database.updateCryptoRates(cryptoRecord);
+                }
+                database.setMeta("last_crypto_update", today.toString());
+            } catch (Exception e) {
+                log.error("Failed to update crypto rates: {}", e.getMessage());
+            }
         }
     }
 

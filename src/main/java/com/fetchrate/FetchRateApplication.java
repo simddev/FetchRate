@@ -51,10 +51,7 @@ public class FetchRateApplication {
 
         var context = new SpringApplication(FetchRateApplication.class);
 
-        // 1) Picks a profile, application-cli.properties or application-http.properties
         context.setAdditionalProfiles(startServer ? "http" : "cli");
-
-        // 2) Forces the app type, guarantees no server for CLI
         context.setWebApplicationType(startServer ? WebApplicationType.SERVLET : WebApplicationType.NONE);
 
         context.run(springArgs);

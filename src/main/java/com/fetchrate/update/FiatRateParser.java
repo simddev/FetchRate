@@ -37,12 +37,11 @@ public class FiatRateParser {
 
 
     /**
-     * This method takes a String of the data and converts it into a List of FiatRateRecord.
-     * <p>
-     * It uses regex to extract the data, since the .xml file is in a predictable format.
+     * Parses an ECB XML feed into a list of fiat rate records.
+     * Only currencies recognised by {@link com.fetchrate.core.CurrencyClassifier} are retained.
      *
-     * @param xml String of the data to be parsed
-     * @return List of FiatRateRecord
+     * @param xml Raw XML from the ECB feed.
+     * @return List of parsed {@link com.fetchrate.core.FiatRateRecord} objects.
      */
     public List<FiatRateRecord> parseFiat(String xml) {
 
