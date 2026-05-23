@@ -275,15 +275,15 @@ class RequestControllerTest {
     }
 
     @Test
-    void convert_outputCurrencyInvalid_returns400() {
+    void convert_outputCurrencyUnknownSymbol_returns404() {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
         when(classifier.isSupportedOutputCurrency("FAKE")).thenReturn(false);
         when(convertor.convertToCrypto(any(QueryRecord.class), eq("FAKE")))
-                .thenThrow(new IllegalArgumentException("No crypto rate found for FAKE"));
+                .thenThrow(new RateNotFoundException("No crypto rate found for FAKE on 2024-01-15"));
 
         ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15", "FAKE");
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test

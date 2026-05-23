@@ -131,7 +131,7 @@ public class CommandLineRequest implements CommandLineRunner {
                     BigDecimal result = convertor.convertToCrypto(query, exchangeSymbol);
                     System.out.println(objectMapper.writeValueAsString(
                             buildCrossResponse(amount, currency, date, result, exchangeSymbol)));
-                } else if (outputCurrency != null) {
+                } else if (outputCurrency != null && !"EUR".equals(outputCurrency)) {
                     BigDecimal result = convertor.convertTo(query, outputCurrency);
                     System.out.println(objectMapper.writeValueAsString(
                             buildCrossResponse(amount, currency, date, result, outputCurrency)));

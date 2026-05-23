@@ -70,8 +70,6 @@ public class RateDatabase {
                     )
                 """);
 
-        jdbc.execute("CREATE INDEX IF NOT EXISTS idx_fiat_rates_date_currency ON fiat_rates(date, currency)");
-        jdbc.execute("CREATE INDEX IF NOT EXISTS idx_crypto_rates_date_symbol ON crypto_rates(date, symbol)");
 
     }
 
