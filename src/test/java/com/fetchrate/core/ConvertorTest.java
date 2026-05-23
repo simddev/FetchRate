@@ -99,9 +99,9 @@ class ConvertorTest {
     void convert_fiatRateNotFoundThrowsException() {
         when(classifier.isSupported("USD")).thenReturn(true);
         when(classifier.isFiat("USD")).thenReturn(true);
-        when(database.findFiatRate(any())).thenThrow(new IllegalArgumentException("No rate found"));
+        when(database.findFiatRate(any())).thenThrow(new RateNotFoundException("No rate found for USD on 2024-01-15"));
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(RateNotFoundException.class, () ->
                 convertor.convert(new QueryRecord(new BigDecimal("100"), "USD", testDate)));
     }
 
@@ -124,7 +124,7 @@ class ConvertorTest {
         when(classifier.isFiat("XRP")).thenReturn(false);
         // First DB lookup misses, lazy fetch stores it, second lookup hits
         when(database.findCryptoRate(any()))
-                .thenThrow(new IllegalArgumentException("No crypto rate found"))
+                .thenThrow(new RateNotFoundException("No crypto rate found for XRP on 2024-01-15"))
                 .thenReturn(new CryptoRateRecord("XRP", testDate, new BigDecimal("0.50")));
         when(cryptoUpdater.fetchAndParseSpecific(eq("XRP"), eq(testDate)))
                 .thenReturn(List.of(new CryptoRateRecord("XRP", testDate, new BigDecimal("0.50"))));
@@ -226,7 +226,7 @@ class ConvertorTest {
                 new FiatRateRecord("USD", testDate, new BigDecimal("1.00"))
         );
         when(database.findCryptoRate(any()))
-                .thenThrow(new IllegalArgumentException("No crypto rate found"))
+                .thenThrow(new RateNotFoundException("No crypto rate found for SOL on 2024-01-15"))
                 .thenReturn(new CryptoRateRecord("SOL", testDate, new BigDecimal("100.00")));
         when(cryptoUpdater.fetchAndParseSpecific(eq("SOL"), eq(testDate)))
                 .thenReturn(List.of(new CryptoRateRecord("SOL", testDate, new BigDecimal("100.00"))));
@@ -247,7 +247,7 @@ class ConvertorTest {
                 new CryptoRateRecord("BTC", testDate, new BigDecimal("40000.00"))
         );
         when(database.findCryptoRate(argThat(q -> q != null && "XRP".equals(q.currencySymbol()))))
-                .thenThrow(new IllegalArgumentException("No crypto rate found for XRP"));
+                .thenThrow(new RateNotFoundException("No crypto rate found for XRP on 2024-01-15"));
         when(cryptoUpdater.fetchAndParseSpecific(eq("XRP"), eq(testDate))).thenReturn(List.of());
 
         assertThrows(IllegalArgumentException.class, () ->
@@ -259,11 +259,11 @@ class ConvertorTest {
         when(classifier.isSupported("XRP")).thenReturn(true);
         when(classifier.isFiat("XRP")).thenReturn(false);
         when(database.findCryptoRate(any()))
-                .thenThrow(new IllegalArgumentException("No crypto rate found for XRP"));
+                .thenThrow(new RateNotFoundException("No crypto rate found for XRP on 2024-01-15"));
         when(cryptoUpdater.fetchAndParseSpecific(eq("XRP"), eq(testDate)))
                 .thenReturn(List.of());
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+        RateNotFoundException ex = assertThrows(RateNotFoundException.class, () ->
                 convertor.convert(new QueryRecord(new BigDecimal("100"), "XRP", testDate)));
 
         assertTrue(ex.getMessage().contains("XRP"));
