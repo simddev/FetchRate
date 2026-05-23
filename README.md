@@ -38,6 +38,22 @@ java -jar target/FetchRate-0.3.jar start_http_server --port 9090
 
 > The HTTP server binds to `127.0.0.1` (loopback only) by default. To expose it on the network — for example behind a reverse proxy — set `server.address=0.0.0.0` in `fetchrate.properties`.
 
+**Docker:**
+```bash
+docker compose up
+```
+
+The web UI is available at `http://localhost:8000` and the REST API at `/convert`. Rate data is persisted to `./data/` on the host. To pass a crypto API key:
+
+```bash
+FETCHRATE_API_KEY=your_key docker compose up
+```
+
+The image also supports CLI usage:
+```bash
+docker run --rm -v ./data:/app/data fetchrate convert -a 100 -c USD -d 2024-01-15
+```
+
 For a full list of commands and options:
 ```bash
 java -jar target/FetchRate-0.3.jar --help
