@@ -1,6 +1,7 @@
 services:
   fetchrate:
     build: .
+    image: fetchrate
     ports:
       - "8000:8000"
     volumes:
