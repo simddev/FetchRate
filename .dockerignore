@@ -1,0 +1,7 @@
+target/
+.git/
+data/
+fetchrate.properties
+.idea/
+*.iml
+.mvn/

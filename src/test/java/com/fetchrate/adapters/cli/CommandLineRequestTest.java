@@ -328,6 +328,20 @@ class CommandLineRequestTest {
     }
 
     @Test
+    void run_toFlagEur_usesEurFormat() throws Exception {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convertTo(any(), eq("EUR"))).thenReturn(new BigDecimal("91.37"));
+
+        cli.run("convert", "--amount", "100", "--input-currency", "USD", "--date", "2024-01-15", "--to", "EUR");
+
+        String out = output();
+        assertTrue(out.contains("inEuro"));
+        assertTrue(out.contains("91.37"));
+        assertFalse(out.contains("\"currency\""));
+        verify(convertor).convertTo(any(), eq("EUR"));
+    }
+
+    @Test
     void run_toFlag_passesOutputCurrencyToConvertor() throws Exception {
         when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
         when(convertor.convertTo(any(), eq("GBP"))).thenReturn(new BigDecimal("78.40"));
