@@ -1,8 +1,10 @@
-## FetchRate
+# FetchRate
 
 FetchRate is a historical currency and cryptocurrency exchange rate tool. Given an amount, a source currency or crypto symbol, and a date, it returns the equivalent value in a target currency using rates from that specific day.
 
 It provides three interfaces for the same service: a **CLI**, a **REST API**, and a **web UI**.
+
+**Stack:** Java 17 · Spring Boot 4 · SQLite · Thymeleaf · Maven
 
 ---
 
@@ -17,7 +19,7 @@ It provides three interfaces for the same service: a **CLI**, a **REST API**, an
 
 ### Building & Running
 
-**Requirements:** Java 17+, Maven 4
+**Requirements (local build):** Java 17+, Maven 4
 
 ```bash
 mvn package -DskipTests
@@ -49,8 +51,9 @@ The web UI is available at `http://localhost:8000` and the REST API at `/convert
 FETCHRATE_API_KEY=your_key docker compose up
 ```
 
-The image also supports CLI usage:
+The image also supports CLI usage. Build the image first, then run:
 ```bash
+docker compose build
 docker run --rm -v ./data:/app/data fetchrate convert -a 100 -c USD -d 2024-01-15
 ```
 
@@ -224,7 +227,7 @@ If all sources fail (e.g. no network), the timestamp is not advanced and the nex
 
 #### On-Demand Fetching
 
-If a crypto rate for the requested date is not in the database, the application fetches it immediately before returning an error. The result is cached for future use.
+If a crypto rate for the requested date is not in the database, the application fetches it on demand and returns the result immediately. The fetched rate is cached in the local database for future requests. If the on-demand fetch also fails (e.g. no API key configured, symbol not found), an error is returned.
 
 #### CSV Fallback
 
