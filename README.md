@@ -183,9 +183,9 @@ The ECB publishes rates on **business days only**. Fiat conversions on weekends 
 
 Default tracked symbols: `BTC`, `LTC`, `DOGE`, `SOL`, `USDT`.
 
-Crypto rates are sourced from [LiveCoinWatch](https://www.livecoinwatch.com) (default provider). An API key is required for automatic daily updates and on-demand fetching — free keys are available at [livecoinwatch.com/tools/api](https://www.livecoinwatch.com/tools/api). Without a key, only rates loaded from local CSV files are available.
+Crypto rates require a compatible data provider API. An API key is required for automatic daily updates and on-demand fetching — without one, only rates loaded from local CSV files are available. Additional symbols can be added via `config --add-symbol`. Unlike fiat, crypto rates are available for every calendar day including weekends.
 
-Additional symbols can be added via `config --add-symbol`. Any symbol supported by LiveCoinWatch is accepted. Unlike fiat, crypto rates are available for every calendar day including weekends.
+The application ships with [LiveCoinWatch](https://www.livecoinwatch.com) pre-configured as the default endpoint because it currently offers a free API tier. FetchRate is not affiliated with or endorsed by LiveCoinWatch — it is simply one example of a compatible provider. Any service implementing the same API contract can be used instead (see [Custom Provider](#custom-provider) below).
 
 ---
 
@@ -252,7 +252,7 @@ Place `.csv` files in `data/crypto/` to seed historical crypto rates without usi
 
 #### API Key
 
-FetchRate uses [LiveCoinWatch](https://www.livecoinwatch.com/tools/api) as the default crypto data provider. Get a free API key at [livecoinwatch.com/tools/api](https://www.livecoinwatch.com/tools/api), then configure it using any of the options below.
+FetchRate ships with [LiveCoinWatch](https://www.livecoinwatch.com/tools/api) pre-configured as the default endpoint. If you want to use it, free API keys are available at [livecoinwatch.com/tools/api](https://www.livecoinwatch.com/tools/api). To use a different provider instead, see [Custom Provider](#custom-provider) below — only the API key and endpoint URL need to change.
 
 **Option 1 — Properties file (recommended):** create `fetchrate.properties` next to the jar:
 ```
