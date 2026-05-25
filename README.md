@@ -274,6 +274,23 @@ When running in HTTP mode, the API key and provider URL can also be configured f
 
 > **CLI vs HTTP settings:** The `config` command and properties file write values that take effect on the next startup. The web UI (HTTP mode) stores values in the local database and they take effect immediately without a restart. If both are configured, the database value takes priority.
 
+#### Custom Provider
+
+The provider URL is fully configurable, so you can swap LiveCoinWatch for any other service or self-hosted proxy — as long as it implements the same API contract:
+
+- **Method:** `POST`
+- **Auth:** `x-api-key` header
+- **Request body:**
+  ```json
+  {"currency":"EUR","code":"BTC","start":<epoch_ms>,"end":<epoch_ms>,"meta":false}
+  ```
+- **Response:**
+  ```json
+  {"code":"BTC","history":[{"date":<epoch_ms>,"rate":<eur_price>}, ...]}
+  ```
+
+Set the endpoint via any of the methods above (`--set-url`, `fetchrate.provider-url`, or the web UI). The API key field accepts whatever credential the replacement service requires.
+
 #### Tracked Symbols
 
 The daily update fetches rates for the default set: `BTC`, `LTC`, `DOGE`, `SOL`, `USDT`. This list can be customised:
