@@ -19,13 +19,13 @@ public class FiatRateUpdater {
 
     private final FiatRateParser fiatRateParser;
     private final FiatRateFetcher fiatRateFetcher;
-    private final ECBURLs URL;
+    private final ECBURLs ecbUrls;
     private final RateDatabase database;
 
-    public FiatRateUpdater(FiatRateParser fiatRateParser, FiatRateFetcher fiatRateFetcher, ECBURLs URL, RateDatabase database) {
+    public FiatRateUpdater(FiatRateParser fiatRateParser, FiatRateFetcher fiatRateFetcher, ECBURLs ecbUrls, RateDatabase database) {
         this.fiatRateParser = fiatRateParser;
         this.fiatRateFetcher = fiatRateFetcher;
-        this.URL = URL;
+        this.ecbUrls = ecbUrls;
         this.database = database;
     }
 
@@ -39,12 +39,12 @@ public class FiatRateUpdater {
         LocalDate latestDate = database.getLastUpdate();
 
         if (latestDate == null) {
-            return URL.getFullURL();
+            return ecbUrls.getFullURL();
         } else {
             long daysBehind = ChronoUnit.DAYS.between(latestDate, LocalDate.now());
-            if (daysBehind >= 90) return URL.getFullURL();
-            else if (daysBehind > 1) return URL.getDays90URL();
-            else return URL.getDailyURL();
+            if (daysBehind >= 90) return ecbUrls.getFullURL();
+            else if (daysBehind > 1) return ecbUrls.getDays90URL();
+            else return ecbUrls.getDailyURL();
         }
 
     }

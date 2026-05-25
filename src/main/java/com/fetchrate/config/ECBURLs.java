@@ -4,9 +4,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * This class serves to provide getter methods which return the URLs for the Fiat data.
- * <p>
- * They can be found and adjusted in application-http.properties and application-cli.properties.
+ * Configuration properties holder for the three ECB exchange rate feed URLs.
+ * Bound from the {@code ecb.fiat.*} prefix in {@code application-*.properties}.
+ * <ul>
+ *   <li>{@code dailyUrl} — today's rates only; used when the database is already up to date</li>
+ *   <li>{@code days90Url} — last 90 days; used when the database is 2–89 days behind</li>
+ *   <li>{@code fullUrl} — complete history; used on first run or after a gap of 90+ days</li>
+ * </ul>
  */
 @Component
 @ConfigurationProperties(prefix = "ecb.fiat")

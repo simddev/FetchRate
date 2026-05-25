@@ -7,8 +7,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * JSON response body returned by the {@code /convert} endpoint.
- * Contains the original request details in {@code input} and the converted EUR amount in {@code output}.
+ * Response body for EUR-output conversions, used by both the REST endpoint and the CLI.
+ * Contains the original request details in {@code input} and the converted amount in {@code output.inEuro}.
+ * Cross-currency responses (non-EUR output) use a separate {@code LinkedHashMap} structure built inline.
  */
 @JsonPropertyOrder({"input", "output"})
 public record ConvertResponse(Input input, Output output) {

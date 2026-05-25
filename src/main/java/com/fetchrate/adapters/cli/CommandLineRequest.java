@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 
@@ -204,7 +205,7 @@ public class CommandLineRequest implements CommandLineRunner {
             }
             if ("--list-symbols".equals(args[i])) {
                 try {
-                    java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
+                    Map<String, Object> out = new LinkedHashMap<>();
                     out.put("symbols", cryptoUpdater.getEffectiveSymbols());
                     out.put("customized", cryptoUpdater.isCustomized());
                     System.out.println(objectMapper.writeValueAsString(out));
@@ -248,19 +249,19 @@ public class CommandLineRequest implements CommandLineRunner {
         }
     }
 
-    private java.util.LinkedHashMap<String, Object> buildCrossResponse(
-            BigDecimal amount, String currency, java.time.LocalDate date,
+    private LinkedHashMap<String, Object> buildCrossResponse(
+            BigDecimal amount, String currency, LocalDate date,
             BigDecimal result, String outputSymbol) {
-        var input = new java.util.LinkedHashMap<String, String>();
+        var input = new LinkedHashMap<String, String>();
         input.put("amount", amount.toPlainString());
         input.put("currencySymbol", currency);
         input.put("date", date.toString());
 
-        var output = new java.util.LinkedHashMap<String, String>();
+        var output = new LinkedHashMap<String, String>();
         output.put("amount", result.toPlainString());
         output.put("currency", outputSymbol);
 
-        var response = new java.util.LinkedHashMap<String, Object>();
+        var response = new LinkedHashMap<String, Object>();
         response.put("input", input);
         response.put("output", output);
         return response;

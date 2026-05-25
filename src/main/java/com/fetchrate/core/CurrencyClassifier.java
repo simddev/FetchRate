@@ -5,8 +5,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This class serves to help identify if the user's query is fiat or cryptocurrency.
- * This later on helps with the business logic.
+ * Classifies currency symbols as ECB-tracked fiat, cryptocurrency, or unsupported.
+ * Holds the static display-name maps used by the web UI and the validation logic
+ * used by {@link Convertor} and the adapter layer.
  */
 @Component
 public class CurrencyClassifier {

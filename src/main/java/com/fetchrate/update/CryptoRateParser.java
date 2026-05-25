@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Parses cryptocurrency rate data from two formats into {@link com.fetchrate.core.CryptoRateRecord} lists:
@@ -137,18 +139,13 @@ public class CryptoRateParser {
 
     private void manualExtractFromTruncatedJson(String symbol, List<CryptoRateRecord> cryptoRecord, String json) {
         try {
-            // Find symbol if present in JSON
-            String symbolFromJson = null;
-            java.util.regex.Pattern symbolPattern = java.util.regex.Pattern.compile("\"code\"\\s*:\\s*\"([A-Z0-9]+)\"", java.util.regex.Pattern.CASE_INSENSITIVE);
-            java.util.regex.Matcher symbolMatcher = symbolPattern.matcher(json);
-            if (symbolMatcher.find()) {
-                symbolFromJson = symbolMatcher.group(1).toUpperCase();
-            }
-            
+            Pattern symbolPattern = Pattern.compile("\"code\"\\s*:\\s*\"([A-Z0-9]+)\"", Pattern.CASE_INSENSITIVE);
+            Matcher symbolMatcher = symbolPattern.matcher(json);
+            String symbolFromJson = symbolMatcher.find() ? symbolMatcher.group(1).toUpperCase() : null;
             String effectiveSymbol = (symbolFromJson != null) ? symbolFromJson : symbol;
 
-            java.util.regex.Pattern entryPattern = java.util.regex.Pattern.compile("\"date\"\\s*:\\s*(\\d+)\\s*,\\s*\"rate\"\\s*:\\s*([\\d.]+)");
-            java.util.regex.Matcher entryMatcher = entryPattern.matcher(json);
+            Pattern entryPattern = Pattern.compile("\"date\"\\s*:\\s*(\\d+)\\s*,\\s*\"rate\"\\s*:\\s*([\\d.]+)");
+            Matcher entryMatcher = entryPattern.matcher(json);
             while (entryMatcher.find()) {
                 try {
                     long timestamp = Long.parseLong(entryMatcher.group(1));
