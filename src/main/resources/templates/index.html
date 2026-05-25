@@ -45,12 +45,10 @@
             margin: 0 0 0.4rem 0;
             letter-spacing: -1px;
             font-weight: 800;
-            background: linear-gradient(to right, #6b239b, #c87de8);
+            background: linear-gradient(to right, #8b3dc8, #d494f0);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            -webkit-text-stroke: 1.5px #000;
-            paint-order: stroke fill;
         }
         .tagline {
             color: var(--muted-light);
@@ -128,6 +126,21 @@
         #convert-btn:disabled {
             opacity: 0.5;
             cursor: default;
+        }
+        .spinner {
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.65s linear infinite;
+            vertical-align: middle;
+            margin-right: 7px;
+            margin-bottom: 2px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         #result {
             margin-top: 1.8rem;
@@ -408,6 +421,14 @@
             if (e.key === 'Enter') fetchRate();
         });
 
+        function showError(container, message) {
+            const span = document.createElement('span');
+            span.className = 'error-text';
+            span.textContent = message;
+            container.innerHTML = '';
+            container.appendChild(span);
+        }
+
         function formatNumber(num) {
             return new Intl.NumberFormat('en-US').format(num);
         }
@@ -453,7 +474,7 @@
             const btn = document.getElementById('convert-btn');
 
             if (!amountInput || !currency || !date) {
-                resultDiv.innerHTML = '<span class="error-text">Please fill in all fields.</span>';
+                showError(resultDiv, 'Please fill in all fields.');
                 resultDiv.style.display = 'block';
                 return;
             }
@@ -464,7 +485,7 @@
             resultDiv.style.animation = '';
 
             btn.disabled = true;
-            btn.textContent = 'Fetching…';
+            btn.innerHTML = '<span class="spinner"></span>Fetching…';
 
             try {
                 let url = `/convert?amount=${encodeURIComponent(amountInput)}&input_currency=${currency}&date=${date}`;
@@ -489,10 +510,10 @@
                         `<div class="result-summary">${amountFormatted} ${currencyName} (${data.input.currencySymbol})<br>on the ${humanDate}</div>` +
                         `<div class="result-raw">${amountFormatted} ${data.input.currencySymbol} on ${dateISO} = ${resultFormatted} ${resultSymbol}</div>`;
                 } else {
-                    resultDiv.innerHTML = `<span class="error-text">${data.error || 'An error occurred.'}</span>`;
+                    showError(resultDiv, data.error || 'An error occurred.');
                 }
             } catch (error) {
-                resultDiv.innerHTML = '<span class="error-text">Failed to connect to server.</span>';
+                showError(resultDiv, 'Failed to connect to server.');
             } finally {
                 btn.disabled = false;
                 updateButtonText();

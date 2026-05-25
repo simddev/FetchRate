@@ -19,7 +19,7 @@ It provides three interfaces for the same service: a **CLI**, a **REST API**, an
 
 ### Building & Running
 
-**Requirements (local build):** Java 17+, Maven 4
+**Requirements (local build):** Java 17+, Maven 3.9+
 
 ```bash
 mvn package -DskipTests
