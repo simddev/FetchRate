@@ -183,7 +183,9 @@ The ECB publishes rates on **business days only**. Fiat conversions on weekends 
 
 Default tracked symbols: `BTC`, `LTC`, `DOGE`, `SOL`, `USDT`.
 
-Additional symbols can be added via `config --add-symbol`. Any symbol supported by the configured data provider is accepted. Unlike fiat, crypto rates are available for every calendar day including weekends.
+Crypto rates are sourced from [LiveCoinWatch](https://www.livecoinwatch.com) (default provider). An API key is required for automatic daily updates and on-demand fetching — free keys are available at [livecoinwatch.com/tools/api](https://www.livecoinwatch.com/tools/api). Without a key, only rates loaded from local CSV files are available.
+
+Additional symbols can be added via `config --add-symbol`. Any symbol supported by LiveCoinWatch is accepted. Unlike fiat, crypto rates are available for every calendar day including weekends.
 
 ---
 
@@ -216,6 +218,17 @@ The small rounding difference that may arise from the two-step pivot (versus a d
 
 The application maintains a local SQLite database in the `data/` directory.
 
+#### Schema
+
+| Table | Columns | Purpose |
+|---|---|---|
+| `fiat_rates` | `date`, `currency`, `rate` | ECB daily rates (1 EUR = N foreign units) |
+| `crypto_rates` | `date`, `symbol`, `rate` | Crypto rates in EUR per 1 coin |
+| `meta` | `key`, `value` | Runtime state: last update timestamps, API key, provider URL |
+| `tracked_symbols` | `symbol` | Custom crypto symbol list (empty = default list in effect) |
+
+All bulk writes use `INSERT ... ON CONFLICT DO UPDATE` (upsert), so re-running an update is always safe. The schema is created automatically on first startup.
+
 #### Automatic Updates
 
 Rates are refreshed once per day on the first request of the day:
@@ -238,6 +251,8 @@ Place `.csv` files in `data/crypto/` to seed historical crypto rates without usi
 ### Configuration
 
 #### API Key
+
+FetchRate uses [LiveCoinWatch](https://www.livecoinwatch.com/tools/api) as the default crypto data provider. Get a free API key at [livecoinwatch.com/tools/api](https://www.livecoinwatch.com/tools/api), then configure it using any of the options below.
 
 **Option 1 — Properties file (recommended):** create `fetchrate.properties` next to the jar:
 ```
