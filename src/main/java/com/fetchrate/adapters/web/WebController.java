@@ -35,15 +35,16 @@ public class WebController {
      */
     @GetMapping("/")
     public String index(Model model) {
-        Set<String> cryptoSymbols = new HashSet<>();
-        cryptoSymbols.addAll(classifier.getCurrencyNames().keySet().stream()
+        Map<String, String> currencyNames = classifier.getCurrencyNames();
+
+        Set<String> cryptoSymbols = new HashSet<>(currencyNames.keySet().stream()
                 .filter(classifier::isCrypto)
                 .toList());
         if (cryptoUpdater.isCustomized()) {
             cryptoSymbols.addAll(cryptoUpdater.getEffectiveSymbols());
         }
 
-        Map<String, String> names = new HashMap<>(classifier.getCurrencyNames());
+        Map<String, String> names = new HashMap<>(currencyNames);
         for (String sym : cryptoSymbols) {
             names.putIfAbsent(sym, sym);
         }

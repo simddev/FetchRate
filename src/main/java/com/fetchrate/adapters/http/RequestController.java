@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -102,7 +101,7 @@ public class RequestController {
                 BigDecimal result = classifier.isSupportedOutputCurrency(outputCurrency)
                         ? convertor.convertTo(query, outputCurrency)
                         : convertor.convertToCrypto(query, outputCurrency);
-                return ResponseEntity.ok(buildCrossResponse(amount, currency, date, result, outputCurrency));
+                return ResponseEntity.ok(ConvertResponse.crossOf(amount, currency, date, result, outputCurrency));
             }
             BigDecimal inEuros = convertor.convert(query);
             return ResponseEntity.ok(ConvertResponse.of(amount, currency, date, inEuros));
@@ -129,24 +128,6 @@ public class RequestController {
     @GetMapping("/health")
     public Map<String, String> health() {
         return Map.of("status", "ok");
-    }
-
-    private LinkedHashMap<String, Object> buildCrossResponse(
-            BigDecimal amount, String currency, LocalDate date,
-            BigDecimal result, String outputSymbol) {
-        var input = new LinkedHashMap<String, String>();
-        input.put("amount", amount.toPlainString());
-        input.put("currencySymbol", currency);
-        input.put("date", date.toString());
-
-        var output = new LinkedHashMap<String, String>();
-        output.put("amount", result.toPlainString());
-        output.put("currency", outputSymbol);
-
-        var response = new LinkedHashMap<String, Object>();
-        response.put("input", input);
-        response.put("output", output);
-        return response;
     }
 
 }

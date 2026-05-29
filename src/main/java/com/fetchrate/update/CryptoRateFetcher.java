@@ -115,6 +115,10 @@ public class CryptoRateFetcher {
      * @throws RuntimeException      if the API returns a non-200 status or the request fails.
      */
     public String fetchFromProvider(String symbol, LocalDate start, LocalDate end) {
+        if (symbol == null || !symbol.matches("^[A-Z0-9]{2,10}$")) {
+            throw new IllegalArgumentException("Invalid crypto symbol: " + symbol);
+        }
+
         String apiKey = resolveApiKey();
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("Crypto data provider API key is not configured.");

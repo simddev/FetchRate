@@ -59,11 +59,7 @@ public class CryptoRateUpdater {
      * @param symbol The coin symbol to add (e.g., {@code "XRP"}).
      */
     public void addTrackedSymbol(String symbol) {
-        if (database.getTrackedSymbols().isEmpty()) {
-            for (String def : DEFAULT_SYMBOLS) {
-                database.addTrackedSymbol(def);
-            }
-        }
+        seedDefaultsIfEmpty();
         database.addTrackedSymbol(symbol);
     }
 
@@ -75,12 +71,16 @@ public class CryptoRateUpdater {
      * @param symbol The coin symbol to remove.
      */
     public void removeTrackedSymbol(String symbol) {
+        seedDefaultsIfEmpty();
+        database.removeTrackedSymbol(symbol);
+    }
+
+    private void seedDefaultsIfEmpty() {
         if (database.getTrackedSymbols().isEmpty()) {
             for (String def : DEFAULT_SYMBOLS) {
                 database.addTrackedSymbol(def);
             }
         }
-        database.removeTrackedSymbol(symbol);
     }
 
     /**

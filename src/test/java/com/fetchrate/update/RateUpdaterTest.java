@@ -1,5 +1,7 @@
 package com.fetchrate.update;
 
+import com.fetchrate.core.CryptoRateRecord;
+import com.fetchrate.core.FiatRateRecord;
 import com.fetchrate.persistence.RateDatabase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -7,10 +9,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
@@ -33,12 +35,26 @@ class RateUpdaterTest {
         when(database.getMeta("last_fiat_update")).thenReturn(null);
         when(database.getMeta("last_crypto_update")).thenReturn(null);
         when(fiatUpdate.fetchAndParseFiat()).thenReturn(Collections.emptyList());
-        when(cryptoUpdate.fetchAndParseCrypto()).thenReturn(Collections.emptyList());
+        when(cryptoUpdate.fetchAndParseCrypto()).thenReturn(List.of(
+                new CryptoRateRecord("BTC", LocalDate.now(), new BigDecimal("50000"))));
 
         rateUpdater.updateRates();
 
         verify(database).setMeta(eq("last_fiat_update"), anyString());
         verify(database).setMeta(eq("last_crypto_update"), anyString());
+    }
+
+    @Test
+    void updateRates_cryptoReturnsEmptyList_doesNotSetCryptoTimestamp() {
+        when(database.getMeta("last_fiat_update")).thenReturn(null);
+        when(database.getMeta("last_crypto_update")).thenReturn(null);
+        when(fiatUpdate.fetchAndParseFiat()).thenReturn(Collections.emptyList());
+        when(cryptoUpdate.fetchAndParseCrypto()).thenReturn(Collections.emptyList());
+
+        rateUpdater.updateRates();
+
+        verify(database).setMeta(eq("last_fiat_update"), anyString());
+        verify(database, never()).setMeta(eq("last_crypto_update"), anyString());
     }
 
     @Test
@@ -72,7 +88,8 @@ class RateUpdaterTest {
         when(database.getMeta("last_fiat_update")).thenReturn(null);
         when(database.getMeta("last_crypto_update")).thenReturn(null);
         when(fiatUpdate.fetchAndParseFiat()).thenThrow(new RuntimeException("ECB down"));
-        when(cryptoUpdate.fetchAndParseCrypto()).thenReturn(Collections.emptyList());
+        when(cryptoUpdate.fetchAndParseCrypto()).thenReturn(List.of(
+                new CryptoRateRecord("BTC", LocalDate.now(), new BigDecimal("50000"))));
 
         rateUpdater.updateRates();
 
@@ -99,7 +116,8 @@ class RateUpdaterTest {
         String today = LocalDate.now().toString();
         when(database.getMeta("last_fiat_update")).thenReturn(today);
         when(database.getMeta("last_crypto_update")).thenReturn(null);
-        when(cryptoUpdate.fetchAndParseCrypto()).thenReturn(Collections.emptyList());
+        when(cryptoUpdate.fetchAndParseCrypto()).thenReturn(List.of(
+                new CryptoRateRecord("BTC", LocalDate.now(), new BigDecimal("50000"))));
 
         rateUpdater.updateRates();
 

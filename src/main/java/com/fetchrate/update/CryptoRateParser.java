@@ -47,6 +47,7 @@ public class CryptoRateParser {
      * @return List of parsed {@link com.fetchrate.core.CryptoRateRecord} objects.
      */
     public List<CryptoRateRecord> parseCrypto(String symbol, String csv) {
+        if (csv.startsWith("﻿")) csv = csv.substring(1);
 
         List<CryptoRateRecord> cryptoRecord = new ArrayList<>();
         String[] lines = csv.split("\\R");
@@ -107,18 +108,22 @@ public class CryptoRateParser {
                 JsonNode root = objectMapper.readTree(json);
                 String symbolFromJson = root.path("code").asText().toUpperCase();
                 String effectiveSymbol = symbolFromJson.isEmpty() ? symbol : symbolFromJson;
-                
+
                 JsonNode historyNode = root.path("history");
                 if (historyNode.isArray()) {
                     for (JsonNode entry : historyNode) {
-                        JsonNode dateNode = entry.path("date");
-                        JsonNode rateNode = entry.path("rate");
-                        if (!dateNode.isMissingNode() && !rateNode.isMissingNode()) {
-                            long timestamp = dateNode.asLong();
-                            BigDecimal rate = new BigDecimal(rateNode.asText());
-                            // Timestamps are UTC epoch millis — use UTC to avoid date shifting.
-                            LocalDate date = Instant.ofEpochMilli(timestamp).atZone(ZoneOffset.UTC).toLocalDate();
-                            cryptoRecord.add(new CryptoRateRecord(effectiveSymbol, date, rate));
+                        try {
+                            JsonNode dateNode = entry.path("date");
+                            JsonNode rateNode = entry.path("rate");
+                            if (!dateNode.isMissingNode() && !rateNode.isMissingNode()) {
+                                long timestamp = dateNode.asLong();
+                                BigDecimal rate = new BigDecimal(rateNode.asText());
+                                // Timestamps are UTC epoch millis — use UTC to avoid date shifting.
+                                LocalDate date = Instant.ofEpochMilli(timestamp).atZone(ZoneOffset.UTC).toLocalDate();
+                                cryptoRecord.add(new CryptoRateRecord(effectiveSymbol, date, rate));
+                            }
+                        } catch (Exception e) {
+                            log.debug("Skipping malformed history entry for {}: {}", symbol, e.getMessage());
                         }
                     }
                 }
@@ -144,14 +149,24 @@ public class CryptoRateParser {
             String symbolFromJson = symbolMatcher.find() ? symbolMatcher.group(1).toUpperCase() : null;
             String effectiveSymbol = (symbolFromJson != null) ? symbolFromJson : symbol;
 
-            Pattern entryPattern = Pattern.compile("\"date\"\\s*:\\s*(\\d+)\\s*,\\s*\"rate\"\\s*:\\s*([\\d.]+)");
-            Matcher entryMatcher = entryPattern.matcher(json);
-            while (entryMatcher.find()) {
+            // Match each flat JSON object in the array and extract date + rate independently,
+            // so field order does not matter.
+            Pattern objectPattern = Pattern.compile("\\{[^}]+\\}");
+            Pattern datePattern = Pattern.compile("\"date\"\\s*:\\s*(\\d+)");
+            Pattern ratePattern = Pattern.compile("\"rate\"\\s*:\\s*([\\d.]+)");
+
+            Matcher objectMatcher = objectPattern.matcher(json);
+            while (objectMatcher.find()) {
                 try {
-                    long timestamp = Long.parseLong(entryMatcher.group(1));
-                    BigDecimal rate = new BigDecimal(entryMatcher.group(2));
-                    LocalDate date = Instant.ofEpochMilli(timestamp).atZone(ZoneOffset.UTC).toLocalDate();
-                    cryptoRecord.add(new CryptoRateRecord(effectiveSymbol, date, rate));
+                    String obj = objectMatcher.group();
+                    Matcher dm = datePattern.matcher(obj);
+                    Matcher rm = ratePattern.matcher(obj);
+                    if (dm.find() && rm.find()) {
+                        long timestamp = Long.parseLong(dm.group(1));
+                        BigDecimal rate = new BigDecimal(rm.group(1));
+                        LocalDate date = Instant.ofEpochMilli(timestamp).atZone(ZoneOffset.UTC).toLocalDate();
+                        cryptoRecord.add(new CryptoRateRecord(effectiveSymbol, date, rate));
+                    }
                 } catch (Exception e) {
                     log.debug("Skipping malformed entry during manual JSON extraction for {}: {}", symbol, e.getMessage());
                 }
