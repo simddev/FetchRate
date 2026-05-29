@@ -25,7 +25,7 @@ public class FiatRateParser {
     );
 
     private static final Pattern CURR_AND_RATE = Pattern.compile(
-            "<Cube\\s+currency=['\"]([A-Z]{3})['\"]\\s+rate=['\"]([0-9.]+)['\"]\\s*/?>",
+            "<Cube\\s+currency=['\"]([A-Z]{3})['\"]\\s+rate=['\"]([0-9]+(?:\\.[0-9]+)?)['\"]\\s*/?>",
             Pattern.CASE_INSENSITIVE
     );
 

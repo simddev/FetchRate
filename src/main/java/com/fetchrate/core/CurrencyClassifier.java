@@ -1,6 +1,8 @@
 package com.fetchrate.core;
 
 import org.springframework.stereotype.Component;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -53,12 +55,17 @@ public class CurrencyClassifier {
             "USDT", "Tether"
     );
 
-    /** Returns a combined map of all supported currency symbols to their full names, including EUR. */
-    public Map<String, String> getCurrencyNames() {
-        Map<String, String> all = new java.util.HashMap<>(FIAT_NAMES);
+    private static final Map<String, String> ALL_NAMES;
+    static {
+        Map<String, String> all = new HashMap<>(FIAT_NAMES);
         all.putAll(CRYPTO_NAMES);
         all.put("EUR", "Euro");
-        return all;
+        ALL_NAMES = Collections.unmodifiableMap(all);
+    }
+
+    /** Returns a combined map of all supported currency symbols to their full names, including EUR. */
+    public Map<String, String> getCurrencyNames() {
+        return ALL_NAMES;
     }
 
     /** Returns the set of all supported fiat currency symbols. */

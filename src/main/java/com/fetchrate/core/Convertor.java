@@ -79,6 +79,9 @@ public class Convertor {
             );
 
             // The ECB gives us 1 EUR = Amount Foreign Currency.
+            if (fiatRecord.rate().compareTo(BigDecimal.ZERO) == 0) {
+                throw new RateNotFoundException("Rate for " + currencySymbol + " on " + query.date() + " is zero — data may be corrupt.");
+            }
             return amount.divide(fiatRecord.rate(), 2, RoundingMode.HALF_UP);
         }
 
@@ -169,6 +172,9 @@ public class Convertor {
         }
 
         // Crypto rate is EUR per 1 coin, so divide to get coin count.
+        if (outputRate.rate().compareTo(BigDecimal.ZERO) == 0) {
+            throw new RateNotFoundException("Rate for " + outputSymbol + " on " + query.date() + " is zero — data may be corrupt.");
+        }
         return inEur.divide(outputRate.rate(), 8, RoundingMode.HALF_UP);
     }
 

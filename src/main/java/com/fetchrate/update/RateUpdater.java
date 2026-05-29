@@ -79,8 +79,8 @@ public class RateUpdater {
                 List<CryptoRateRecord> cryptoRecord = cryptoUpdate.fetchAndParseCrypto();
                 if (!cryptoRecord.isEmpty()) {
                     database.updateCryptoRates(cryptoRecord);
+                    database.setMeta("last_crypto_update", today.toString());
                 }
-                database.setMeta("last_crypto_update", today.toString());
             } catch (Exception e) {
                 log.error("Failed to update crypto rates: {}", e.getMessage());
             }

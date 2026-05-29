@@ -97,7 +97,12 @@ public class CommandLineRequest implements CommandLineRunner {
                 } else if (("--to".equals(a) || "-t".equals(a)) && i + 1 < args.length) {
                     outputCurrency = args[++i].toUpperCase();
                 } else if (("--exchange".equals(a) || "-e".equals(a)) && i + 1 < args.length) {
-                    exchangeSymbol = args[++i].toUpperCase();
+                    String sym = args[++i].toUpperCase();
+                    if (!sym.matches("^[A-Z0-9]{2,10}$")) {
+                        printError("Invalid exchange symbol. Use 2–10 alphanumeric characters (e.g. ETH, SOL).");
+                        return;
+                    }
+                    exchangeSymbol = sym;
                 }
             }
 
@@ -131,11 +136,11 @@ public class CommandLineRequest implements CommandLineRunner {
                 if (exchangeSymbol != null) {
                     BigDecimal result = convertor.convertToCrypto(query, exchangeSymbol);
                     System.out.println(objectMapper.writeValueAsString(
-                            buildCrossResponse(amount, currency, date, result, exchangeSymbol)));
+                            ConvertResponse.crossOf(amount, currency, date, result, exchangeSymbol)));
                 } else if (outputCurrency != null && !"EUR".equals(outputCurrency)) {
                     BigDecimal result = convertor.convertTo(query, outputCurrency);
                     System.out.println(objectMapper.writeValueAsString(
-                            buildCrossResponse(amount, currency, date, result, outputCurrency)));
+                            ConvertResponse.crossOf(amount, currency, date, result, outputCurrency)));
                 } else {
                     BigDecimal result = convertor.convertTo(query, "EUR");
                     System.out.println(objectMapper.writeValueAsString(
@@ -247,24 +252,6 @@ public class CommandLineRequest implements CommandLineRunner {
         } catch (IOException e) {
             System.out.println("{\"error\":\"Could not write fetchrate.properties: " + e.getMessage() + "\"}");
         }
-    }
-
-    private LinkedHashMap<String, Object> buildCrossResponse(
-            BigDecimal amount, String currency, LocalDate date,
-            BigDecimal result, String outputSymbol) {
-        var input = new LinkedHashMap<String, String>();
-        input.put("amount", amount.toPlainString());
-        input.put("currencySymbol", currency);
-        input.put("date", date.toString());
-
-        var output = new LinkedHashMap<String, String>();
-        output.put("amount", result.toPlainString());
-        output.put("currency", outputSymbol);
-
-        var response = new LinkedHashMap<String, Object>();
-        response.put("input", input);
-        response.put("output", output);
-        return response;
     }
 
     private void printError(String message) {
