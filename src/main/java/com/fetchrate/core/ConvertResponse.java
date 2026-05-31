@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * Response body for EUR-output conversions, used by both the REST endpoint and the CLI.
  * Contains the original request details in {@code input} and the converted amount in {@code output.inEuro}.
- * Cross-currency responses (non-EUR output) use a separate {@code LinkedHashMap} structure built inline.
+ * Cross-currency responses (non-EUR output) use the {@link #crossOf} factory method.
  */
 @JsonPropertyOrder({"input", "output"})
 public record ConvertResponse(Input input, Output output) {
