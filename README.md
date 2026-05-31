@@ -155,6 +155,19 @@ GET /health
 
 Returns `{"status": "ok"}`.
 
+```
+GET /settings
+```
+
+Returns the current runtime settings: `apiKeyConfigured` (boolean), `providerUrl` (string or null), `trackedSymbols` (array), and `trackedSymbolsCustomized` (boolean).
+
+```
+POST /settings
+Content-Type: application/json
+```
+
+Updates one or more runtime settings. Accepted fields: `apiKey`, `providerUrl`, `addSymbol`, `removeSymbol`. Returns `{"status":"saved"}` on success or `{"error":"..."}` on validation failure. This is the programmatic equivalent of the web UI settings panel.
+
 ---
 
 ### Web UI

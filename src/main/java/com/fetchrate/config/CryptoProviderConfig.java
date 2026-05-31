@@ -3,6 +3,11 @@ package com.fetchrate.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+/**
+ * Binds {@code fetchrate.api-key} and {@code fetchrate.provider-url} from application properties
+ * (or {@code fetchrate.properties}). Used by {@link com.fetchrate.update.CryptoRateFetcher}
+ * as the fallback when no value is stored in the database.
+ */
 @Component
 @ConfigurationProperties(prefix = "fetchrate")
 public class CryptoProviderConfig {
