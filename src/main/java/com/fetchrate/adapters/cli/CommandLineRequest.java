@@ -107,7 +107,7 @@ public class CommandLineRequest implements CommandLineRunner {
             }
 
             if (amount == null || currency == null || date == null) {
-                printUsage();
+                printError("Required: --amount (-a), --input-currency (-c), and --date (-d).");
                 return;
             }
 
