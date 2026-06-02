@@ -170,6 +170,36 @@ class CommandLineRequestTest {
     }
 
     @Test
+    void run_convertMissingAmount_outputsJsonError() throws Exception {
+        cli.run("convert", "--input-currency", "USD", "--date", "2024-01-15");
+
+        String out = output();
+        assertTrue(out.contains("error"));
+        assertTrue(out.contains("Required"));
+        verifyNoInteractions(convertor);
+    }
+
+    @Test
+    void run_convertMissingCurrency_outputsJsonError() throws Exception {
+        cli.run("convert", "--amount", "100", "--date", "2024-01-15");
+
+        String out = output();
+        assertTrue(out.contains("error"));
+        assertTrue(out.contains("Required"));
+        verifyNoInteractions(convertor);
+    }
+
+    @Test
+    void run_convertMissingDate_outputsJsonError() throws Exception {
+        cli.run("convert", "--amount", "100", "--input-currency", "USD");
+
+        String out = output();
+        assertTrue(out.contains("error"));
+        assertTrue(out.contains("Required"));
+        verifyNoInteractions(convertor);
+    }
+
+    @Test
     void run_configNoArgs_outputsUsage() throws Exception {
         cli.run("config");
         assertTrue(output().contains("Usage"));
