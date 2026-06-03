@@ -167,6 +167,22 @@ class ConvertorTest {
     }
 
     @Test
+    void convertTo_outputRateIsZero_throwsRateNotFoundException() {
+        when(classifier.isSupported("USD")).thenReturn(true);
+        when(classifier.isFiat("USD")).thenReturn(true);
+        when(classifier.isSupportedOutputCurrency("GBP")).thenReturn(true);
+        when(database.findFiatRate(any())).thenReturn(
+                new FiatRateRecord("USD", testDate, new BigDecimal("1.00"))
+        );
+        when(database.findFiatRateOnOrBefore(eq("GBP"), eq(testDate))).thenReturn(
+                new FiatRateRecord("GBP", testDate, BigDecimal.ZERO)
+        );
+
+        assertThrows(RateNotFoundException.class, () ->
+                convertor.convertTo(new QueryRecord(new BigDecimal("100"), "USD", testDate), "GBP"));
+    }
+
+    @Test
     void convertTo_unsupportedOutputCurrency_throwsBeforeConversion() {
         when(classifier.isSupportedOutputCurrency("BTC")).thenReturn(false);
 

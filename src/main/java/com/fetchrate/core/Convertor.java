@@ -133,6 +133,9 @@ public class Convertor {
         }
 
         FiatRateRecord targetRate = database.findFiatRateOnOrBefore(outputCurrency, query.date());
+        if (targetRate.rate().compareTo(BigDecimal.ZERO) == 0) {
+            throw new RateNotFoundException("Rate for " + outputCurrency + " on or before " + query.date() + " is zero — data may be corrupt.");
+        }
         return inEur.multiply(targetRate.rate()).setScale(2, RoundingMode.HALF_UP);
     }
 

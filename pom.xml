@@ -12,7 +12,7 @@
     <artifactId>FetchRate</artifactId>
     <version>0.3</version>
     <name>FetchRate</name>
-    <description>FetchRate - Currency and cryptocurrency to EUR converter</description>
+    <description>FetchRate - Historical currency and cryptocurrency exchange rate converter</description>
     <properties>
         <java.version>17</java.version>
         <sqlite.jdbc.version>3.46.0.0</sqlite.jdbc.version>
