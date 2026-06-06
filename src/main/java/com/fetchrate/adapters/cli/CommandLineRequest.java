@@ -22,9 +22,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 
 /**
- * The main class for handling CLI queries.
- * <p>
- * It is run first in case the first argument is "convert".
+ * Handles all CLI commands: {@code convert}, {@code config}, and help flags.
+ * Activated only under the {@code cli} Spring profile.
  */
 @Profile("cli")
 @Component
@@ -168,11 +167,13 @@ public class CommandLineRequest implements CommandLineRunner {
                 System.out.println("  java -jar fetchrate.jar config --list-symbols           Show the current tracked symbol list");
                 return;
             }
-            if ("--set-key".equals(args[i]) && i + 1 < args.length) {
+            if ("--set-key".equals(args[i])) {
+                if (i + 1 >= args.length) { printError("--set-key requires a value."); return; }
                 writeProperty("fetchrate.api-key", args[++i].trim(), "API key");
                 return;
             }
-            if ("--set-url".equals(args[i]) && i + 1 < args.length) {
+            if ("--set-url".equals(args[i])) {
+                if (i + 1 >= args.length) { printError("--set-url requires a value."); return; }
                 String url = args[++i].trim();
                 try {
                     URI uri = URI.create(url);
@@ -188,7 +189,8 @@ public class CommandLineRequest implements CommandLineRunner {
                 writeProperty("fetchrate.provider-url", url, "Provider URL");
                 return;
             }
-            if ("--add-symbol".equals(args[i]) && i + 1 < args.length) {
+            if ("--add-symbol".equals(args[i])) {
+                if (i + 1 >= args.length) { printError("--add-symbol requires a value."); return; }
                 String sym = args[++i].trim().toUpperCase();
                 if (!sym.matches("^[A-Z0-9]{2,10}$")) {
                     printError("Invalid symbol. Use 2–10 alphanumeric characters (e.g. BTC, XRP).");
@@ -198,7 +200,8 @@ public class CommandLineRequest implements CommandLineRunner {
                 System.out.println("{\"status\":\"" + sym + " added to tracked symbols\"}");
                 return;
             }
-            if ("--remove-symbol".equals(args[i]) && i + 1 < args.length) {
+            if ("--remove-symbol".equals(args[i])) {
+                if (i + 1 >= args.length) { printError("--remove-symbol requires a value."); return; }
                 String sym = args[++i].trim().toUpperCase();
                 if (!sym.matches("^[A-Z0-9]{2,10}$")) {
                     printError("Invalid symbol. Use 2–10 alphanumeric characters (e.g. BTC, XRP).");
