@@ -27,15 +27,15 @@ mvn package -DskipTests
 
 **CLI:**
 ```bash
-java -jar target/FetchRate-0.3.jar convert --amount 100 --input-currency USD --date 2024-01-15
+java -jar target/FetchRate-0.4.jar convert --amount 100 --input-currency USD --date 2024-01-15
 ```
 
 **HTTP server** (web UI at `http://localhost:8000`, REST API at `/convert`):
 ```bash
-java -jar target/FetchRate-0.3.jar start_http_server
+java -jar target/FetchRate-0.4.jar start_http_server
 
 # Custom port:
-java -jar target/FetchRate-0.3.jar start_http_server --port 9090
+java -jar target/FetchRate-0.4.jar start_http_server --port 9090
 ```
 
 > The HTTP server binds to `127.0.0.1` (loopback only) by default. To expose it on the network — for example behind a reverse proxy — set `server.address=0.0.0.0` in `fetchrate.properties`.
@@ -59,7 +59,7 @@ docker run --rm -v ./data:/app/data fetchrate convert -a 100 -c USD -d 2024-01-1
 
 For a full list of commands and options:
 ```bash
-java -jar target/FetchRate-0.3.jar --help
+java -jar target/FetchRate-0.4.jar --help
 ```
 
 ---
@@ -69,7 +69,7 @@ java -jar target/FetchRate-0.3.jar --help
 #### `convert`
 
 ```
-java -jar FetchRate-0.3.jar convert -a <amount> -c <symbol> -d <YYYY-MM-DD> [--to <symbol>] [--exchange <symbol>]
+java -jar FetchRate-0.4.jar convert -a <amount> -c <symbol> -d <YYYY-MM-DD> [--to <symbol>] [--exchange <symbol>]
 ```
 
 | Flag | Short | Description |
@@ -83,15 +83,15 @@ java -jar FetchRate-0.3.jar convert -a <amount> -c <symbol> -d <YYYY-MM-DD> [--t
 **Examples:**
 ```bash
 # Convert to EUR (default)
-java -jar FetchRate-0.3.jar convert -a 100 -c USD -d 2024-01-15
+java -jar FetchRate-0.4.jar convert -a 100 -c USD -d 2024-01-15
 
 # Convert to a different fiat currency
-java -jar FetchRate-0.3.jar convert -a 100 -c USD -d 2024-01-15 --to GBP
-java -jar FetchRate-0.3.jar convert -a 1 -c BTC -d 2024-01-15 --to JPY
+java -jar FetchRate-0.4.jar convert -a 100 -c USD -d 2024-01-15 --to GBP
+java -jar FetchRate-0.4.jar convert -a 1 -c BTC -d 2024-01-15 --to JPY
 
 # Exchange for another cryptocurrency
-java -jar FetchRate-0.3.jar convert -a 1 -c BTC -d 2024-01-15 --exchange ETH
-java -jar FetchRate-0.3.jar convert -a 100 -c USD -d 2024-01-15 --exchange SOL
+java -jar FetchRate-0.4.jar convert -a 1 -c BTC -d 2024-01-15 --exchange ETH
+java -jar FetchRate-0.4.jar convert -a 100 -c USD -d 2024-01-15 --exchange SOL
 ```
 
 All results are printed to stdout as JSON. Errors are also returned as JSON.
@@ -130,11 +130,11 @@ Fiat output is rounded to **2 decimal places**. Cryptocurrency output (`--exchan
 #### `config`
 
 ```bash
-java -jar FetchRate-0.3.jar config --set-key YOUR_API_KEY        # Save crypto data provider API key
-java -jar FetchRate-0.3.jar config --set-url https://...         # Override crypto data provider URL
-java -jar FetchRate-0.3.jar config --add-symbol XRP              # Add symbol to daily update list
-java -jar FetchRate-0.3.jar config --remove-symbol DOGE          # Remove symbol from daily update list
-java -jar FetchRate-0.3.jar config --list-symbols                # Show current tracked symbol list
+java -jar FetchRate-0.4.jar config --set-key YOUR_API_KEY        # Save crypto data provider API key
+java -jar FetchRate-0.4.jar config --set-url https://...         # Override crypto data provider URL
+java -jar FetchRate-0.4.jar config --add-symbol XRP              # Add symbol to daily update list
+java -jar FetchRate-0.4.jar config --remove-symbol DOGE          # Remove symbol from daily update list
+java -jar FetchRate-0.4.jar config --list-symbols                # Show current tracked symbol list
 ```
 
 ---
@@ -274,8 +274,8 @@ fetchrate.api-key=your_api_key_here
 
 **Option 2 — CLI:**
 ```bash
-java -jar FetchRate-0.3.jar config --set-key your_api_key_here
-java -jar FetchRate-0.3.jar config --set-url https://your-provider/endpoint
+java -jar FetchRate-0.4.jar config --set-key your_api_key_here
+java -jar FetchRate-0.4.jar config --set-url https://your-provider/endpoint
 ```
 
 **Option 3 — Environment variable:**
@@ -309,9 +309,9 @@ Set the endpoint via any of the methods above (`--set-url`, `fetchrate.provider-
 The daily update fetches rates for the default set: `BTC`, `LTC`, `DOGE`, `SOL`, `USDT`. This list can be customised:
 
 ```bash
-java -jar FetchRate-0.3.jar config --list-symbols
-java -jar FetchRate-0.3.jar config --add-symbol XRP
-java -jar FetchRate-0.3.jar config --remove-symbol DOGE
+java -jar FetchRate-0.4.jar config --list-symbols
+java -jar FetchRate-0.4.jar config --add-symbol XRP
+java -jar FetchRate-0.4.jar config --remove-symbol DOGE
 ```
 
 The first add or remove seeds the list from the current defaults, so no existing symbols are lost. In HTTP mode the list is also manageable from the web UI.
