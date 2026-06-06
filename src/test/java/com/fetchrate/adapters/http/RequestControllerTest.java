@@ -287,6 +287,19 @@ class RequestControllerTest {
     }
 
     @Test
+    void convert_blankOutputCurrency_treatedAsEur() {
+        when(rateUpdater.alreadyUpdatedToday()).thenReturn(true);
+        when(convertor.convert(any(QueryRecord.class))).thenReturn(new BigDecimal("91.37"));
+
+        ResponseEntity<?> response = controller.convert("100", "USD", "2024-01-15", "   ");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(convertor).convert(any());
+        verify(convertor, never()).convertTo(any(), any());
+        verify(convertor, never()).convertToCrypto(any(), any());
+    }
+
+    @Test
     void health_returnsOk() {
         var result = controller.health();
         assertEquals("ok", result.get("status"));

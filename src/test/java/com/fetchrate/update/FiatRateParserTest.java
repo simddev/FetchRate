@@ -63,6 +63,23 @@ class FiatRateParserTest {
     }
 
     @Test
+    void parseFiat_malformedRate_isSkipped() {
+        String xml = """
+                <Cube>
+                <Cube time="2024-01-15">
+                <Cube currency="USD" rate="1.2.3"/>
+                <Cube currency="GBP" rate="0.8591"/>
+                </Cube>
+                </Cube>
+                """;
+
+        List<FiatRateRecord> records = parser.parseFiat(xml);
+
+        assertEquals(1, records.size());
+        assertEquals("GBP", records.get(0).currency());
+    }
+
+    @Test
     void parseFiat_parsesMultipleDates() {
         String xml = """
                 <Cube>

@@ -49,12 +49,12 @@ public class FetchRateApplication {
             springArgs = argList.toArray(new String[0]);
         }
 
-        var context = new SpringApplication(FetchRateApplication.class);
+        var app = new SpringApplication(FetchRateApplication.class);
 
-        context.setAdditionalProfiles(startServer ? "http" : "cli");
-        context.setWebApplicationType(startServer ? WebApplicationType.SERVLET : WebApplicationType.NONE);
+        app.setAdditionalProfiles(startServer ? "http" : "cli");
+        app.setWebApplicationType(startServer ? WebApplicationType.SERVLET : WebApplicationType.NONE);
 
-        context.run(springArgs);
+        app.run(springArgs);
     }
 
 }

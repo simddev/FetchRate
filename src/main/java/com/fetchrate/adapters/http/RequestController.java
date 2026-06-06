@@ -93,7 +93,7 @@ public class RequestController {
             rateUpdater.updateRates();
         }
 
-        String outputCurrency = (outputCurrencyParam != null) ? outputCurrencyParam.strip().toUpperCase() : null;
+        String outputCurrency = (outputCurrencyParam != null && !outputCurrencyParam.isBlank()) ? outputCurrencyParam.strip().toUpperCase() : null;
         QueryRecord query = new QueryRecord(amount, currency, date);
 
         try {
