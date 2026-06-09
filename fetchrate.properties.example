@@ -2,7 +2,7 @@
 # Copy or rename this file to fetchrate.properties and place it next to the jar.
 # Values here override environment variables and defaults.
 
-# LiveCoinWatch API key — get a free key at https://www.livecoinwatch.com/tools/api
+# LiveCoinWatch API key  -  get a free key at https://www.livecoinwatch.com/tools/api
 fetchrate.api-key=YOUR_API_KEY_HERE
 
 # Optional: override the default crypto data provider endpoint (LiveCoinWatch by default)

@@ -335,13 +335,13 @@
             <div class="currency-row">
                 <select id="fiat-currency" aria-label="Fiat currency" onchange="clearOther(this, 'crypto-currency')">
                     <option value="" disabled selected>Fiat</option>
-                    <option value="EUR">EUR — Euro</option>
-                    <option th:each="curr : ${fiats}" th:value="${curr}" th:text="${curr} + ' — ' + ${currencyNames.get(curr)}"></option>
+                    <option value="EUR">EUR  -  Euro</option>
+                    <option th:each="curr : ${fiats}" th:value="${curr}" th:text="${curr} + '  -  ' + ${currencyNames.get(curr)}"></option>
                 </select>
                 <span class="or-divider">or</span>
                 <select id="crypto-currency" aria-label="Cryptocurrency" onchange="clearOther(this, 'fiat-currency')">
                     <option value="" disabled selected>Crypto</option>
-                    <option th:each="curr : ${cryptos}" th:value="${curr}" th:text="${curr} + ' — ' + ${currencyNames.get(curr)}"></option>
+                    <option th:each="curr : ${cryptos}" th:value="${curr}" th:text="${curr} + '  -  ' + ${currencyNames.get(curr)}"></option>
                 </select>
             </div>
         </div>
@@ -351,10 +351,10 @@
             <select id="output-currency" aria-label="Output currency" onchange="updateButtonText()">
                 <option value="EUR" selected>EUR &mdash; Euro</option>
                 <optgroup label="Fiat">
-                    <option th:each="curr : ${fiats}" th:value="${curr}" th:text="${curr} + ' — ' + ${currencyNames.get(curr)}"></option>
+                    <option th:each="curr : ${fiats}" th:value="${curr}" th:text="${curr} + '  -  ' + ${currencyNames.get(curr)}"></option>
                 </optgroup>
                 <optgroup label="Crypto">
-                    <option th:each="curr : ${cryptos}" th:value="${curr}" th:text="${curr} + ' — ' + ${currencyNames.get(curr)}"></option>
+                    <option th:each="curr : ${cryptos}" th:value="${curr}" th:text="${curr} + '  -  ' + ${currencyNames.get(curr)}"></option>
                 </optgroup>
             </select>
         </div>
@@ -399,7 +399,7 @@
             <span class="footer-sources">
                 Fiat: <a href="https://www.ecb.europa.eu/stats/eurofxref/" target="_blank" rel="noopener noreferrer">ECB</a>
                 &nbsp;·&nbsp;
-                Crypto: <span id="footer-crypto-source">—</span>
+                Crypto: <span id="footer-crypto-source"> - </span>
             </span>
             <a class="contact-btn" href="mailto:simon.d.dev@proton.me">Contact</a>
         </div>
@@ -550,7 +550,7 @@
                 const keyEl = document.getElementById('api-key-status');
                 keyEl.innerHTML = data.apiKeyConfigured
                     ? '<span style="color:#6abf69">✓ Configured</span>'
-                    : '<span class="error-text">✗ Not set — crypto rates will not update</span>';
+                    : '<span class="error-text">✗ Not set  -  crypto rates will not update</span>';
 
                 const urlEl = document.getElementById('provider-url-status');
                 const footerCryptoEl = document.getElementById('footer-crypto-source');
@@ -631,8 +631,8 @@
             const list = document.getElementById('tracked-symbols-list');
             const note = document.getElementById('symbols-note');
             note.innerHTML = customized
-                ? '<span style="color:#888">Custom list — fetched on each daily update</span>'
-                : '<span style="color:#555">Default list — fetched on each daily update</span>';
+                ? '<span style="color:#888">Custom list  -  fetched on each daily update</span>'
+                : '<span style="color:#555">Default list  -  fetched on each daily update</span>';
             list.innerHTML = '';
             symbols.forEach(sym => {
                 const chip = document.createElement('span');

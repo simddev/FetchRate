@@ -13,7 +13,7 @@ It provides three interfaces for the same service: a **CLI**, a **REST API**, an
 - Convert any fiat currency or cryptocurrency to **EUR** (default)
 - Convert to any other **fiat currency** supported by the ECB (e.g. USD, GBP, JPY) using `--to`
 - Convert to another **cryptocurrency** (e.g. ETH, SOL) using `--exchange`
-- All conversions are historical — rates are looked up for the exact date provided
+- All conversions are historical  -  rates are looked up for the exact date provided
 
 ---
 
@@ -38,7 +38,7 @@ java -jar target/FetchRate-0.4.jar start_http_server
 java -jar target/FetchRate-0.4.jar start_http_server --port 9090
 ```
 
-> The HTTP server binds to `127.0.0.1` (loopback only) by default. To expose it on the network — for example behind a reverse proxy — set `server.address=0.0.0.0` in `fetchrate.properties`.
+> The HTTP server binds to `127.0.0.1` (loopback only) by default. To expose it on the network  -  for example behind a reverse proxy  -  set `server.address=0.0.0.0` in `fetchrate.properties`.
 
 **Docker:**
 ```bash
@@ -174,7 +174,7 @@ Updates one or more runtime settings. Accepted fields: `apiKey`, `providerUrl`, 
 
 Once the HTTP server is running, a browser interface is available at `/`.
 
-The web UI supports selecting an output currency via a dropdown — any ECB fiat currency or tracked cryptocurrency. The default output is EUR.
+The web UI supports selecting an output currency via a dropdown  -  any ECB fiat currency or tracked cryptocurrency. The default output is EUR.
 
 <p align="center">
   <img src="images/ui-preview.png" width="380" alt="FetchRate web interface">
@@ -196,9 +196,9 @@ The ECB publishes rates on **business days only**. Fiat conversions on weekends 
 
 Default tracked symbols: `BTC`, `LTC`, `DOGE`, `SOL`, `USDT`.
 
-Crypto rates require a compatible data provider API. An API key is required for automatic daily updates and on-demand fetching — without one, only rates loaded from local CSV files are available. Additional symbols can be added via `config --add-symbol`. Unlike fiat, crypto rates are available for every calendar day including weekends.
+Crypto rates require a compatible data provider API. An API key is required for automatic daily updates and on-demand fetching  -  without one, only rates loaded from local CSV files are available. Additional symbols can be added via `config --add-symbol`. Unlike fiat, crypto rates are available for every calendar day including weekends.
 
-The application ships with [LiveCoinWatch](https://www.livecoinwatch.com) pre-configured as the default endpoint because it currently offers a free API tier. FetchRate is not affiliated with or endorsed by LiveCoinWatch — it is simply one example of a compatible provider. Any service implementing the same API contract can be used instead (see [Custom Provider](#custom-provider) below).
+The application ships with [LiveCoinWatch](https://www.livecoinwatch.com) pre-configured as the default endpoint because it currently offers a free API tier. FetchRate is not affiliated with or endorsed by LiveCoinWatch  -  it is simply one example of a compatible provider. Any service implementing the same API contract can be used instead (see [Custom Provider](#custom-provider) below).
 
 ---
 
@@ -218,7 +218,7 @@ For crypto output, the stored EUR-equivalent rate for that coin on the requested
 
 **Note for tax purposes:** This two-step EUR-pivot methodology is consistent with guidance from major tax authorities:
 
-- **US (IRS):** IRS Notice 2014-21 explicitly permits converting via an intermediate currency — *"converted into U.S. dollars (or into another real currency which in turn can be converted into U.S. dollars)"*.
+- **US (IRS):** IRS Notice 2014-21 explicitly permits converting via an intermediate currency  -  *"converted into U.S. dollars (or into another real currency which in turn can be converted into U.S. dollars)"*.
 - **UK (HMRC):** No mandatory source is specified; consistent methodology and record-keeping are required.
 - **Germany (BMF):** ECB is the official EU rate source; the 2025 BMF circular accepts daily pricing from recognised sources.
 - **Japan (NTA):** Japanese taxpayers should note that the NTA standard instrument is the TTM rate published by a Japanese bank. ECB rates may qualify as an *"other reasonable market rate applied continuously"*, but users filing Japanese taxes are advised to confirm with a local tax advisor.
@@ -246,8 +246,8 @@ All bulk writes use `INSERT ... ON CONFLICT DO UPDATE` (upsert), so re-running a
 
 Rates are refreshed once per day on the first request of the day:
 
-- **Fiat** — fetched from the ECB. The appropriate feed is selected automatically (full history, 90-day, or daily) based on how long ago the database was last updated.
-- **Crypto** — if an API key is configured, the last 30 days of rates are fetched for all tracked symbols. Fiat and crypto updates are independent; a failure in one does not prevent the other.
+- **Fiat**  -  fetched from the ECB. The appropriate feed is selected automatically (full history, 90-day, or daily) based on how long ago the database was last updated.
+- **Crypto**  -  if an API key is configured, the last 30 days of rates are fetched for all tracked symbols. Fiat and crypto updates are independent; a failure in one does not prevent the other.
 
 If all sources fail (e.g. no network), the timestamp is not advanced and the next request retries.
 
@@ -265,20 +265,20 @@ Place `.csv` files in `data/crypto/` to seed historical crypto rates without usi
 
 #### API Key
 
-FetchRate ships with [LiveCoinWatch](https://www.livecoinwatch.com/tools/api) pre-configured as the default endpoint. If you want to use it, free API keys are available at [livecoinwatch.com/tools/api](https://www.livecoinwatch.com/tools/api). To use a different provider instead, see [Custom Provider](#custom-provider) below — only the API key and endpoint URL need to change.
+FetchRate ships with [LiveCoinWatch](https://www.livecoinwatch.com/tools/api) pre-configured as the default endpoint. If you want to use it, free API keys are available at [livecoinwatch.com/tools/api](https://www.livecoinwatch.com/tools/api). To use a different provider instead, see [Custom Provider](#custom-provider) below  -  only the API key and endpoint URL need to change.
 
-**Option 1 — Properties file (recommended):** create `fetchrate.properties` next to the jar:
+**Option 1  -  Properties file (recommended):** create `fetchrate.properties` next to the jar:
 ```
 fetchrate.api-key=your_api_key_here
 ```
 
-**Option 2 — CLI:**
+**Option 2  -  CLI:**
 ```bash
 java -jar FetchRate-0.4.jar config --set-key your_api_key_here
 java -jar FetchRate-0.4.jar config --set-url https://your-provider/endpoint
 ```
 
-**Option 3 — Environment variable:**
+**Option 3  -  Environment variable:**
 ```bash
 export FETCHRATE_API_KEY=your_api_key_here
 ```
@@ -289,7 +289,7 @@ When running in HTTP mode, the API key and provider URL can also be configured f
 
 #### Custom Provider
 
-The provider URL is fully configurable, so you can swap LiveCoinWatch for any other service or self-hosted proxy — as long as it implements the same API contract:
+The provider URL is fully configurable, so you can swap LiveCoinWatch for any other service or self-hosted proxy  -  as long as it implements the same API contract:
 
 - **Method:** `POST`
 - **Auth:** `x-api-key` header

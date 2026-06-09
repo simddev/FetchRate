@@ -48,7 +48,7 @@ public class RateUpdater {
 
     /**
      * Fetches and persists the latest fiat and crypto exchange rates.
-     * Each source is tracked independently — a source that already succeeded today
+     * Each source is tracked independently  -  a source that already succeeded today
      * is skipped, while a source that failed yesterday or earlier will retry.
      * Synchronized to prevent concurrent update runs when the HTTP server handles
      * multiple requests simultaneously.

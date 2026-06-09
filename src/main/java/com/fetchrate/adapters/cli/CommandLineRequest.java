@@ -274,7 +274,7 @@ public class CommandLineRequest implements CommandLineRunner {
 
     /** Prints the full help text covering all available commands and options. */
     private void printHelp() {
-        System.out.println("FetchRate — historical currency converter");
+        System.out.println("FetchRate  -  historical currency converter");
         System.out.println();
         System.out.println("USAGE");
         System.out.println("  java -jar fetchrate.jar <command> [options]");

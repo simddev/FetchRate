@@ -58,7 +58,7 @@ class CryptoRateFetcherTest {
         // Should throw RuntimeException (network/IO), not IllegalStateException
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
                 fetcher.fetchFromProvider("BTC", start, end));
-        assertFalse(ex instanceof IllegalStateException, "Should not throw 'not configured' — key was found in DB");
+        assertFalse(ex instanceof IllegalStateException, "Should not throw 'not configured'  -  key was found in DB");
 
         // DB key was used directly; config.getApiKey() should never have been called
         verify(config, never()).getApiKey();
@@ -72,7 +72,7 @@ class CryptoRateFetcherTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
                 fetcher.fetchFromProvider("BTC", start, end));
-        assertFalse(ex instanceof IllegalStateException, "Should not throw 'not configured' — fell back to config key");
+        assertFalse(ex instanceof IllegalStateException, "Should not throw 'not configured'  -  fell back to config key");
 
         verify(config).getApiKey();
     }

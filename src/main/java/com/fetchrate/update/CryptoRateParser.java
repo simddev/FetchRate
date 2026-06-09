@@ -118,7 +118,7 @@ public class CryptoRateParser {
                             if (!dateNode.isMissingNode() && !rateNode.isMissingNode()) {
                                 long timestamp = dateNode.asLong();
                                 BigDecimal rate = new BigDecimal(rateNode.asText());
-                                // Timestamps are UTC epoch millis — use UTC to avoid date shifting.
+                                // Timestamps are UTC epoch millis  -  use UTC to avoid date shifting.
                                 LocalDate date = Instant.ofEpochMilli(timestamp).atZone(ZoneOffset.UTC).toLocalDate();
                                 cryptoRecord.add(new CryptoRateRecord(effectiveSymbol, date, rate));
                             }
