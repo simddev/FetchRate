@@ -32,7 +32,7 @@ public class FiatRateUpdater {
     /**
      * Selects the ECB feed URL based on how far behind the database is.
      * Returns the full historical URL if the database has never been updated or is 90+ days behind,
-     * the 90-day URL if 2–89 days behind, or the daily URL otherwise.
+     * the 90-day URL if 2 - 89 days behind, or the daily URL otherwise.
      */
     private String chooseECBURL() {
 

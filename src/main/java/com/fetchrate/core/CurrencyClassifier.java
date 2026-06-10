@@ -85,7 +85,7 @@ public class CurrencyClassifier {
 
     /**
      * Returns {@code true} if the symbol is supported for conversion.
-     * Known fiats, known cryptos, EUR, and any uppercase alphanumeric token (2–10 chars)
+     * Known fiats, known cryptos, EUR, and any uppercase alphanumeric token (2 - 10 chars)
      * are considered supported, allowing unlisted crypto symbols to pass validation.
      */
     public boolean isSupported(String symbol) {

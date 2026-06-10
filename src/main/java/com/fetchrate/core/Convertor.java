@@ -70,7 +70,7 @@ public class Convertor {
                         : query.date().minusDays(2);
                 throw new IllegalArgumentException(
                         "No ECB rate for " + query.date() + " (weekend or holiday). " +
-                        "The ECB only publishes rates on business days  -  try " + friday + " (Friday)."
+                        "The ECB only publishes rates on business days - try " + friday + " (Friday)."
                 );
             }
 
@@ -80,7 +80,7 @@ public class Convertor {
 
             // The ECB gives us 1 EUR = Amount Foreign Currency.
             if (fiatRecord.rate().compareTo(BigDecimal.ZERO) == 0) {
-                throw new RateNotFoundException("Rate for " + currencySymbol + " on " + query.date() + " is zero  -  data may be corrupt.");
+                throw new RateNotFoundException("Rate for " + currencySymbol + " on " + query.date() + " is zero - data may be corrupt.");
             }
             return amount.divide(fiatRecord.rate(), 2, RoundingMode.HALF_UP);
         }
@@ -134,7 +134,7 @@ public class Convertor {
 
         FiatRateRecord targetRate = database.findFiatRateOnOrBefore(outputCurrency, query.date());
         if (targetRate.rate().compareTo(BigDecimal.ZERO) == 0) {
-            throw new RateNotFoundException("Rate for " + outputCurrency + " on or before " + query.date() + " is zero  -  data may be corrupt.");
+            throw new RateNotFoundException("Rate for " + outputCurrency + " on or before " + query.date() + " is zero - data may be corrupt.");
         }
         return inEur.multiply(targetRate.rate()).setScale(2, RoundingMode.HALF_UP);
     }
@@ -147,7 +147,7 @@ public class Convertor {
      *
      * @param query        The query containing the amount, source currency symbol, and date.
      * @param outputSymbol The target cryptocurrency symbol (e.g. {@code "ETH"}, {@code "SOL"}).
-     *                     Must not be a fiat currency or EUR  -  use {@link #convertTo} for those.
+     *                     Must not be a fiat currency or EUR - use {@link #convertTo} for those.
      * @return The converted amount in {@code outputSymbol}, rounded to 8 decimal places.
      * @throws IllegalArgumentException if {@code outputSymbol} is a fiat currency or EUR.
      * @throws RateNotFoundException    if no rate is available for {@code outputSymbol} on the query date.
@@ -176,7 +176,7 @@ public class Convertor {
 
         // Crypto rate is EUR per 1 coin, so divide to get coin count.
         if (outputRate.rate().compareTo(BigDecimal.ZERO) == 0) {
-            throw new RateNotFoundException("Rate for " + outputSymbol + " on " + query.date() + " is zero  -  data may be corrupt.");
+            throw new RateNotFoundException("Rate for " + outputSymbol + " on " + query.date() + " is zero - data may be corrupt.");
         }
         return inEur.divide(outputRate.rate(), 8, RoundingMode.HALF_UP);
     }

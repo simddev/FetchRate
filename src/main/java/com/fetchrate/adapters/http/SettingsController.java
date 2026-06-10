@@ -51,7 +51,7 @@ public class SettingsController {
      * At least one of the following fields must be present and non-blank:
      * {@code apiKey}, {@code providerUrl}, {@code addSymbol}, or {@code removeSymbol}.
      * The provider URL, if supplied, must use the {@code http} or {@code https} scheme.
-     * Symbols must be 2–10 uppercase alphanumeric characters.
+     * Symbols must be 2 - 10 uppercase alphanumeric characters.
      * All validation runs before any write is performed.
      *
      * @param body Request body with optional fields: {@code apiKey}, {@code providerUrl},
@@ -89,13 +89,13 @@ public class SettingsController {
         if (hasAddSymbol) {
             String sym = addSymbol.trim().toUpperCase();
             if (!sym.matches("^[A-Z0-9]{2,10}$")) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Symbol must be 2–10 alphanumeric characters"));
+                return ResponseEntity.badRequest().body(Map.of("error", "Symbol must be 2 - 10 alphanumeric characters"));
             }
         }
         if (hasRemoveSymbol) {
             String sym = removeSymbol.trim().toUpperCase();
             if (!sym.matches("^[A-Z0-9]{2,10}$")) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Symbol must be 2–10 alphanumeric characters"));
+                return ResponseEntity.badRequest().body(Map.of("error", "Symbol must be 2 - 10 alphanumeric characters"));
             }
         }
 

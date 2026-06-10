@@ -98,7 +98,7 @@ public class CommandLineRequest implements CommandLineRunner {
                 } else if (("--exchange".equals(a) || "-e".equals(a)) && i + 1 < args.length) {
                     String sym = args[++i].toUpperCase();
                     if (!sym.matches("^[A-Z0-9]{2,10}$")) {
-                        printError("Invalid exchange symbol. Use 2–10 alphanumeric characters (e.g. ETH, SOL).");
+                        printError("Invalid exchange symbol. Use 2 - 10 alphanumeric characters (e.g. ETH, SOL).");
                         return;
                     }
                     exchangeSymbol = sym;
@@ -193,7 +193,7 @@ public class CommandLineRequest implements CommandLineRunner {
                 if (i + 1 >= args.length) { printError("--add-symbol requires a value."); return; }
                 String sym = args[++i].trim().toUpperCase();
                 if (!sym.matches("^[A-Z0-9]{2,10}$")) {
-                    printError("Invalid symbol. Use 2–10 alphanumeric characters (e.g. BTC, XRP).");
+                    printError("Invalid symbol. Use 2 - 10 alphanumeric characters (e.g. BTC, XRP).");
                     return;
                 }
                 cryptoUpdater.addTrackedSymbol(sym);
@@ -204,7 +204,7 @@ public class CommandLineRequest implements CommandLineRunner {
                 if (i + 1 >= args.length) { printError("--remove-symbol requires a value."); return; }
                 String sym = args[++i].trim().toUpperCase();
                 if (!sym.matches("^[A-Z0-9]{2,10}$")) {
-                    printError("Invalid symbol. Use 2–10 alphanumeric characters (e.g. BTC, XRP).");
+                    printError("Invalid symbol. Use 2 - 10 alphanumeric characters (e.g. BTC, XRP).");
                     return;
                 }
                 cryptoUpdater.removeTrackedSymbol(sym);
@@ -274,7 +274,7 @@ public class CommandLineRequest implements CommandLineRunner {
 
     /** Prints the full help text covering all available commands and options. */
     private void printHelp() {
-        System.out.println("FetchRate  -  historical currency converter");
+        System.out.println("FetchRate - historical currency converter");
         System.out.println();
         System.out.println("USAGE");
         System.out.println("  java -jar fetchrate.jar <command> [options]");
