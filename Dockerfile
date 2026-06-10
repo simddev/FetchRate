@@ -7,7 +7,7 @@ RUN mvn package -DskipTests -q
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /build/target/FetchRate-0.4.jar app.jar
+COPY --from=build /build/target/FetchRate-*.jar app.jar
 EXPOSE 8000
 ENV SERVER_ADDRESS=0.0.0.0
 VOLUME /app/data
